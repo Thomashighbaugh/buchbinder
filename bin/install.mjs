@@ -387,14 +387,21 @@ async function ensureProjectConfig() {
         success('Updated .opencode/package.json with plugin runtime deps');
         
         // --- ADDED: Install dependencies immediately ---
-        const pkgManager = fs.existsSync(path.join(process.cwd(), 'bun.lockb')) ? 'bun' : 'npm';
+        const pkgManager = 'bun';
         log(`  Installing dependencies with ${pkgManager}...`);
         try {
-            const installCmd = pkgManager === 'bun' ? 'bun install' : 'npm install --ignore-scripts --prefer-offline';
-            execSync(installCmd, { cwd: DEST_DIR, stdio: 'pipe' });
+            execSync(`${pkgManager} install`, { cwd: DEST_DIR, stdio: 'pipe' });
             success('Dependencies installed successfully.');
         } catch (err) {
-            error(`Failed to install dependencies: ${err.message}`);
+            error(`Failed to install dependencies with ${pkgManager}: ${err.message}`);
+            // Fallback to npm if bun fails
+            log(`  Falling back to npm...`);
+            try {
+                execSync(`npm install --ignore-scripts --prefer-offline`, { cwd: DEST_DIR, stdio: 'pipe' });
+                success('Dependencies installed via npm fallback.');
+            } catch (npmErr) {
+                error(`npm fallback also failed: ${npmErr.message}`);
+            }
         }
     } else {
         log('.opencode/package.json already has all required deps — skipping dependency install');

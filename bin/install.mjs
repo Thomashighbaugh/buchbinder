@@ -390,7 +390,8 @@ async function ensureProjectConfig() {
         const pkgManager = fs.existsSync(path.join(process.cwd(), 'bun.lockb')) ? 'bun' : 'npm';
         log(`  Installing dependencies with ${pkgManager}...`);
         try {
-            execSync(`${pkgManager} install`, { cwd: DEST_DIR, stdio: 'inherit' });
+            const installCmd = pkgManager === 'bun' ? 'bun install' : 'npm install --ignore-scripts --prefer-offline';
+            execSync(installCmd, { cwd: DEST_DIR, stdio: 'pipe' });
             success('Dependencies installed successfully.');
         } catch (err) {
             error(`Failed to install dependencies: ${err.message}`);
@@ -645,17 +646,32 @@ async function main() {
                 });
 
             for (const p of paths) {
-                if (fs.existsSync(p)) {
-                    const destName = importChoice === 'lorebook'
-                        ? (importedFiles.length === 0 ? 'imported-lorebook.json' : `imported-lorebook-${importedFiles.length}.json`)
-                        : (importedFiles.length === 0 ? 'premise.md' : `premise-${importedFiles.length}.md`);
-                    const destPath = path.join(process.cwd(), destName);
-                    fs.copySync(p, destPath);
-                    success(`Imported ${path.basename(p)} → ${destName}`);
-                    importedFiles.push(destPath);
-                } else {
+                if (!fs.existsSync(p)) {
                     warn(`File not found: "${p}" — skipping`);
+                    continue;
                 }
+                const srcAbs = path.resolve(p);
+                const srcBase = path.basename(srcAbs);
+                const subdir = importChoice === 'lorebook' ? 'lorebook' : 'premise';
+                const destDir = path.join(process.cwd(), 'book', subdir);
+                // If the source is already inside the destination directory, don't copy.
+                const isAlreadyInPlace = path.dirname(srcAbs) === destDir;
+                let destPath;
+                if (isAlreadyInPlace) {
+                    destPath = srcAbs;
+                    success(`Found ${srcBase} already in ./book/${subdir}/ — using as-is`);
+                } else {
+                    fs.ensureDirSync(destDir);
+                    const destName = srcBase;
+                    destPath = path.join(destDir, destName);
+                    if (fs.existsSync(destPath)) {
+                        warn(`Destination already exists: ./book/${subdir}/${destName} — skipping`);
+                        continue;
+                    }
+                    fs.copySync(srcAbs, destPath);
+                    success(`Imported ${srcBase} → ./book/${subdir}/${destName}`);
+                }
+                importedFiles.push(destPath);
             }
             if (importedFiles.length === 0 && rawInput.trim()) {
                 warn('No files could be imported — you can add them later via /kombinat manifest');

@@ -18,31 +18,31 @@ import { useProjectState, setInjector } from './hooks/use-project-state.js'
 
 /** All 25 subcommands for the instant menu */
 const KOMBINAT_SUBCOMMANDS = [
-  { label: 'guided',          description: 'Assess project state and recommend next phase' },
-  { label: 'manifest',     description: 'Establish creative or intellectual principles' },
-  { label: 'specify',        description: 'Build story specification with premise stress-test' },
-  { label: 'clarify',        description: 'Resolve specification ambiguities' },
-  { label: 'research',       description: 'Active research — sources, annotation, literature review' },
-  { label: 'outline',        description: 'Chapter structure, pacing, arc design' },
-  { label: 'task-manager',   description: 'Break outline into tracked tasks' },
+  { label: 'guided',          description: 'Assess project state and run the full workflow pipeline' },
+  { label: 'manifest',        description: 'Establish creative or intellectual principles' },
+  { label: 'specify',         description: 'Build story specification with premise stress-test' },
+  { label: 'clarify',         description: 'Resolve specification ambiguities' },
+  { label: 'research',        description: 'Active research — sources, annotation, literature review' },
+  { label: 'outline',         description: 'Chapter structure, pacing, arc design' },
+  { label: 'task-manager',    description: 'Break outline into tracked tasks' },
   { label: 'draft',           description: 'Batch draft (default) — all planned chapters or up to 6' },
-  { label: 'critique',       description: 'Batch critique — modes: alpha, beta, peer, sensitivity, cold-read' },
-  { label: 'revise',         description: 'Batch revise with revision-verify gate — --depth full for 3-pass' },
-  { label: 'edit',           description: 'Three-pass editing: line-edit, copy-edit, proofread' },
-  { label: 'review',         description: 'Broad project QA — continuity scan, structural analyses' },
-  { label: 'cite',           description: 'Citation management — add, format, validate, bibliography' },
-  { label: 'publish',       description: 'Export via pandoc — EPUB, DOCX, LaTeX, PDF, web' },
-  { label: 'track',          description: 'Unified tracking — characters, plots, timelines, sources' },
-  { label: 'timeline',       description: 'Chronological consistency verification' },
-  { label: 'meta',           description: 'Bibliographic metadata management' },
-  { label: 'drafter',       description: 'Loose draft jumpstart from raw ideas' },
-  { label: 'verify',         description: 'Run quality gates on demand — voice, continuity, style' },
-  { label: 'resume',         description: 'Resume interrupted session from checkpoint' },
-  { label: 'cycle',          description: 'Batch editorial cycle — draft→critique→revise→edit→done' },
-  { label: 'pacing-audit',   description: 'Analyze pacing distribution, find saggy sections' },
-  { label: 'hook-review',    description: 'Check each chapter opening and closing hooks' },
-  { label: 'read-through',   description: 'Full read-through — immersion audit, trust accounting' },
-  { label: 'series',         description: 'Series infrastructure — init, sync, audit, register, status' },
+  { label: 'critique',        description: 'Batch critique — modes: alpha, beta, peer, sensitivity, cold-read' },
+  { label: 'revise',          description: 'Batch revise with revision-verify gate — --depth full for 3-pass' },
+  { label: 'edit',            description: 'Three-pass editing: line-edit, copy-edit, proofread' },
+  { label: 'review',          description: 'Broad project QA — continuity scan, structural analyses' },
+  { label: 'cite',            description: 'Citation management — add, format, validate, bibliography' },
+  { label: 'publish',         description: 'Export via pandoc — EPUB, DOCX, LaTeX, PDF, web' },
+  { label: 'track',           description: 'Unified tracking — characters, plots, timelines, sources' },
+  { label: 'timeline',        description: 'Chronological consistency verification' },
+  { label: 'meta',            description: 'Bibliographic metadata management' },
+  { label: 'drafter',         description: 'Loose draft jumpstart from raw ideas' },
+  { label: 'verify',          description: 'Run quality gates on demand — voice, continuity, style' },
+  { label: 'resume',          description: 'Resume interrupted session from checkpoint' },
+  { label: 'cycle',           description: 'Batch editorial cycle — draft→critique→revise→edit→done' },
+  { label: 'pacing-audit',    description: 'Analyze pacing distribution, find saggy sections' },
+  { label: 'hook-review',     description: 'Check each chapter opening and closing hooks' },
+  { label: 'read-through',    description: 'Full read-through — immersion audit, trust accounting' },
+  { label: 'series',          description: 'Series infrastructure — init, sync, audit, register, status' },
 ] as const
 
 const tui: TuiPlugin = async (api: TuiPluginApi, _o, _meta: TuiPluginMeta) => {
@@ -82,7 +82,7 @@ const tui: TuiPlugin = async (api: TuiPluginApi, _o, _meta: TuiPluginMeta) => {
     },
   })
 
-  // Register the /kombinat slash command via the keymap layer API.
+  // Register the /kombinate slash command via the keymap layer API.
   // (api.command.register() is deprecated and silently fails in current OpenCode.)
   if (api.keymap) {
     const keymap = api.keymap as any
@@ -90,11 +90,11 @@ const tui: TuiPlugin = async (api: TuiPluginApi, _o, _meta: TuiPluginMeta) => {
       keymap.registerLayer({
         commands: [
           {
-            title: 'Kombinat: Phase Menu',
-            value: 'kombinat',
-            description: 'Open the instant Kombinat phase selection menu',
+            title: 'Kombinate: Phase Menu',
+            value: 'kombinate',
+            description: 'Open the instant Kombinate phase selection menu',
             category: 'Kombinat Writer',
-            slash: { name: 'kombinat', aliases: ['kom'] },
+            slash: { name: 'kombinate', aliases: ['kom', 'kombinat'] },
             onSelect: () => {
               const DS = api.ui.DialogSelect
               const options: TuiDialogSelectOption<string>[] = KOMBINAT_SUBCOMMANDS.map(s => ({
@@ -106,13 +106,13 @@ const tui: TuiPlugin = async (api: TuiPluginApi, _o, _meta: TuiPluginMeta) => {
               api.ui.dialog.setSize('large')
               api.ui.dialog.replace(() =>
                 DS({
-                  title: 'Kombinat Writer — Select Phase',
+                  title: 'Kombinate Writer — Select Phase',
                   placeholder: 'Choose a phase...',
                   options,
                   onSelect: (sel: TuiDialogSelectOption<string>) => {
                     api.ui.dialog.clear()
                     const cmd = `/kombinat-router ${sel.value}`
-                    api.ui.toast({ title: 'Kombinat', message: `Routing to ${sel.value}` })
+                    api.ui.toast({ title: 'Kombinate', message: `Routing to ${sel.value}` })
                     api.client.tui.appendPrompt({ text: cmd + ' ' }).then(() => {
                       setTimeout(() => {
                         api.client.tui.appendPrompt({ text: '\n' }).catch(() => {})

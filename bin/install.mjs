@@ -809,6 +809,18 @@ async function main() {
         const pluginR = syncCopySidebarPlugin(DEST_DIR, syncMode)
         const hooksR = syncCopyHooksPlugin(DEST_DIR, syncMode)
         syncEnsureProjectConfig(DEST_DIR)
+        // Run bun install to ensure all deps are available
+        try {
+            execSync('bun install', { cwd: DEST_DIR, stdio: 'pipe' });
+            success('Dependencies installed');
+        } catch (err) {
+            try {
+                execSync('npm install --ignore-scripts --prefer-offline', { cwd: DEST_DIR, stdio: 'pipe' });
+                success('Dependencies installed via npm fallback');
+            } catch (npmErr) {
+                warn('Dependency install failed — run "bun install" in .opencode/ manually');
+            }
+        }
         log(`  Skills:    ${skillsR.copied} copied, ${skillsR.skipped} skipped`)
         log(`  Tools:     ${toolsR.copied} copied, ${toolsR.skipped} skipped`)
         log(`  Commands:  ${cmdsR.copied} copied, ${cmdsR.skipped} skipped`)

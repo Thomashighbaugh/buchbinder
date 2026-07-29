@@ -4,9 +4,9 @@
  *
  * Registers:
  *   - `/kombinat` slash command → instant DialogSelect menu
- *   - 3 sidebar slots (title, content, footer) — all four tabs (Dashboard,
- *     Gates, Diff, Viz) are rendered as a single scrollable column. No tabs.
- *     No keybinds. The user scrolls down through everything.
+ *   - 3 sidebar slots (title, content, footer)
+ *
+ * Uses api.command.register() (same API as the working hubs-tui plugin).
  */
 
 import type { TuiPlugin, TuiPluginApi, TuiPluginMeta, TuiDialogSelectOption } from '@opencode-ai/plugin/tui'
@@ -16,7 +16,7 @@ import { SidebarContent } from './components/sidebar-content.js'
 import { SidebarFooter } from './components/sidebar-footer.js'
 import { useProjectState, setInjector } from './hooks/use-project-state.js'
 
-/** All 25 subcommands for the instant menu */
+/** All subcommands for the instant menu */
 const KOMBINAT_SUBCOMMANDS = [
   { label: 'guided',          description: 'Assess project state and run the full workflow pipeline' },
   { label: 'ideation',        description: 'Iteratively refine premise, theme, setting, characters, conflict before constitution' },
@@ -40,9 +40,9 @@ const KOMBINAT_SUBCOMMANDS = [
   { label: 'verify',          description: 'Run quality gates on demand — voice, continuity, style' },
   { label: 'resume',          description: 'Resume interrupted session from checkpoint' },
   { label: 'cycle',           description: 'Batch editorial cycle — draft→critique→revise→edit→done' },
-  { label: 'pacing-audit',    description: 'Analyze pacing distribution, find saggy sections' },
-  { label: 'hook-review',     description: 'Check each chapter opening and closing hooks' },
-  { label: 'read-through',    description: 'Full read-through — immersion audit, trust accounting' },
+  { label: 'pacing-audit',   description: 'Analyze pacing distribution, find saggy sections' },
+  { label: 'hook-review',    description: 'Check each chapter opening and closing hooks' },
+  { label: 'read-through',   description: 'Full read-through — immersion audit, trust accounting' },
   { label: 'series',          description: 'Series infrastructure — init, sync, audit, register, status' },
 ] as const
 
@@ -54,9 +54,7 @@ const tui: TuiPlugin = async (api: TuiPluginApi, _o, _meta: TuiPluginMeta) => {
     api.client.tui.appendPrompt({ text: cmd + ' ' }).catch(() => {})
   })
 
-  // Single sidebar state — no tab switching. All four sections stack vertically
-  // and the user scrolls through them. The signature still accepts activeTab for
-  // backward compatibility, but it's a no-op now.
+  // Single sidebar state — no tab switching.
   const noopSet = () => {}
   const sidebarState = useProjectState(projectRoot, () => 'dashboard', noopSet)
 
@@ -69,7 +67,7 @@ const tui: TuiPlugin = async (api: TuiPluginApi, _o, _meta: TuiPluginMeta) => {
     })
   })
 
-  // Register sidebar slots — slot renderers receive (ctx, props) where ctx has theme
+  // Register sidebar slots
   api.slots.register({
     slots: {
       'sidebar_title': (_ctx, props: { session_id: string; title: string }) =>
@@ -83,51 +81,45 @@ const tui: TuiPlugin = async (api: TuiPluginApi, _o, _meta: TuiPluginMeta) => {
     },
   })
 
-  // Register the /kombinate slash command via the keymap layer API.
-  // (api.command.register() is deprecated and silently fails in current OpenCode.)
-  if (api.keymap) {
-    const keymap = api.keymap as any
-    if (typeof keymap.registerLayer === 'function') {
-      keymap.registerLayer({
-        commands: [
-          {
-            title: 'Kombinate: Phase Menu',
-            value: 'kombinate',
-            description: 'Open the instant Kombinate phase selection menu',
-            category: 'Kombinat Writer',
-            slash: { name: 'kombinat', aliases: ['kom', 'k'] },
-            onSelect: () => {
-              const DS = api.ui.DialogSelect
-              const options: TuiDialogSelectOption<string>[] = KOMBINAT_SUBCOMMANDS.map(s => ({
-                title: s.label,
-                value: s.label,
-                description: s.description,
-              }))
+  // Register the /kombinat slash command — uses the same api.command.register()
+  // API that the working hubs-tui plugin uses. The deprecated keymap API
+  // silently fails in current OpenCode.
+  if (api.command) {
+    api.command.register(() => {
+      const options: TuiDialogSelectOption<string>[] = KOMBINAT_SUBCOMMANDS.map(s => ({
+        title: s.label,
+        value: s.label,
+        description: s.description,
+      }))
 
-              api.ui.dialog.setSize('large')
-              api.ui.dialog.replace(() =>
-                DS({
-                  title: 'Kombinate Writer — Select Phase',
-                  placeholder: 'Choose a phase...',
-                  options,
-                  onSelect: (sel: TuiDialogSelectOption<string>) => {
-                    api.ui.dialog.clear()
-                    const cmd = `/kombinat-router ${sel.value}`
-                    api.ui.toast({ title: 'Kombinate', message: `Routing to ${sel.value}` })
-                    api.client.tui.appendPrompt({ text: cmd + ' ' }).then(() => {
-                      setTimeout(() => {
-                        api.client.tui.appendPrompt({ text: '\n' }).catch(() => {})
-                      }, 100)
-                    }).catch(() => {})
-                  },
-                })
-              )
-            },
-          },
-        ],
-        bindings: [],
-      })
-    }
+      return [{
+        title: 'Kombinat: Phase Menu',
+        value: 'kombinat',
+        description: 'Open the instant Kombinat phase selection menu',
+        category: 'Kombinat Writer',
+        slash: { name: 'kombinat', aliases: ['kom', 'k'] },
+        onSelect: () => {
+          const DS = api.ui.DialogSelect
+          api.ui.dialog.setSize('large')
+          api.ui.dialog.replace(() =>
+            DS({
+              title: 'Kombinat Writer — Select Phase',
+              placeholder: 'Choose a phase...',
+              options,
+              onSelect: (sel: TuiDialogSelectOption<string>) => {
+                api.ui.dialog.clear()
+                const cmd = `/kombinat ${sel.value}`
+                api.ui.toast({ title: 'Kombinat', message: `Routing to ${sel.value}` })
+                // Append the command text but do NOT auto-submit.
+                // The user presses Enter to run it through the kombinat.md
+                // command router, which calls hubMenu to execute the phase.
+                api.client.tui.appendPrompt({ text: cmd }).catch(() => {})
+              },
+            })
+          )
+        },
+      }]
+    })
   }
 }
 

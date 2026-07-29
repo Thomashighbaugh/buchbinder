@@ -28,6 +28,7 @@ import {
     copySlashCommands as syncCopySlashCommands,
     copyTemplates as syncCopyTemplates,
     copySidebarPlugin as syncCopySidebarPlugin,
+    copyHooksPlugin as syncCopyHooksPlugin,
     ensureProjectConfig as syncEnsureProjectConfig,
     initProjectStructure as syncInitProjectStructure,
     PACKAGE_ROOT as PKG_ROOT,
@@ -207,12 +208,19 @@ async function copyToolsAndLib(overwriteAll, skipAll) {
 
 // ─── Slash Commands ─────────────────────────────────────────────────────────
 async function copySlashCommands(overwriteAll, skipAll) {
-    // Slash commands are no longer installed. The /kombinat instant menu is
-    // registered by the sidebar plugin via api.keymap.registerLayer(). The
-    // internal routing/utility commands (kombinat-router, kombinat-gates,
-    // kombinat-split-outline) were fallback paths that polluted the user's
-    // / command list.
-    return { overwriteAll, skipAll, copied: 0, skipped: 0 };
+    const srcDir = path.join(SRC_DIR, 'commands');
+    const destDir = path.join(DEST_DIR, 'commands');
+    if (!fs.existsSync(srcDir)) return { overwriteAll, skipAll, copied: 0, skipped: 0 };
+    fs.ensureDirSync(destDir);
+    let copied = 0, skipped = 0;
+    for (const file of fs.readdirSync(srcDir).filter(f => f.endsWith('.md'))) {
+        const src = path.join(srcDir, file);
+        const dest = path.join(destDir, file);
+        fs.copySync(src, dest, { overwrite: true });
+        copied++;
+    }
+    success(`${copied} slash commands synchronized`);
+    return { overwriteAll, skipAll, copied, skipped: 0 };
 }
 
 // ─── Templates ──────────────────────────────────────────────────────────────
@@ -225,7 +233,6 @@ function copyTemplates(track) {
     if (fs.existsSync(baseDir)) fs.copySync(baseDir, destDir, { overwrite: true });
     const trackDir = path.join(baseTemplates, track);
     if (fs.existsSync(trackDir)) fs.copySync(trackDir, destDir, { overwrite: true });
-    // Copy series templates
     const seriesDir = path.join(baseTemplates, 'series');
     if (fs.existsSync(seriesDir)) {
         const destSeriesDir = path.join(destDir, 'series');
@@ -274,13 +281,28 @@ async function copySidebarPlugin(overwriteAll, skipAll) {
     return { overwriteAll: true, skipAll: false, copied };
 }
 
-// ─── Project tui.json + opencode.jsonc + package.json (plugin registration) ─
-// OpenCode requires the plugin to be registered in BOTH:
-//   1. .opencode/tui.json  — TUI keybind/theme config + TUI plugin paths
-//   2. .opencode/opencode.jsonc — main config whose "plugin" array loads plugins
-//
-// tui.json alone is NOT sufficient — the plugin won't appear in `opencode debug
-// info` and won't load. Both files must list the plugin path.
+// ─── Hooks Plugin ────────────────────────────────────────────────────────────
+async function copyHooksPlugin(overwriteAll, skipAll) {
+    const srcDir = path.join(SRC_DIR, 'hooks-plugin');
+    const destDir = path.join(DEST_DIR, 'plugins', 'hooks');
+    if (!fs.existsSync(srcDir)) { log('No hooks plugin source — skipping'); return { overwriteAll: true, skipAll: false, copied: 0 }; }
+    fs.ensureDirSync(destDir);
+    let copied = 0;
+    for (const file of fs.readdirSync(srcDir)) {
+        const src = path.join(srcDir, file);
+        const dest = path.join(destDir, file);
+        if (file.endsWith('.ts') || file.endsWith('.js')) {
+            fs.copySync(src, dest, { overwrite: true });
+            copied++;
+        }
+    }
+    success(`${copied} hooks plugin files synchronized`);
+    return { overwriteAll: true, skipAll: false, copied };
+}
+
+// ─── Project .opencode/opencode.jsonc + .opencode/tui.json + package.json (plugin registration) ─
+// OpenCode reads .opencode/opencode.jsonc at the project root for plugin loading.
+// The TUI plugin also needs to be in .opencode/tui.json for sidebar + slash commands.
 //
 // The plugin's built bundle externalizes solid-js and @opentui/solid (they
 // are baked into the OpenCode bun runtime but need to be resolvable from
@@ -291,9 +313,44 @@ async function ensureProjectConfig() {
     const tuiJsonPath = path.join(DEST_DIR, 'tui.json');
     const opencodeJsoncPath = path.join(DEST_DIR, 'opencode.jsonc');
     const pkgJsonPath = path.join(DEST_DIR, 'package.json');
-    const PLUGIN_ENTRY = path.resolve(DEST_DIR, 'plugins/kombinat-sidebar/index.js');
+    const PLUGIN_ENTRY = './plugins/kombinat-sidebar/index.js';
+    const HOOKS_ENTRY = './plugins/hooks/index.js';
 
-    // ── tui.json: register the plugin ──
+    // ── .opencode/opencode.jsonc: register the plugins so OpenCode loads them ──
+    if (!fs.existsSync(opencodeJsoncPath)) {
+        const config = {
+            $schema: 'https://opencode.ai/config.json',
+            plugin: [PLUGIN_ENTRY, HOOKS_ENTRY],
+        };
+        fs.writeFileSync(opencodeJsoncPath, JSON.stringify(config, null, 2) + '\n', 'utf-8');
+        success('Created .opencode/opencode.jsonc with kombinat-sidebar + hooks plugins registered');
+    } else {
+        const raw = fs.readFileSync(opencodeJsoncPath, 'utf-8');
+        let config;
+        try {
+            const stripped = raw.replace(/\/\/[^\n]*/g, '').replace(/\/\*[\s\S]*?\*\//g, '');
+            config = JSON.parse(stripped);
+        } catch {
+            warn('Could not parse existing .opencode/opencode.jsonc — skipping plugin registration.');
+            config = null;
+        }
+        if (config) {
+            const plugins = Array.isArray(config.plugin) ? config.plugin : [];
+            const hasSidebar = plugins.some(p => typeof p === 'string' && p.endsWith('kombinat-sidebar/index.js'));
+            const hasHooks = plugins.some(p => typeof p === 'string' && p.endsWith('hooks/index.js'));
+            if (!hasSidebar) plugins.push(PLUGIN_ENTRY);
+            if (!hasHooks) plugins.push(HOOKS_ENTRY);
+            if (!hasSidebar || !hasHooks) {
+                config.plugin = plugins;
+                fs.writeFileSync(opencodeJsoncPath, JSON.stringify(config, null, 2) + '\n', 'utf-8');
+                success(`Updated .opencode/opencode.jsonc plugin array`);
+            } else {
+                log('.opencode/opencode.jsonc already registers all plugins — skipping');
+            }
+        }
+    }
+
+    // ── .opencode/tui.json: register the TUI plugin for sidebar + slash commands ──
     if (!fs.existsSync(tuiJsonPath)) {
         const config = {
             $schema: 'https://opencode.ai/tui.json',
@@ -326,36 +383,6 @@ async function ensureProjectConfig() {
                 config.plugin = [...plugins, PLUGIN_ENTRY];
                 fs.writeFileSync(tuiJsonPath, JSON.stringify(config, null, 2) + '\n', 'utf-8');
                 success(`Added kombinat-sidebar to .opencode/tui.json plugin array`);
-            }
-        }
-    }
-
-    // ── opencode.jsonc: register the plugin so it actually loads ──
-    if (!fs.existsSync(opencodeJsoncPath)) {
-        const config = {
-            plugin: [PLUGIN_ENTRY],
-        };
-        fs.writeFileSync(opencodeJsoncPath, JSON.stringify(config, null, 2) + '\n', 'utf-8');
-        success('Created .opencode/opencode.jsonc with kombinat-sidebar plugin registered');
-    } else {
-        const raw = fs.readFileSync(opencodeJsoncPath, 'utf-8');
-        let config;
-        try {
-            const stripped = raw.replace(/\/\/[^\n]*/g, '').replace(/\/\*[\s\S]*?\*\//g, '');
-            config = JSON.parse(stripped);
-        } catch {
-            warn('Could not parse existing .opencode/opencode.jsonc — skipping plugin registration.');
-            config = null;
-        }
-        if (config) {
-            const plugins = Array.isArray(config.plugin) ? config.plugin : [];
-            const hasEntry = plugins.some(p => typeof p === 'string' && p.endsWith('kombinat-sidebar/index.js'));
-            if (hasEntry) {
-                log('.opencode/opencode.jsonc already registers kombinat-sidebar — skipping');
-            } else {
-                config.plugin = [...plugins, PLUGIN_ENTRY];
-                fs.writeFileSync(opencodeJsoncPath, JSON.stringify(config, null, 2) + '\n', 'utf-8');
-                success(`Added kombinat-sidebar to .opencode/opencode.jsonc plugin array`);
             }
         }
     }
@@ -446,38 +473,33 @@ async function instantiateTemplates(targetDir, track) {
 async function initProjectStructure(track, nonInteractive = false, targetDir = path.join(process.cwd(), 'book')) {
     const projectRoot = process.cwd();
     if (fs.existsSync(targetDir)) {
-        if (nonInteractive) {
-            // Don't update track.json on a non-interactive reinstall; respect what's there.
-            return;
+        // book/ already exists — just ensure track.json is there, no noise
+        if (!fs.existsSync(path.join(targetDir, 'track.json'))) {
+            fs.writeJsonSync(path.join(targetDir, 'track.json'), { track, initialized: new Date().toISOString(), version: '0.1.0' }, { spaces: 2 });
         }
-        const update = await confirm({ message: `${path.basename(targetDir)}/ directory already exists. Update track.json?`, default: false });
-        if (update) fs.writeJsonSync(path.join(targetDir, 'track.json'), { track, initialized: new Date().toISOString(), version: '0.1.0' }, { spaces: 2 });
-    } else {
-        fs.ensureDirSync(targetDir);
-        fs.ensureDirSync(path.join(targetDir, 'content'));
-        fs.ensureDirSync(path.join(targetDir, 'research', 'sources'));
-        fs.ensureDirSync(path.join(targetDir, 'research', 'bibliography'));
-        fs.ensureDirSync(path.join(targetDir, 'research', 'interviews'));
-        fs.ensureDirSync(path.join(targetDir, 'knowledge'));
-        fs.ensureDirSync(path.join(targetDir, 'tracking'));
-        fs.ensureDirSync(path.join(targetDir, 'drafts'));
-        fs.ensureDirSync(path.join(targetDir, 'critique'));
-        fs.ensureDirSync(path.join(targetDir, 'revisions'));
-        fs.ensureDirSync(path.join(targetDir, 'metadata'));
-        fs.ensureDirSync(path.join(targetDir, 'checkpoints'));
-        fs.ensureDirSync(path.join(projectRoot, 'memory'));
-        fs.ensureDirSync(path.join(projectRoot, 'output', 'manuscript'));
-        
-        fs.writeJsonSync(path.join(targetDir, 'track.json'), { track, initialized: new Date().toISOString(), version: '0.1.0' }, { spaces: 2 });
-        
-        await instantiateTemplates(targetDir, track);
-        
-        const manifestPath = path.join(targetDir, 'manifest.md');
-        if (!fs.existsSync(manifestPath)) {
-            fs.writeFileSync(manifestPath, `# ${track === 'fiction' ? 'Creative' : 'Intellectual'} Manifest\n\n*Generated by Kombinat Writer — replace with your principles.*\n\n## Core Values\n[Your central thesis, theme, or purpose]\n\n## Quality Baseline\n[Your non-negotiable standards]\n\n## Style Principles\n[Register, tone, conventions]\n\n## Content Principles\n[Structure, evidence, narrative norms]\n\n## Reader Contract\n[Audience expectations, content notes]\n\n## Revision Procedures\n[How revision decisions are made]\n`, 'utf-8');
-        }
-        success(`Project structure initialized at ${targetDir}`);
+        return;
     }
+    fs.ensureDirSync(targetDir);
+    fs.ensureDirSync(path.join(targetDir, 'content'));
+    fs.ensureDirSync(path.join(targetDir, 'research', 'sources'));
+    fs.ensureDirSync(path.join(targetDir, 'research', 'bibliography'));
+    fs.ensureDirSync(path.join(targetDir, 'research', 'interviews'));
+    fs.ensureDirSync(path.join(targetDir, 'knowledge'));
+    fs.ensureDirSync(path.join(targetDir, 'tracking'));
+    fs.ensureDirSync(path.join(targetDir, 'drafts'));
+    fs.ensureDirSync(path.join(targetDir, 'critique'));
+    fs.ensureDirSync(path.join(targetDir, 'revisions'));
+    fs.ensureDirSync(path.join(targetDir, 'metadata'));
+    fs.ensureDirSync(path.join(targetDir, 'checkpoints'));
+    fs.ensureDirSync(path.join(projectRoot, 'memory'));
+    fs.ensureDirSync(path.join(projectRoot, 'output', 'manuscript'));
+    fs.writeJsonSync(path.join(targetDir, 'track.json'), { track, initialized: new Date().toISOString(), version: '0.1.0' }, { spaces: 2 });
+    await instantiateTemplates(targetDir, track);
+    const manifestPath = path.join(targetDir, 'manifest.md');
+    if (!fs.existsSync(manifestPath)) {
+        fs.writeFileSync(manifestPath, `# ${track === 'fiction' ? 'Creative' : 'Intellectual'} Manifest\n\n*Generated by Kombinat Writer — replace with your principles.*\n\n## Core Values\n[Your central thesis, theme, or purpose]\n\n## Quality Baseline\n[Your non-negotiable standards]\n\n## Style Principles\n[Register, tone, conventions]\n\n## Content Principles\n[Structure, evidence, narrative norms]\n\n## Reader Contract\n[Audience expectations, content notes]\n\n## Revision Procedures\n[How revision decisions are made]\n`, 'utf-8');
+    }
+    success(`Project structure initialized at ${targetDir}`);
 }
 
 // ─── Main ───────────────────────────────────────────────────────────────────
@@ -785,11 +807,13 @@ async function main() {
         const cmdsR = syncCopySlashCommands(DEST_DIR, syncMode)
         syncCopyTemplates(DEST_DIR, track)
         const pluginR = syncCopySidebarPlugin(DEST_DIR, syncMode)
+        const hooksR = syncCopyHooksPlugin(DEST_DIR, syncMode)
         syncEnsureProjectConfig(DEST_DIR)
         log(`  Skills:    ${skillsR.copied} copied, ${skillsR.skipped} skipped`)
         log(`  Tools:     ${toolsR.copied} copied, ${toolsR.skipped} skipped`)
         log(`  Commands:  ${cmdsR.copied} copied, ${cmdsR.skipped} skipped`)
         log(`  Plugin:    ${pluginR.copied} copied (${pluginR.source})`)
+        log(`  Hooks:     ${hooksR.copied} copied`)
     } else {
         // Interactive path: use the local copy functions with conflict prompts.
         let overwriteAll = false, skipAll = false;
@@ -802,6 +826,8 @@ async function main() {
         copyTemplates(track);
         const pluginResult = await copySidebarPlugin(overwriteAll, skipAll);
         overwriteAll = pluginResult.overwriteAll; skipAll = pluginResult.skipAll;
+        const hooksResult = await copyHooksPlugin(overwriteAll, skipAll);
+        overwriteAll = hooksResult.overwriteAll; skipAll = hooksResult.skipAll;
         await ensureProjectConfig();
     }
 

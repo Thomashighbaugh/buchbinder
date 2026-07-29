@@ -158,13 +158,22 @@ function walkAndCopy(srcDir, destDir, mode, manifestFiles, callback) {
 // ─── Slash Commands ─────────────────────────────────────────────────────────
 
 export function copySlashCommands(destDir, mode, manifestFiles = null) {
-    // Slash commands are no longer installed. The /kombinat instant menu is
-    // registered by the sidebar plugin via api.keymap.registerLayer(). The
-    // internal routing/utility commands (kombinat-router, kombinat-gates,
-    // kombinat-split-outline) were fallback paths that polluted the user's
-    // / command list. The plugin's DialogSelect → appendPrompt flow handles
-    // all phase routing internally.
-    return { copied: 0, skipped: 0 }
+    const srcDir = path.join(SRC_DIR, 'commands')
+    const destDir2 = path.join(destDir, 'commands')
+    if (!fs.existsSync(srcDir)) return { copied: 0, skipped: 0 }
+    fs.ensureDirSync(destDir2)
+    let copied = 0, skipped = 0
+    for (const file of fs.readdirSync(srcDir).filter(f => f.endsWith('.md'))) {
+        const result = smartCopyFile(
+            path.join(srcDir, file),
+            path.join(destDir2, file),
+            mode,
+            manifestFiles ? manifestFiles.get(`commands/${file}`) : null,
+        )
+        if (result === 'copied') copied++
+        else skipped++
+    }
+    return { copied, skipped }
 }
 
 // ─── Templates ──────────────────────────────────────────────────────────────
@@ -247,7 +256,6 @@ export function copySidebarPlugin(destDir, mode, manifestFiles = null) {
         const subSrc = path.join(srcDir, entry.name)
         const subDest = path.join(destDir2, entry.name)
         if (entry.isSymbolicLink()) {
-            // Resolve the symlink target and copy the real directory contents.
             const realSrc = fs.realpathSync(subSrc)
             if (!fs.existsSync(realSrc) || !fs.statSync(realSrc).isDirectory()) continue
             fs.ensureDirSync(subDest)
@@ -275,6 +283,30 @@ export function copySidebarPlugin(destDir, mode, manifestFiles = null) {
 }
 
 /**
+ * Copy the hooks plugin from src/plugins/hooks/ to <destDir>/plugins/hooks/.
+ */
+export function copyHooksPlugin(destDir, mode, manifestFiles = null) {
+    const srcDir = path.join(SRC_DIR, 'hooks-plugin')
+    const destDir2 = path.join(destDir, 'plugins', 'hooks')
+    if (!fs.existsSync(srcDir)) return { copied: 0, skipped: 0 }
+    fs.ensureDirSync(destDir2)
+    let copied = 0, skipped = 0
+    for (const entry of fs.readdirSync(srcDir, { withFileTypes: true })) {
+        if (!entry.isFile()) continue
+        if (!entry.name.endsWith('.ts') && !entry.name.endsWith('.js')) continue
+        const result = smartCopyFile(
+            path.join(srcDir, entry.name),
+            path.join(destDir2, entry.name),
+            mode,
+            manifestFiles ? manifestFiles.get(`plugins/hooks/${entry.name}`) : null,
+        )
+        if (result === 'copied') copied++
+        else skipped++
+    }
+    return { copied, skipped }
+}
+
+/**
  * Copy a directory tree following symlinks (dereferencing them to real files).
  * Used for the plugin's lib/ symlink which points into src/lib/.
  */
@@ -294,6 +326,7 @@ function copyDirDereferenced(srcDir, destDir, mode, manifestFiles) {
 // ─── Project Config (tui.json, opencode.jsonc, package.json) ────────────────
 
 const PLUGIN_ENTRY = './plugins/kombinat-sidebar/index.js'
+const HOOKS_ENTRY = './plugins/hooks/index.js'
 
 const REQUIRED_DEPS = {
     '@opencode-ai/plugin': '1.17.9',
@@ -328,16 +361,20 @@ export function ensureProjectConfig(destDir) {
         }
     }
 
-    // opencode.jsonc
+    // opencode.jsonc — register both plugins
     if (!fs.existsSync(opencodeJsoncPath)) {
-        const config = { plugin: [PLUGIN_ENTRY] }
+        const config = { plugin: [PLUGIN_ENTRY, HOOKS_ENTRY] }
         fs.writeFileSync(opencodeJsoncPath, JSON.stringify(config, null, 2) + '\n', 'utf-8')
     } else {
         const config = parseJsonc(opencodeJsoncPath)
         if (config) {
             const plugins = Array.isArray(config.plugin) ? config.plugin : []
-            if (!plugins.some(p => typeof p === 'string' && p.endsWith('kombinat-sidebar/index.js'))) {
-                config.plugin = [...plugins, PLUGIN_ENTRY]
+            const hasSidebar = plugins.some(p => typeof p === 'string' && p.endsWith('kombinat-sidebar/index.js'))
+            const hasHooks = plugins.some(p => typeof p === 'string' && p.endsWith('hooks/index.js'))
+            if (!hasSidebar) plugins.push(PLUGIN_ENTRY)
+            if (!hasHooks) plugins.push(HOOKS_ENTRY)
+            if (!hasSidebar || !hasHooks) {
+                config.plugin = plugins
                 fs.writeFileSync(opencodeJsoncPath, JSON.stringify(config, null, 2) + '\n', 'utf-8')
             }
         }

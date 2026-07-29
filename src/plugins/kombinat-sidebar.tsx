@@ -19,6 +19,7 @@ import { useProjectState, setInjector } from './hooks/use-project-state.js'
 /** All 25 subcommands for the instant menu */
 const KOMBINAT_SUBCOMMANDS = [
   { label: 'guided',          description: 'Assess project state and run the full workflow pipeline' },
+  { label: 'ideation',        description: 'Iteratively refine premise, theme, setting, characters, conflict before constitution' },
   { label: 'manifest',        description: 'Establish creative or intellectual principles' },
   { label: 'specify',         description: 'Build story specification with premise stress-test' },
   { label: 'clarify',         description: 'Resolve specification ambiguities' },
@@ -94,7 +95,7 @@ const tui: TuiPlugin = async (api: TuiPluginApi, _o, _meta: TuiPluginMeta) => {
             value: 'kombinate',
             description: 'Open the instant Kombinate phase selection menu',
             category: 'Kombinat Writer',
-            slash: { name: 'kombinate', aliases: ['kom', 'kombinat'] },
+            slash: { name: 'kombinat', aliases: ['kom', 'k'] },
             onSelect: () => {
               const DS = api.ui.DialogSelect
               const options: TuiDialogSelectOption<string>[] = KOMBINAT_SUBCOMMANDS.map(s => ({
@@ -130,5 +131,5 @@ const tui: TuiPlugin = async (api: TuiPluginApi, _o, _meta: TuiPluginMeta) => {
   }
 }
 
-const plugin = { id: 'kombinat-sidebar', tui, server: tui }
+const plugin = { id: 'kombinat-sidebar', tui }
 export default plugin

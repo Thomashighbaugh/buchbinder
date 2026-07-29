@@ -17,6 +17,7 @@ If \`{userInput}\` begins with a recognised subcommand or alias, dispatch immedi
 
 | Subcommand | Aliases | Route to |
 |-----------|---------|----------|
+| \`ideation\` | \`idea\`, \`brainstorm\`, \`explore\` | \`/kombinat ideation\` |
 | \`manifest\` | \`const\` | \`/kombinat manifest\` |
 | \`specify\` | \`spec\` | \`/kombinat specify\` |
 | \`clarify\` | \`clar\` | \`/kombinat clarify\` |
@@ -51,6 +52,7 @@ Check \`./book/track.json\`:
 Check for the presence and status of phase output documents. The detection follows the track-specific phase order.
 
 **Fiction track detection order:**
+0. \`./book/ideation/\` has artifacts? → Past Phase 0 (ideation)
 1. \`./book/manifest.md\` exists? → Past Phase 1
 2. \`./book/specification.md\` or \`./book/specification/\` exists? → Past Phase 2
 3. \`./book/specification/\` has \`[Needs Clarification]\` markers? → Phase 3 needed
@@ -63,6 +65,7 @@ Check for the presence and status of phase output documents. The detection follo
 10. Any chapters with \`[Done]\` in task tracking? → Phases 10-11 reached
 
 **Non-fiction track detection order:**
+0. \`./book/ideation/\` has artifacts? → Past Phase 0 (ideation)
 1. \`./book/manifest.md\` exists? → Past Phase 1
 2. \`./book/research/\` has sources or research plan? → Past Phase 2
 3. Sources annotated and bibliography started? → Past Phase 3
@@ -77,7 +80,8 @@ Check for the presence and status of phase output documents. The detection follo
 
 | State | Meaning | Recommended Next |
 |-------|---------|-----------------|
-| \`not-started\` | No phase documents exist | Phase 1: \`/kombinat manifest\` |
+| \`not-started\` | No phase documents exist | Phase 0: \`/kombinat ideation\` — refine your premise before constitution |
+| \`ideation\` | Ideation artifacts exist but no manifest | Phase 1: \`/kombinat manifest\` (or return to \`/kombinat ideation\` to refine further) |
 | \`in-progress\` | Some phases complete, current phase identified | Current phase subcommand |
 | \`active-writing\` | Drafting phase, chapters exist | Phase 7: \`/kombinat draft\` or \`/kombinat critique\` |
 | \`revision-cycle\` | Critique or revision artifacts exist | Phase 8-9: \`/kombinat critique\` or \`/kombinat revise\` |
@@ -86,7 +90,7 @@ Check for the presence and status of phase output documents. The detection follo
 | \`publishing\` | All content approved, ready to export | Phase 12: \`/kombinat publish\` |
 | \`complete\` | Everything finalised | Celebrate the achievement |
 
-**IMPORTANT — Do not belabor the obvious.** When the state is \`not-started\`, simply state "New project — starting from Phase 1" and recommend \`/kombinat manifest\`. Do NOT repeatedly mention that the project is blank, empty, or has no documents — the user knows, they just created it. Be concise. One sentence of context, then the recommendation.
+**IMPORTANT — Do not belabor the obvious.** When the state is \`not-started\`, simply state "New project — start with /kombinat ideation to develop your premise, or /kombinat manifest if you already have a solid idea." Do NOT repeatedly mention that the project is blank, empty, or has no documents — the user knows, they just created it. Be concise. One sentence of context, then the recommendation.
 
 **Also check for imported files.** Before reporting state, check for:
 - \`./imported-lorebook.json\` — if present, mention "Lorebook import detected — run \`/kombinat manifest\` to convert it into series lorebook and pre-fill your manifest."
@@ -108,18 +112,19 @@ Present a roadmap that:
 Track: Fiction  |  State: Planning
 
 Phase Workflow:
-  [DONE]   1. Manifest   — Creative principles established
+  [DONE]   0. Ideation     — Premise and theme refined
+  [DONE]   1. Manifest     — Creative principles established
   [DONE]   2. Specify      — Story specification created
   [NEXT]   3. Clarify      — Resolve ambiguities in the specification
-  [PENDING] 4. Research     — Gather contextual reference material
-  [PENDING] 5. Outline      — Chapter structure and arc design
-  [PENDING] 6. Tasks        — Break outline into tracked tasks
-  [PENDING] 7. Draft        — Write chapters with pre-draft checklist
-  [PENDING] 8. Critique     — Structured feedback simulation
-  [PENDING] 9. Revise       — Plan and apply revisions
-  [PENDING] 10. Edit        — Line-level editing pass
-  [PENDING] 11. Review       — Broad project QA
-  [PENDING] 12. Publish      — Format export and submission
+  [PENDING] 4. Research    — Gather contextual reference material
+  [PENDING] 5. Outline     — Chapter structure and arc design
+  [PENDING] 6. Tasks       — Break outline into tracked tasks
+  [PENDING] 7. Draft       — Write chapters with pre-draft checklist
+  [PENDING] 8. Critique    — Structured feedback simulation
+  [PENDING] 9. Revise      — Plan and apply revisions
+  [PENDING] 10. Edit       — Line-level editing pass
+  [PENDING] 11. Review     — Broad project QA
+  [PENDING] 12. Publish    — Format export and submission
 
 To continue, type: /kombinat clarify
 \`\`\`

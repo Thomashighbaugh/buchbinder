@@ -92,15 +92,12 @@ export function copyToolsAndLib(destDir, mode, manifestFiles = null) {
         else skipped++
     })
     // Copy lib/ (.ts modules + .mjs runtime modules)
-    // lib/ is placed at <destDir>/plugins/lib/ to mirror the source layout
-    // where src/lib/ is a sibling of src/plugins/. This keeps the plugin's
-    // relative imports (../../lib/) working in both the source tree and the
-    // installed consumer project.
+    // lib/ is placed at <destDir>/plugins/lib/ — all imports point here.
+    // tools/ import ../plugins/lib/, the sidebar plugin imports ../../lib/.
     const srcLib = path.join(SRC_DIR, 'lib')
     if (fs.existsSync(srcLib)) {
         const libDest = path.join(destDir, 'plugins', 'lib')
         fs.ensureDirSync(libDest)
-        // Copy .ts modules + .mjs runtime modules (chunker, index-builder, etc.)
         for (const file of fs.readdirSync(srcLib).filter(f => (f.endsWith('.ts') && !f.endsWith('.d.ts')) || f.endsWith('.mjs'))) {
             const result = smartCopyFile(
                 path.join(srcLib, file),
@@ -111,7 +108,6 @@ export function copyToolsAndLib(destDir, mode, manifestFiles = null) {
             if (result === 'copied') copied++
             else skipped++
         }
-        // Copy scripts/ directory (lore-query.mjs, build-lore-index uses this)
         const srcScripts = path.join(srcLib, 'scripts')
         if (fs.existsSync(srcScripts)) {
             const destScripts = path.join(libDest, 'scripts')

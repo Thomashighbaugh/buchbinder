@@ -11,7 +11,7 @@
  */
 
 import { tool } from "@opencode-ai/plugin"
-import { splitOutline } from "../lib/outline-splitter.js"
+import { splitOutline } from "../plugins/lib/outline-splitter.js"
 import path from "path"
 import os from "os"
 

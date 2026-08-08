@@ -171,15 +171,13 @@ async function copyToolsAndLib(overwriteAll, skipAll) {
         }
     }
     await walkDir(srcTools);
-    // Copy lib/ (TypeScript modules + scripts/) at <destDir>/plugins/lib/
-    // to mirror the source layout where src/lib/ is a sibling of src/plugins/.
-    // This keeps the plugin's relative imports (../../lib/) working.
+    // Copy lib/ to plugins/lib/ — all imports point there.
+    // tools/ import ../plugins/lib/, the sidebar plugin imports ../../lib/.
     const srcLib = path.join(SRC_DIR, 'lib');
     if (fs.existsSync(srcLib)) {
         const libDest = path.join(DEST_DIR, 'plugins', 'lib');
         fs.ensureDirSync(libDest);
-        // Copy .ts modules
-        for (const file of fs.readdirSync(srcLib).filter(f => f.endsWith('.ts') && !f.endsWith('.d.ts'))) {
+        for (const file of fs.readdirSync(srcLib).filter(f => (f.endsWith('.ts') && !f.endsWith('.d.ts')) || f.endsWith('.mjs'))) {
             const srcFile = path.join(srcLib, file);
             const destFile = path.join(libDest, file);
             if (newSkipAll) { skipped++; continue; }
@@ -187,7 +185,6 @@ async function copyToolsAndLib(overwriteAll, skipAll) {
             fs.copySync(srcFile, destFile, { overwrite: true });
             copied++;
         }
-        // Copy scripts/ directory (lore-query.mjs etc.)
         const srcScripts = path.join(srcLib, 'scripts');
         if (fs.existsSync(srcScripts)) {
             const destScripts = path.join(libDest, 'scripts');
@@ -221,6 +218,20 @@ async function copySlashCommands(overwriteAll, skipAll) {
     }
     success(`${copied} slash commands synchronized`);
     return { overwriteAll, skipAll, copied, skipped: 0 };
+}
+
+// ─── Rules ──────────────────────────────────────────────────────────────────
+function copyRules() {
+    const srcDir = path.join(SRC_DIR, 'rules');
+    const destDir = path.join(DEST_DIR, 'rules');
+    if (!fs.existsSync(srcDir)) return;
+    fs.ensureDirSync(destDir);
+    let copied = 0;
+    for (const file of fs.readdirSync(srcDir).filter(f => f.endsWith('.md'))) {
+        fs.copySync(path.join(srcDir, file), path.join(destDir, file), { overwrite: true });
+        copied++;
+    }
+    success(`${copied} rules synchronized`);
 }
 
 // ─── Templates ──────────────────────────────────────────────────────────────
@@ -806,6 +817,7 @@ async function main() {
         const toolsR = syncCopyToolsAndLib(DEST_DIR, syncMode)
         const cmdsR = syncCopySlashCommands(DEST_DIR, syncMode)
         syncCopyTemplates(DEST_DIR, track)
+        copyRules()
         const pluginR = syncCopySidebarPlugin(DEST_DIR, syncMode)
         const hooksR = syncCopyHooksPlugin(DEST_DIR, syncMode)
         syncEnsureProjectConfig(DEST_DIR)
@@ -836,6 +848,7 @@ async function main() {
         const cmdResult = await copySlashCommands(overwriteAll, skipAll);
         overwriteAll = cmdResult.overwriteAll; skipAll = cmdResult.skipAll;
         copyTemplates(track);
+        copyRules();
         const pluginResult = await copySidebarPlugin(overwriteAll, skipAll);
         overwriteAll = pluginResult.overwriteAll; skipAll = pluginResult.skipAll;
         const hooksResult = await copyHooksPlugin(overwriteAll, skipAll);

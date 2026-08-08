@@ -85,9 +85,24 @@ interface PhaseState {
 }
 
 /** Extract the kombinat phase from a message, if any. */
-function detectPhase(text: string): string | null {
+function detectPhase(text: string | undefined | null): string | null {
+  if (!text || typeof text !== 'string') return null
   const m = text.match(/\/kombinat(?:-router)?\s+(\S+)/)
   return m ? m[1] : null
+}
+
+/** Safely extract text content from a UserMessage (content field varies by SDK version). */
+function getMessageText(message: any): string {
+  if (!message) return ''
+  if (typeof message.content === 'string') return message.content
+  if (typeof message.text === 'string') return message.text
+  if (Array.isArray(message.parts)) {
+    return message.parts
+      .filter((p: any) => p?.type === 'text' && typeof p.text === 'string')
+      .map((p: any) => p.text)
+      .join(' ')
+  }
+  return ''
 }
 
 /** Files that are safe to cache (deterministic reads). */
@@ -198,7 +213,7 @@ Next step: ${phaseState.nextStep || 'Run /kombinat guided to assess state'}
     // Reducing maxOutputTokens saves API costs and speeds up responses.
     "chat.params": async (input, output) => {
       // Detect phase from the user message
-      const phase = detectPhase(input.message.content)
+      const phase = detectPhase(getMessageText(input.message))
       if (!phase) return
 
       const budget = PHASE_BUDGETS[phase]
@@ -213,7 +228,7 @@ Next step: ${phaseState.nextStep || 'Run /kombinat guided to assess state'}
     // to keep the agent going. For kombinat phases, this is wasteful —
     // the phase should end cleanly. Skip it.
     "experimental.compaction.autocontinue": async (input, output) => {
-      const phase = detectPhase(input.message.content)
+      const phase = detectPhase(getMessageText(input.message))
       if (phase) {
         // Phase commands should not auto-continue — the agent reports
         // results and stops. The user decides what to do next.

@@ -1,12 +1,12 @@
 {
-  "name": "kombinat-sidebar",
+  "name": "buchbinder-sidebar",
   "version": "0.1.0",
-  "description": "Kombinat Writer TUI Sidebar Plugin — instant /kombinat menu, dashboard, gates, diff, visualizations",
+  "description": "Buchbinder TUI Sidebar Plugin — instant /buchbinder menu, dashboard, gates, diff, visualizations",
   "type": "module",
-  "main": "./kombinat-sidebar.tsx",
+  "main": "./buchbinder-sidebar.tsx",
   "exports": {
-    ".": "./kombinat-sidebar.tsx",
-    "./tui": "./kombinat-sidebar.tsx"
+    ".": "./buchbinder-sidebar.tsx",
+    "./tui": "./buchbinder-sidebar.tsx"
   },
   "oc-plugin": ["tui"],
   "scripts": {

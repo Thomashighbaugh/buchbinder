@@ -25,7 +25,7 @@ export function SidebarFooter(props: { session_id: string; state: SidebarState }
         </Show>
       </box>
       <text style={{ fg: c.textMuted }}>
-        {'Scroll for all sections · /kombinat menu'}
+        {'Scroll for all sections · /buchbinder menu'}
       </text>
     </box>
   )

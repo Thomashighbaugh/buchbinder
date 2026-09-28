@@ -10,7 +10,7 @@ export function ThreadMatrixView(props: { state: SidebarState }) {
   return (
     <Show
       when={viz()?.threads.length}
-      fallback={<text style={{ fg: c.textMuted }}>{'No thread data — run /kombinat review'}</text>}
+      fallback={<text style={{ fg: c.textMuted }}>{'No thread data — run /buchbinder review'}</text>}
     >
       <box flexDirection="column">
         <text style={{ fg: c.cyan }}>{'Thread Matrix'}</text>

@@ -17,7 +17,7 @@
     "types": ["@opencode-ai/plugin"]
   },
   "include": [
-    "kombinat-sidebar.tsx",
+    "buchbinder-sidebar.tsx",
     "components/**/*.tsx",
     "hooks/**/*.ts",
     "utils/**/*.ts"

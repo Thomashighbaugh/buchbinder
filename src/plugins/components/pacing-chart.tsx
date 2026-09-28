@@ -10,7 +10,7 @@ export function PacingChart(props: { state: SidebarState }) {
   return (
     <Show
       when={viz()?.pacing.length}
-      fallback={<text style={{ fg: c.textMuted }}>{'No pacing data — run /kombinat verify'}</text>}
+      fallback={<text style={{ fg: c.textMuted }}>{'No pacing data — run /buchbinder verify'}</text>}
     >
       <box flexDirection="column">
         <text style={{ fg: c.cyan }}>{'Pacing Heartbeat'}</text>

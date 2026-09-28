@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 /**
- * kombinat-refresh — idempotent plugin sync for kombinat-writer
+ * buchbinder-refresh — idempotent plugin sync for buchbinder
  *
- * Compares the current kombinat-writer source tree against what was last
- * installed (recorded in .opencode/.kombinat-install-manifest.json) and
+ * Compares the current buchbinder source tree against what was last
+ * installed (recorded in .opencode/.buchbinder-install-manifest.json) and
  * copies any changed/new files into the consumer project's .opencode/
  * directory, while:
  *
@@ -16,13 +16,13 @@
  *     whose source files have changed)
  *
  * Usage:
- *   npx kombinat-refresh                    # interactive + default track='fiction'
- *   npx kombinat-refresh --track non-fiction
- *   npx kombinat-refresh --prune            # also remove files that vanished from source
- *   npx kombinat-refresh --force            # skip the locally-modified check (destructive)
- *   npx kombinat-refresh --postinstall      # skip prompts (used by npm postinstall)
- *   npx kombinat-refresh --skip-build       # skip the sidebar build (for debugging)
- *   npx kombinat-refresh --skip-index       # skip the lore index rebuild
+ *   npx buchbinder-refresh                    # interactive + default track='fiction'
+ *   npx buchbinder-refresh --track non-fiction
+ *   npx buchbinder-refresh --prune            # also remove files that vanished from source
+ *   npx buchbinder-refresh --force            # skip the locally-modified check (destructive)
+ *   npx buchbinder-refresh --postinstall      # skip prompts (used by npm postinstall)
+ *   npx buchbinder-refresh --skip-build       # skip the sidebar build (for debugging)
+ *   npx buchbinder-refresh --skip-index       # skip the lore index rebuild
  *
  * Exit codes:
  *   0  — success, no locally-modified files were detected
@@ -103,10 +103,10 @@ function parseArgs(argv) {
 }
 
 function printHelp() {
-    log(`kombinat-refresh — idempotent plugin sync for kombinat-writer`)
+    log(`buchbinder-refresh — idempotent plugin sync for buchbinder`)
     log('')
     log(`Usage:`)
-    log(`  npx kombinat-refresh [options]`)
+    log(`  npx buchbinder-refresh [options]`)
     log('')
     log(`Options:`)
     log(`  --track <fiction|non-fiction|mixed>  Track to use for skills/templates (default: fiction)`)
@@ -138,11 +138,11 @@ async function main() {
     if (!existingManifest) {
         if (args.postinstall) {
             warn('No prior install recorded; nothing to refresh.')
-            warn('Run `npx kombinat-writer` to perform the initial install.')
+            warn('Run `npx buchbinder` to perform the initial install.')
             process.exit(0)
         }
         // Interactive first-time: defer to install.mjs
-        warn('No prior install recorded in this project. Delegating to kombinat-writer for initial install...')
+        warn('No prior install recorded in this project. Delegating to buchbinder for initial install...')
         try {
             execSync(`node "${path.join(PACKAGE_ROOT, 'bin', 'install.mjs')}" --non-interactive`, {
                 stdio: 'inherit',
@@ -153,13 +153,13 @@ async function main() {
             process.exit(2)
         }
         // After install, the manifest will be written; exit so the user can re-run refresh.
-        success('Initial install complete. Re-run `npx kombinat-refresh` to verify the sync.')
+        success('Initial install complete. Re-run `npx buchbinder-refresh` to verify the sync.')
         process.exit(0)
     }
 
     // ── Refresh path ──
     log('')
-    log(colorize('bold', 'kombinat-refresh — idempotent plugin sync'))
+    log(colorize('bold', 'buchbinder-refresh — idempotent plugin sync'))
     log(describeOwnership())
     log('')
     log(`  Package:    ${PACKAGE_ROOT} @ ${existingManifest.packageCommit || 'unknown'}`)
@@ -217,7 +217,7 @@ async function main() {
             log(`  Sources:   ${indexResult.sourcesTotal} (${indexResult.sourcesAdded} added, ${indexResult.sourcesUpdated} updated, ${indexResult.sourcesUnchanged} unchanged)`)
         } catch (err) {
             warn(`Lore index build failed: ${err.message}`)
-            warn('You can rebuild it later with `npx kombinat-index`.')
+            warn('You can rebuild it later with `npx buchbinder-index`.')
         }
     }
 
@@ -285,7 +285,7 @@ async function main() {
     writeManifest(destDir, finalManifest)
 
     header('Refresh complete')
-    log(`  Manifest:    ${path.join(destDir, '.kombinat-install-manifest.json')}`)
+    log(`  Manifest:    ${path.join(destDir, '.buchbinder-install-manifest.json')}`)
     log(`  Index:       ${indexResult ? `${indexResult.chunksTotal} chunks` : 'unchanged'}`)
     if (locallyModified.length > 0) {
         log(colorize('yellow', `  Drift:       ${locallyModified.length} locally-modified files preserved`))

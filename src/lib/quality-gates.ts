@@ -452,7 +452,7 @@ export function preDraftGate(
   if (profilesExist(projectRoot)) {
     evidence.push('✓ Voice profiles exist — voice check will run after draft');
   } else if (chapterNumber > 3) {
-    blocking.push('Voice profiles not generated — run /kombinat verify voice-init after chapter 3');
+    blocking.push('Voice profiles not generated — run /buchbinder verify voice-init after chapter 3');
   } else {
     warnings.push('Voice profiles not yet generated (expected — generated after chapter 3)');
   }
@@ -889,7 +889,7 @@ export function nonNegotiablesGate(
       passed: true,
       blocking: [],
       warnings: [],
-      evidence: ['No creative constraints file found — gate passes by default. Declare constraints via /kombinat manifest.'],
+      evidence: ['No creative constraints file found — gate passes by default. Declare constraints via /buchbinder manifest.'],
     };
   }
 

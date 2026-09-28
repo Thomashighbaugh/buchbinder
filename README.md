@@ -1,20 +1,20 @@
-# Kombinat Writer — Professional Book Writing Workflow for OpenCode
+# Buchbinder — Professional Book Writing Workflow for OpenCode
 
-**Kombinat Writer** is a professional-grade book writing workflow for OpenCode that guides authors from initial concept to completed, publishable manuscript. It supports fiction, non-fiction, mixed, and series projects through a structured phase system with fine-grained outlining, XML-structured drafting, 25 hard-block quality gates, 8 critique modes, three-pass editing, multi-pass revision, and pandoc-based publishing.
+**Buchbinder** is a professional-grade book writing workflow for OpenCode that guides authors from initial concept to completed, publishable manuscript. It supports fiction, non-fiction, mixed, and series projects through a structured phase system with fine-grained outlining, XML-structured drafting, 25 hard-block quality gates, 8 critique modes, three-pass editing, multi-pass revision, and pandoc-based publishing.
 
-Named after the Old English *kombinat* — the oral poet who composed and recited epic verse, transmitting works like *Beowulf* through craft rather than inscription — Kombinat Writer is a tool for the writer's craft in the age of AI-assisted composition.
+Named after the German *Buchbinder* — the bookbinder, the craftsperson who folds, sews, and binds printed sheets into a finished, durable book — Buchbinder is a tool for the writer's craft in the age of AI-assisted composition.
 
 ---
 
 ## Origin
 
-Kombinat Writer is a substantial expansion and re-architecture of [novel-writer-english](https://github.com/JeroTan/novel-writer-english) by JeroTan, which was itself a translation and platform-agnostic adaptation of [novel-writer-skills](https://github.com/wordflowlab/novel-writer-skills) by wordflowlab. See [ATTRIBUTION.md](./ATTRIBUTION.md) for the full chain.
+Buchbinder is a substantial expansion and re-architecture of [novel-writer-english](https://github.com/JeroTan/novel-writer-english) by JeroTan, which was itself a translation and platform-agnostic adaptation of [novel-writer-skills](https://github.com/wordflowlab/novel-writer-skills) by wordflowlab. See [ATTRIBUTION.md](./ATTRIBUTION.md) for the full chain.
 
 The author's earlier non-agentic project, [Fiction Fabricator](https://github.com/Thomashighbaugh/fiction-fabricator) — a Python CLI for multi-phase novel generation with XML state management, lorebook support, and multi-format export — contributed key concepts that were refined and re-architected for the agentic context. Fiction Fabricator itself drew inspiration from [pulpgen](https://github.com/pulpgen-dev/pulpgen) and the broader AI creative writing ecosystem, including SillyTavern character card formats and lorebook structures from the AI roleplay community.
 
-The shift from non-agentic Python scripts to an agentic workflow design was inspired by the terminal-based agentic coding approach of [Claude Code](https://www.anthropic.com/claude-code) by Anthropic and made possible by [OpenCode](https://github.com/sst/opencode) — the agentic coding platform whose hub-and-skill architecture, slash command system, per-project configuration model, and TypeScript tool loading are the foundation Kombinat Writer runs on.
+The shift from non-agentic Python scripts to an agentic workflow design was inspired by the terminal-based agentic coding approach of [Claude Code](https://www.anthropic.com/claude-code) by Anthropic and made possible by [OpenCode](https://github.com/sst/opencode) — the agentic coding platform whose hub-and-skill architecture, slash command system, per-project configuration model, and TypeScript tool loading are the foundation Buchbinder runs on.
 
-**What Kombinat Writer adds beyond its antecedents:**
+**What Buchbinder adds beyond its antecedents:**
 
 - 25-subcommand workflow with 26 spec files, 40 library files, and 34 skill files
 - Fine-grained outline with scene beats, setup/payoff chains, and continuity anchors
@@ -42,7 +42,7 @@ The shift from non-agentic Python scripts to an agentic workflow design was insp
 
 ```bash
 # In your book project directory
-npx kombinat-writer
+npx buchbinder
 ```
 
 The interactive installer will:
@@ -51,13 +51,13 @@ The interactive installer will:
 3. Install commands, skills, templates, tools, and lib files into `.opencode/`
 4. Initialize track metadata
 
-After installation, type `/kombinat` in OpenCode to open the workflow menu, or type `/kombinat <subcommand>` for direct dispatch.
+After installation, type `/buchbinder` in OpenCode to open the workflow menu, or type `/buchbinder <subcommand>` for direct dispatch.
 
 ---
 
 ## The 25-Subcommand Workflow
 
-All functionality is accessed through the `/kombinat` hub command. `/kombinat` with no arguments opens an interactive menu via state detection. `/kombinat <subcommand>` routes directly to the specified phase.
+All functionality is accessed through the `/buchbinder` hub command. `/buchbinder` with no arguments opens an interactive menu via state detection. `/buchbinder <subcommand>` routes directly to the specified phase.
 
 ### Phase Subcommands
 
@@ -98,7 +98,7 @@ All functionality is accessed through the `/kombinat` hub command. `/kombinat` w
 
 ## Quality Gate System
 
-Kombinat uses **hard-block quality gates** — gates produce evidence-based pass/fail results that block progression on failure. No soft warnings: a gate either passes or stops the workflow with specific evidence.
+Buchbinder uses **hard-block quality gates** — gates produce evidence-based pass/fail results that block progression on failure. No soft warnings: a gate either passes or stops the workflow with specific evidence.
 
 ### 26 Gates Across 8 Categories
 
@@ -124,7 +124,7 @@ Prose quality scorecard: 5 hard-block metrics (filter words, adverbs, passive vo
 
 Echo detection: 2 hard-block checks (word echo, crutch words) + 2 warning checks (structural echo, beat echo).
 
-Run `/kombinat verify` to run any gate on demand. Run `/kombinat verify --all` to run all gates.
+Run `/buchbinder verify` to run any gate on demand. Run `/buchbinder verify --all` to run all gates.
 
 ---
 
@@ -213,7 +213,7 @@ Linguistic analyses run during editing:
 
 ## Phase 2 Structural Analyses
 
-Run during `/kombinat review` — 14 dedicated analysis libraries:
+Run during `/buchbinder review` — 14 dedicated analysis libraries:
 
 | Analysis | What It Detects |
 |----------|----------------|
@@ -236,7 +236,7 @@ Run during `/kombinat review` — 14 dedicated analysis libraries:
 
 ## Series Lorebook Infrastructure
 
-For multi-book series, Kombinat provides a shared knowledge base:
+For multi-book series, Buchbinder provides a shared knowledge base:
 
 ```
 book/series/lorebook/
@@ -247,16 +247,16 @@ book/series/lorebook/
 └── world.md          # World-building canon
 ```
 
-- `/kombinat series init` — Initialize series lorebook
-- `/kombinat series sync` — Sync book-level knowledge to lorebook
-- `/kombinat series audit` — Audit lorebook for inconsistencies
-- `/kombinat series register` — Register a new book in the series
-- `/kombinat series status` — Show series status and per-book progress
-- `/kombinat series import` — Import external lorebook (SillyTavern, JanitorAI, CharacterAI)
+- `/buchbinder series init` — Initialize series lorebook
+- `/buchbinder series sync` — Sync book-level knowledge to lorebook
+- `/buchbinder series audit` — Audit lorebook for inconsistencies
+- `/buchbinder series register` — Register a new book in the series
+- `/buchbinder series status` — Show series status and per-book progress
+- `/buchbinder series import` — Import external lorebook (SillyTavern, JanitorAI, CharacterAI)
 
 ### Semantic Lore Injection
 
-When generating content (outline, draft, critique, revise, review), Kombinat uses **semantic lore retrieval** to inject only the most relevant lore into the prompt — not the entire lorebook. This keeps the context window focused and reduces token usage.
+When generating content (outline, draft, critique, revise, review), Buchbinder uses **semantic lore retrieval** to inject only the most relevant lore into the prompt — not the entire lorebook. This keeps the context window focused and reduces token usage.
 
 The retrieval pipeline uses local Ollama models:
 
@@ -282,7 +282,7 @@ External lorebook import supports:
 
 #### On-disk Index (v3)
 
-Lore retrieval is fast because Kombinat maintains an on-disk embedding index at:
+Lore retrieval is fast because Buchbinder maintains an on-disk embedding index at:
 
 ```
 .opencode/cache/lore-index/index.json
@@ -305,7 +305,7 @@ The index is built once and reused on every phase invocation. Without the index,
 **Build / refresh the index:**
 ```bash
 # Build or incrementally update the index
-npx kombinat-index
+npx buchbinder-index
 
 # Or from the lore-query script itself
 bun .opencode/tools/lib/scripts/lore-query.mjs --build
@@ -314,7 +314,7 @@ bun .opencode/tools/lib/scripts/lore-query.mjs --build
 bun .opencode/tools/lib/scripts/lore-query.mjs --status
 ```
 
-The index build is **incremental**: re-running on an up-to-date index is a no-op. Only source files whose content has changed since the last build are re-chunked and re-embedded. `npx kombinat-refresh` (see below) rebuilds the index automatically when source files have changed.
+The index build is **incremental**: re-running on an up-to-date index is a no-op. Only source files whose content has changed since the last build are re-chunked and re-embedded. `npx buchbinder-refresh` (see below) rebuilds the index automatically when source files have changed.
 
 **Set `EMBED_MODEL` and `RERANK_MODEL` env vars** to override the default model names. Defaults:
 - `EMBED_MODEL=pedrohml/mxbai-embed-large:latest`
@@ -325,12 +325,12 @@ The index build is **incremental**: re-running on an up-to-date index is a no-op
 For draft, critique, and revise phases, the lore query can **pin** specific chapters to be included **verbatim** in the context, regardless of semantic score. This is critical for continuity — the agent drafting chapter N needs the exact last scene of N-1.
 
 ```bash
-# /kombinat draft Chapter 5 → include the entire prior chapter (4) verbatim
+# /buchbinder draft Chapter 5 → include the entire prior chapter (4) verbatim
 bun .opencode/tools/lib/scripts/lore-query.mjs \
   --query "Draft context for chapter 5" \
   --pin-chapter 5 --pin-side previous --top 5 --rerank
 
-# /kombinat critique Chapter 5 → include both N-1 and N+1 verbatim
+# /buchbinder critique Chapter 5 → include both N-1 and N+1 verbatim
 bun .opencode/tools/lib/scripts/lore-query.mjs \
   --query "Critique context for chapter 5" \
   --pin-chapter 5 --pin-side both --top 5 --rerank
@@ -379,61 +379,61 @@ This doctrine is restated in each phase spec (`outline`, `draft`, `critique`, `r
 
 ### Local Overrides via HTML Comments
 
-Kombinat ships a set of phase specs (`src/tools/hubs/kombinat/{outline,draft,critique,revise,review}.ts`) that you may want to customize for your project. Because the `npx kombinat-refresh` command preserves locally-modified files (see below), a common workflow is:
+Buchbinder ships a set of phase specs (`src/tools/hubs/buchbinder/{outline,draft,critique,revise,review}.ts`) that you may want to customize for your project. Because the `npx buchbinder-refresh` command preserves locally-modified files (see below), a common workflow is:
 
-1. Run `npx kombinat-refresh` once after install to set up the baseline.
-2. Edit a phase spec (e.g. `.opencode/tools/hubs/kombinat/outline.ts`) to add a custom instruction wrapped in HTML comments for clarity.
+1. Run `npx buchbinder-refresh` once after install to set up the baseline.
+2. Edit a phase spec (e.g. `.opencode/tools/hubs/buchbinder/outline.ts`) to add a custom instruction wrapped in HTML comments for clarity.
 3. Subsequent refreshes leave your edit alone — the file appears in the `locallyModified[]` list in the refresh summary.
 
 Example:
 ```ts
-// .opencode/tools/hubs/kombinat/draft.ts
-// <!-- kombinat:override -->
+// .opencode/tools/hubs/buchbinder/draft.ts
+// <!-- buchbinder:override -->
 // Custom: always end chapters on a sensory beat, not a dialogue beat.
-// <!-- /kombinat:override -->
+// <!-- /buchbinder:override -->
 ```
 
-The override survives refreshes because `npx kombinat-refresh` diffs your file against the source and skips the copy when the SHA differs. Use `--force` to override (destructive).
+The override survives refreshes because `npx buchbinder-refresh` diffs your file against the source and skips the copy when the SHA differs. Use `--force` to override (destructive).
 
 ### Per-project Install Model
 
-Kombinat-writer installs **per-project**, not globally. Each book project has its own `.opencode/` directory containing its own copy of the plugin's skills, tools, templates, slash commands, and TUI sidebar plugin. This mirrors the Nix/dependency-isolation pattern: pinning per project means a project created today will build the same way a year from now on a different machine.
+Buchbinder installs **per-project**, not globally. Each book project has its own `.opencode/` directory containing its own copy of the plugin's skills, tools, templates, slash commands, and TUI sidebar plugin. This mirrors the Nix/dependency-isolation pattern: pinning per project means a project created today will build the same way a year from now on a different machine.
 
-The install writes `.opencode/opencode.jsonc`, `.opencode/tui.json`, and `.opencode/package.json` to register the kombinat-sidebar plugin as a project-local plugin. It does **not** touch your global opencode config, `~/.config/opencode`, or your global `node_modules`. Plugin-owned subtrees are: `skills/`, `tools/`, `templates/`, `commands/`, `plugins/`, plus the three config files. Everything else under `.opencode/` (and the project-root `book/`, `memory/`, `output/`, `series/` directories) is project-owned and never touched by install or refresh.
+The install writes `.opencode/opencode.jsonc`, `.opencode/tui.json`, and `.opencode/package.json` to register the buchbinder-sidebar plugin as a project-local plugin. It does **not** touch your global opencode config, `~/.config/opencode`, or your global `node_modules`. Plugin-owned subtrees are: `skills/`, `tools/`, `templates/`, `commands/`, `plugins/`, plus the three config files. Everything else under `.opencode/` (and the project-root `book/`, `memory/`, `output/`, `series/` directories) is project-owned and never touched by install or refresh.
 
 The first time you install, the installer prints an acknowledgement screen explaining the per-project model and asks you to confirm before proceeding. The acknowledgement is not recorded — you re-acknowledge on every fresh install.
 
 ### Refreshing an Existing Install
 
-Once a project is installed, use `npx kombinat-refresh` to sync updates:
+Once a project is installed, use `npx buchbinder-refresh` to sync updates:
 
 ```bash
 # Default: sync changed/new files, preserve your local edits
-npx kombinat-refresh
+npx buchbinder-refresh
 
 # Also remove files that disappeared from source
-npx kombinat-refresh --prune
+npx buchbinder-refresh --prune
 
 # Overwrite locally-modified files (destructive)
-npx kombinat-refresh --force
+npx buchbinder-refresh --force
 
 # Skip the sidebar TypeScript build (faster, for iteration)
-npx kombinat-refresh --skip-build
+npx buchbinder-refresh --skip-build
 
 # Skip the lore index rebuild
-npx kombinat-refresh --skip-index
+npx buchbinder-refresh --skip-index
 
 # For postinstall / CI: skip prompts, defaults track='fiction'
-npx kombinat-refresh --postinstall
+npx buchbinder-refresh --postinstall
 ```
 
-`kombinat-refresh`:
+`buchbinder-refresh`:
 - Always rebuilds the TypeScript-derived sidebar bundle (`npm run build:sidebar` in the package).
 - Always rebuilds the lore index (incrementally).
 - Preserves files you've locally modified (HTML-comment override workflow).
 - Never touches project-owned paths.
 
-The `postinstall` script in `package.json` calls `node bin/refresh.mjs --postinstall || true` so `npm install kombinat-writer` from a consumer project also triggers a sync. This is idempotent — re-running on an up-to-date project is a no-op.
+The `postinstall` script in `package.json` calls `node bin/refresh.mjs --postinstall || true` so `npm install buchbinder` from a consumer project also triggers a sync. This is idempotent — re-running on an up-to-date project is a no-op.
 
 Exit codes:
 - `0` — success, no drift
@@ -483,7 +483,7 @@ Per-character AND per-narration voice fingerprints:
 
 ## Human-in-the-Loop Features
 
-Kombinat integrates 8 HITL features to keep the author in control of the AI-assisted process:
+Buchbinder integrates 8 HITL features to keep the author in control of the AI-assisted process:
 
 ### Phase Preview
 
@@ -577,7 +577,7 @@ JSON checkpoints save state after each phase, enabling resume:
 }
 ```
 
-`/kombinat resume` loads checkpoint, diffs files against content hash, and reports what changed since the checkpoint was saved.
+`/buchbinder resume` loads checkpoint, diffs files against content hash, and reports what changed since the checkpoint was saved.
 
 ---
 
@@ -586,7 +586,7 @@ JSON checkpoints save state after each phase, enabling resume:
 ```
 project/
 ├── .opencode/               # Installed workflow
-│   ├── commands/kombinat-router.md  # Hub phase router (direct phase execution)
+│   ├── commands/buchbinder-router.md  # Hub phase router (direct phase execution)
 │   ├── skills/               # 34 SKILL.md files across 5 categories
 │   │   ├── quality-assurance/
 │   │   ├── critique/
@@ -595,7 +595,7 @@ project/
 │   │   ├── fiction/genre-knowledge/
 │   │   └── non-fiction/
 │   ├── tools/
-│   │   ├── hubs/kombinat/    # 26 subcommand spec files
+│   │   ├── hubs/buchbinder/    # 26 subcommand spec files
 │   │   └── lib/             # 32 library files
 │   └── templates/           # Track + series templates
 ├── book/                    # All book content
@@ -628,7 +628,7 @@ All pipeline phases default to batch processing:
 - **edit**: All chapters or up to 6
 - **cycle**: Full draft→critique→revise→edit for all chapters
 
-Single-chapter is an explicit override: `/kombinat draft 5` or `/kombinat edit Chapter 3`.
+Single-chapter is an explicit override: `/buchbinder draft 5` or `/buchbinder edit Chapter 3`.
 
 Shared context (constitution, specification, knowledge, tracking, style sheet) is loaded **once per batch**, not per chapter.
 
@@ -638,15 +638,15 @@ Shared context (constitution, specification, knowledge, tracking, style sheet) i
 
 ```bash
 git clone <repo>
-cd kombinat-writer
+cd buchbinder
 npm install
 npx tsc --noEmit    # Type check
 node bin/install.mjs test-dir   # Test installation
 ```
 
 Source structure:
-- `src/commands/kombinat-router.md` — Hub phase router (direct `/kombinat-router <phase>`)
-- `src/tools/hubs/kombinat/` — 26 subcommand spec files
+- `src/commands/buchbinder-router.md` — Hub phase router (direct `/buchbinder-router <phase>`)
+- `src/tools/hubs/buchbinder/` — 26 subcommand spec files
 - `src/lib/` — 32 library files (gates, voice, checkpoints, analyses, etc.)
 - `src/skills/` — 34 SKILL.md files across 5 categories
 - `src/templates/` — Track templates (fiction, non-fiction, series)
@@ -668,7 +668,7 @@ This project builds upon the work of multiple antecedent projects:
 - **JeroTan** — [novel-writer-english](https://github.com/JeroTan/novel-writer-english) (MIT) — English translation and eight-step fiction workflow
 - **Thomas Highbaugh** — [Fiction Fabricator](https://github.com/Thomashighbaugh/fiction-fabricator) (MIT) — the author's earlier non-agentic AI novel generator; contributed multi-phase generation, XML state management, lorebook system, and export concepts that were refined for the agentic context
 - **pulpgen-dev** — [pulpgen](https://github.com/pulpgen-dev/pulpgen) (MIT) — AI novel drafting agent that inspired Fiction Fabricator's multi-phase approach and patch-based state tracking
-- **OpenCode team** — [OpenCode](https://github.com/sst/opencode) — the agentic coding platform whose hub-and-skill architecture, slash command system, and per-project configuration model are the foundation Kombinat Writer runs on
+- **OpenCode team** — [OpenCode](https://github.com/sst/opencode) — the agentic coding platform whose hub-and-skill architecture, slash command system, and per-project configuration model are the foundation Buchbinder runs on
 - **Anthropic** — [Claude Code](https://www.anthropic.com/claude-code) — terminal-based agentic coding approach that inspired the shift from non-agentic Python scripts to an agentic workflow design
 
-See [ATTRIBUTION.md](./ATTRIBUTION.md) for the full attribution chain and a detailed accounting of what Kombinat Writer adds.
+See [ATTRIBUTION.md](./ATTRIBUTION.md) for the full attribution chain and a detailed accounting of what Buchbinder adds.

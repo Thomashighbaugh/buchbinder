@@ -2,7 +2,7 @@
  * splitOutline — Tool wrapper for the outline splitter library.
  *
  * The agent calls this after saving ./book/outline.md during the
- * /kombinat outline phase, or as a recovery action if per-chapter
+ * /buchbinder outline phase, or as a recovery action if per-chapter
  * files are missing.
  *
  * The tool is a thin wrapper around the library so it can be invoked
@@ -11,7 +11,7 @@
  */
 
 import { tool } from "@opencode-ai/plugin"
-import { splitOutline } from "../plugins/lib/outline-splitter.js"
+import { splitOutline } from "../lib/outline-splitter.js"
 import path from "path"
 import os from "os"
 

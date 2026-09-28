@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 /**
- * kombinat-index — Build or update the lore/knowledge/outline/draft index
+ * buchbinder-index — Build or update the lore/knowledge/outline/draft index
  *
  * Thin CLI wrapper around src/lib/index-builder.mjs. Installed by the
  * per-project installer into .opencode/tools/lib/scripts/ alongside
- * lore-query.mjs, and exposed as the `kombinat-index` bin entry.
+ * lore-query.mjs, and exposed as the `buchbinder-index` bin entry.
  *
  * Usage:
- *   npx kombinat-index [project-root] [--force] [--quiet]
- *   npx kombinat-index --status [project-root]
+ *   npx buchbinder-index [project-root] [--force] [--quiet]
+ *   npx buchbinder-index --status [project-root]
  *
  * If project-root is omitted, defaults to the current working directory.
  *
@@ -38,8 +38,8 @@ for (let i = 0; i < args.length; i++) {
     else if (a === '--force') force = true
     else if (a === '--quiet') quiet = true
     else if (a === '--help' || a === '-h') {
-        console.log('Usage: kombinat-index [project-root] [--force] [--quiet]')
-        console.log('       kombinat-index --status [project-root]')
+        console.log('Usage: buchbinder-index [project-root] [--force] [--quiet]')
+        console.log('       buchbinder-index --status [project-root]')
         process.exit(0)
     } else if (!a.startsWith('--')) {
         projectRoot = resolve(a)
@@ -61,6 +61,6 @@ try {
     }
     process.exit(0)
 } catch (err) {
-    console.error(`[kombinat-index] Build failed: ${err.message}`)
+    console.error(`[buchbinder-index] Build failed: ${err.message}`)
     process.exit(2)
 }

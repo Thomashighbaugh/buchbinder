@@ -31,7 +31,7 @@ observation to a location — "Page 14, third paragraph: the claim that
 X causes Y is supported only by study Z, which has been criticised for
 sample bias (refs. 12-14). Consider acknowledging this limitation."
 
-Be **kombinate-appropriate**: evaluate against the work's stated aims and
+Be **binding-appropriate**: evaluate against the work's stated aims and
 genre conventions, not an idealised version. Distinguish factual errors
 from disputed interpretations where reasonable experts disagree. Avoid
 ad hominem, dismissive language, and personal preference masquerading
@@ -49,7 +49,7 @@ core dimensions of accuracy, rigour, and fairness.
 
 ## Review Report Structure
 
-Organise in three sections. **Summary**: restate thesis and kombinate,
+Organise in three sections. **Summary**: restate thesis and binding,
 followed by overall assessment of strengths and significant concerns.
 State the conclusion up front. **Major Concerns**: issues substantially
 undermining credibility or usefulness. Each includes location reference,

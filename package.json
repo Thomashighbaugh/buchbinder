@@ -1,13 +1,13 @@
 {
-  "name": "kombinat-writer",
+  "name": "buchbinder",
   "version": "0.2.1",
   "description": "Professional-grade book writing workflow for OpenCode — 25-subcommand slash command router, 26 hard-block quality gates, 8 HITL features, XML-structured drafting, per-character voice profiles, series lorebook infrastructure, and an OpenCode TUI sidebar plugin.",
   "type": "module",
   "main": "bin/install.mjs",
   "bin": {
-    "kombinat-writer": "bin/install.mjs",
-    "kombinat-refresh": "bin/refresh.mjs",
-    "kombinat-index": "bin/build-lore-index.mjs"
+    "buchbinder": "bin/install.mjs",
+    "buchbinder-refresh": "bin/refresh.mjs",
+    "buchbinder-index": "bin/build-lore-index.mjs"
   },
   "scripts": {
     "build": "tsc",
@@ -37,17 +37,17 @@
     "typescript",
     "slash-commands",
     "multi-format-publishing",
-    "kombinat"
+    "buchbinder"
   ],
   "author": "Thomas Highbaugh <https://github.com/Thomashighbaugh>",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Thomashighbaugh/kombinat-writer.git"
+    "url": "git+https://github.com/Thomashighbaugh/buchbinder.git"
   },
-  "homepage": "https://github.com/Thomashighbaugh/kombinat-writer#readme",
+  "homepage": "https://github.com/Thomashighbaugh/buchbinder#readme",
   "bugs": {
-    "url": "https://github.com/Thomashighbaugh/kombinat-writer/issues"
+    "url": "https://github.com/Thomashighbaugh/buchbinder/issues"
   },
   "funding": {
     "type": "github",

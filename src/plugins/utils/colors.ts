@@ -1,5 +1,5 @@
 /**
- * Sanatana Linux color scheme — applied to the Kombinat Writer sidebar.
+ * Sanatana Linux color scheme — applied to the Buchbinder sidebar.
  *
  * Author: Thomas Leon Highbaugh
  * Source: per the YAML provided by the user.

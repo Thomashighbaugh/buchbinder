@@ -4,9 +4,9 @@
 1. [Question 1]
 2. [Question 2]
 
-## Kombinate
-- In kombinate: [what you will investigate]
-- Out of kombinate: [what you will not]
+## Binding
+- In binding: [what you will investigate]
+- Out of binding: [what you will not]
 
 ## Depth
 [Quick survey / Deep academic review / Authenticity check]

@@ -90,7 +90,7 @@ const [vizData, setVizData] = createSignal<VizDataset | null>(null)
 
 // Reference to api.client.tui.appendPrompt — set by entry plugin
 let injectFn: ((cmd: string) => void) | null = null
-/** Sets the command injection callback used by the sidebar to dispatch /kombinat commands. */
+/** Sets the command injection callback used by the sidebar to dispatch /buchbinder commands. */
 export function setInjector(fn: (cmd: string) => void) {
   injectFn = fn
 }

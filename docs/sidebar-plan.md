@@ -1,4 +1,4 @@
-# Kombinat Writer Sidebar — Implementation Plan
+# Buchbinder Sidebar — Implementation Plan
 
 ## Architecture
 
@@ -12,7 +12,7 @@ OpenCode's TUI provides three sidebar slots that plugins can render into:
 
 The sidebar plugin registers components into these slots via `api.slots.register()`. Rendering uses `@opentui/solid` (SolidJS JSX in the terminal — not browser HTML, but JSX components rendered to the terminal via OpenTui's rendering engine).
 
-**Plugin file**: `src/plugins/kombinat-sidebar.tsx`
+**Plugin file**: `src/plugins/buchbinder-sidebar.tsx`
 **Plugin type**: `TuiPluginModule` (from `@opencode-ai/plugin/tui`)
 **Registration**: Via `api.slots.register()` in the plugin entry point
 
@@ -24,7 +24,7 @@ The sidebar plugin registers components into these slots via `api.slots.register
 ┌─────────────────────────────────────────────┐
 │  sidebar_title slot                          │
 │  ┌─────────────────────────────────────────┐ │
-│  │ Kombinat Writer                         │ │
+│  │ Buchbinder                         │ │
 │  │ "The Last Summons"  · Fiction           │ │
 │  │ Phase: DRAFT  ·  Ch 7/24  ·  48.2k wds │ │
 │  └─────────────────────────────────────────┘ │
@@ -300,7 +300,7 @@ Renders into the `sidebar_title` slot. Always visible.
 
 ```
 ┌─────────────────────────────────────────┐
-│ Kombinat Writer                         │
+│ Buchbinder                         │
 │ "The Last Summons"  ·  Fiction          │
 │ Phase: DRAFT  ·  Ch 7/24  ·  48.2k wds  │
 └─────────────────────────────────────────┘
@@ -353,12 +353,12 @@ Renders into the `sidebar_footer` slot. Always visible. Shows quick stats and ke
 ## Plugin Registration
 
 ```typescript
-// src/plugins/kombinat-sidebar.tsx
+// src/plugins/buchbinder-sidebar.tsx
 
 import type { TuiPluginModule, TuiPluginApi, TuiPluginMeta } from '@opencode-ai/plugin/tui'
 import { createSignal, createMemo, For, Show, Switch, Match } from 'solid-js'
 
-// Import Kombinat lib files for data
+// Import Buchbinder lib files for data
 import { detectProjectState } from '../lib/project-state.js'
 import { runGate } from '../lib/quality-gates.js'
 import { buildDraftPreview, buildRevisePreview, buildEditPreview } from '../lib/phase-preview.js'
@@ -387,12 +387,12 @@ function VizTab() { ... }
 const tui: TuiPluginModule['tui'] = async (api: TuiPluginApi, _o, _m: TuiPluginMeta) => {
   // Register keybinds for tab switching
   api.keybind.create({
-    'kombinat.tab1': '1',
-    'kombinat.tab2': '2',
-    'kombinat.tab3': '3',
-    'kombinat.tab4': '4',
-    'kombinat.veto': '|',
-    'kombinat.help': '?',
+    'buchbinder.tab1': '1',
+    'buchbinder.tab2': '2',
+    'buchbinder.tab3': '3',
+    'buchbinder.tab4': '4',
+    'buchbinder.veto': '|',
+    'buchbinder.help': '?',
   })
 
   // Register sidebar slots
@@ -408,18 +408,18 @@ const tui: TuiPluginModule['tui'] = async (api: TuiPluginApi, _o, _m: TuiPluginM
   // Register command for opening sidebar focus
   api.command.register(() => [
     {
-      title: 'Kombinat: Focus Sidebar',
-      value: 'kombinat:focus-sidebar',
+      title: 'Buchbinder: Focus Sidebar',
+      value: 'buchbinder:focus-sidebar',
       keybind: 'ctrl+k',
       onSelect: () => {
-        api.ui.toast({ title: 'Kombinat', message: 'Sidebar active — use 1-4 to switch tabs' })
+        api.ui.toast({ title: 'Buchbinder', message: 'Sidebar active — use 1-4 to switch tabs' })
       },
     },
   ])
 }
 
 const plugin: TuiPluginModule = {
-  id: 'kombinat-sidebar',
+  id: 'buchbinder-sidebar',
   tui,
 }
 
@@ -431,10 +431,10 @@ export default plugin
 ## File Structure
 
 ```
-kombinat-writer/
+buchbinder/
 ├── src/
 │   ├── plugins/
-│   │   ├── kombinat-sidebar.tsx          # Plugin entry point
+│   │   ├── buchbinder-sidebar.tsx          # Plugin entry point
 │   │   ├── components/
 │   │   │   ├── sidebar-title.tsx          # <SidebarTitle />
 │   │   │   ├── sidebar-content.tsx        # <SidebarContent /> (tab router)
@@ -468,7 +468,7 @@ kombinat-writer/
 
 ```
  ┌──────────────┐    reads     ┌──────────────────┐
- │  book/       │ ◄────────── │  Kombinat Libs   │
+ │  book/       │ ◄────────── │  Buchbinder Libs   │
  │  track.json  │              │  (40 .ts files)  │
  │  content/    │              │                  │
  │  outline/    │              │  - project-state │
@@ -507,16 +507,16 @@ kombinat-writer/
                                └──────────────────┘
 ```
 
-The sidebar components call Kombinat's lib functions directly (synchronous file reads via `fs-extra`). SolidJS signals provide reactivity — when a gate runs or a hunk is approved, the signal updates and the UI re-renders.
+The sidebar components call Buchbinder's lib functions directly (synchronous file reads via `fs-extra`). SolidJS signals provide reactivity — when a gate runs or a hunk is approved, the signal updates and the UI re-renders.
 
-For agent operations (drafting, critique, revision), the sidebar sends commands to OpenCode via `api.client.tui.appendPrompt({ text: '/kombinat draft' })` — the same mechanism the existing hubs-tui plugin uses.
+For agent operations (drafting, critique, revision), the sidebar sends commands to OpenCode via `api.client.tui.appendPrompt({ text: '/buchbinder draft' })` — the same mechanism the existing hubs-tui plugin uses.
 
 ---
 
 ## Build Order
 
 ### Phase 1: Plugin Scaffold + Title + Footer
-1. Create `src/plugins/kombinat-sidebar.tsx` — plugin entry, slot registration, keybind setup
+1. Create `src/plugins/buchbinder-sidebar.tsx` — plugin entry, slot registration, keybind setup
 2. Create `src/components/sidebar-title.tsx` — project name, phase, progress bar
 3. Create `src/components/sidebar-footer.tsx` — gate status counts, keybind hints
 4. Create `src/hooks/use-project-state.ts` — reads `book/track.json`, scans content dir
@@ -553,7 +553,7 @@ For agent operations (drafting, critique, revision), the sidebar sends commands 
 27. Test: All 5 visualizations render from lib data
 
 ### Phase 6: Integration + Polish
-28. Wire agent commands: "Start Phase" button → `api.client.tui.appendPrompt({ text: '/kombinat draft' })`
+28. Wire agent commands: "Start Phase" button → `api.client.tui.appendPrompt({ text: '/buchbinder draft' })`
 29. Wire intent input: capture intent → save via `authorial-intent.ts` → pass to OpenCode command
 30. Add gate auto-refresh: listen to `api.event` for file changes, re-run gates
 31. Add provenance auto-refresh: listen for content file changes, update provenance bar
@@ -569,7 +569,7 @@ For agent operations (drafting, critique, revision), the sidebar sends commands 
 | `@opencode-ai/plugin` | TUI plugin types | Yes |
 | `@opentui/solid` | SolidJS JSX terminal rendering | Yes |
 | `solid-js` | Reactivity (signals, memos) | Yes |
-| `fs-extra` | File I/O (used by lib files) | Yes (in kombinat-writer) |
+| `fs-extra` | File I/O (used by lib files) | Yes (in buchbinder) |
 
 No new dependencies needed — the plugin uses the same stack as the existing `hubs-tui` plugin.
 
@@ -579,7 +579,7 @@ No new dependencies needed — the plugin uses the same stack as the existing `h
 
 The installer (`bin/install.mjs`) needs to be updated to copy the plugin:
 
-1. Copy `src/plugins/kombinat-sidebar.tsx` and `src/plugins/components/` to `.opencode/plugins/kombinat-sidebar/`
+1. Copy `src/plugins/buchbinder-sidebar.tsx` and `src/plugins/components/` to `.opencode/plugins/buchbinder-sidebar/`
 2. Register the plugin in `opencode.jsonc` (if per-project plugin loading is supported)
 3. OR: install as a global TUI plugin via `api.plugins.install()`
 
@@ -589,9 +589,9 @@ The exact registration mechanism depends on whether OpenCode supports per-projec
 
 ## Key Design Decisions
 
-1. **Direct lib calls, not API** — The sidebar calls Kombinat's 40 lib files directly as functions. No HTTP API, no subprocess. Fast, type-safe, no network overhead.
+1. **Direct lib calls, not API** — The sidebar calls Buchbinder's 40 lib files directly as functions. No HTTP API, no subprocess. Fast, type-safe, no network overhead.
 
-2. **Agent ops via prompt injection** — When the author clicks "Start Phase", the sidebar injects `/kombinat draft` into OpenCode's prompt via `api.client.tui.appendPrompt()`. OpenCode's agent handles the actual drafting. This reuses the existing 26 specs without reimplementation.
+2. **Agent ops via prompt injection** — When the author clicks "Start Phase", the sidebar injects `/buchbinder draft` into OpenCode's prompt via `api.client.tui.appendPrompt()`. OpenCode's agent handles the actual drafting. This reuses the existing 26 specs without reimplementation.
 
 3. **SolidJS signals for reactivity** — `createSignal()` for tab state, gate results, diff hunks. When a gate runs or a hunk is approved, the signal updates and the UI re-renders instantly.
 

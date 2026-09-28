@@ -2,7 +2,7 @@
  * Lorebook Import — External World-Building Format Converter
  *
  * Converts lorebooks/world info from AI roleplay platforms into the
- * Kombinat Writer series lorebook format. These platforms often contain
+ * Buchbinder series lorebook format. These platforms often contain
  * extensively developed world-building, character sheets, and lore entries
  * created through months of interactive experimentation — exactly the
  * kind of deep world knowledge that benefits a book series.
@@ -22,7 +22,7 @@
  *    Path: exported via character.ai's character editor.
  *    Contains name, greeting, description, title, definitions.
  *
- * All formats are converted to the Kombinat lorebook structure:
+ * All formats are converted to the Buchbinder lorebook structure:
  *   ./series/lorebook/
  *   ├── characters.md  (from character sheets)
  *   ├── world.md        (from world info / scenario / setting)
@@ -525,7 +525,7 @@ export function writeToLorebook(
 
   const lorebookDir = path.join(projectRoot, 'series', 'lorebook');
   if (!fs.existsSync(lorebookDir)) {
-    result.errors.push('Series lorebook not initialized. Run /kombinat series init first.');
+    result.errors.push('Series lorebook not initialized. Run /buchbinder series init first.');
     return result;
   }
 

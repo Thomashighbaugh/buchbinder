@@ -1,11 +1,11 @@
 ---
 name: workflow-guide
-description: "Reference for the full /kombinat phase methodology — track-specific phase order, subcommand reference, and conventions. Use when the user asks about the process or which step to take next."
+description: "Reference for the full /buchbinder phase methodology — track-specific phase order, subcommand reference, and conventions. Use when the user asks about the process or which step to take next."
 ---
 
 # Workflow Guide
 
-Reference for the Kombinat Writer phase methodology. The process varies by track type; consult this guide to determine the correct phase order and available subcommands.
+Reference for the Buchbinder phase methodology. The process varies by track type; consult this guide to determine the correct phase order and available subcommands.
 
 ## Phase Order by Track
 
@@ -68,10 +68,10 @@ Draft and revise in separate sessions. Never revise during a draft session — m
 ```
 project-root/
 ├── .opencode/             # Per-project OpenCode configuration
-│   ├── commands/kombinat-router.md  # Hub phase router (installed by kombinat-writer)
+│   ├── commands/buchbinder-router.md  # Hub phase router (installed by buchbinder)
 │   ├── skills/            # QA, critique, research, fiction, non-fiction skills
 │   ├── tools/             # TypeScript tools (hubMenu, hub-data, project-state, etc.)
-│   │   ├── hubs/kombinat/ # 26 subcommand spec files
+│   │   ├── hubs/buchbinder/ # 26 subcommand spec files
 │   │   └── lib/           # 32 library files (gates, voice, checkpoints, etc.)
 │   └── templates/        # Track templates (fiction/non-fiction/series)
 ├── book/                  # All book content
@@ -100,7 +100,7 @@ project-root/
 
 ## Quality Gate System
 
-Kombinat uses **hard-block quality gates** — gates produce evidence-based pass/fail results that block progression on failure. There are 26 gates across 7 categories:
+Buchbinder uses **hard-block quality gates** — gates produce evidence-based pass/fail results that block progression on failure. There are 26 gates across 7 categories:
 
 | Category | Gates | When |
 |----------|-------|------|
@@ -113,11 +113,11 @@ Kombinat uses **hard-block quality gates** — gates produce evidence-based pass
 | **Experience** | `immersion`, `trust`, `opening-closing`, `continuity`, `style` | During read-through/review — immersion breaks, trust violations, hook strength |
 | **Non-negotiables** | `non-negotiables` | During draft/revise/edit — checks content against author's declared creative constraints |
 
-Run `/kombinat verify` to run any gate on demand. Gates produce structured reports with evidence citations.
+Run `/buchbinder verify` to run any gate on demand. Gates produce structured reports with evidence citations.
 
 ## Human-in-the-Loop Features
 
-Kombinat integrates 8 HITL features to keep the author in control:
+Buchbinder integrates 8 HITL features to keep the author in control:
 
 | Feature | How It Works |
 |---------|-------------|

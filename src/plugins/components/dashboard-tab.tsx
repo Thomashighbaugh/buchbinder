@@ -111,34 +111,34 @@ export function DashboardTab(props: { state: SidebarState }) {
       <box marginTop={1}>
         <text style={{ fg: c.header, attributes: BOLD }}>{'── Actions ──'}</text>
       </box>
-      <box flexDirection="row" on:select={() => props.state.injectCommand('/kombinat draft')}>
+      <box flexDirection="row" on:select={() => props.state.injectCommand('/buchbinder draft')}>
         <text style={{ fg: c.pass, attributes: BOLD }}>{'▶ '}</text>
-        <text style={{ fg: c.blue }}>{'/kombinat draft'}</text>
+        <text style={{ fg: c.blue }}>{'/buchbinder draft'}</text>
         <text style={{ fg: c.textMuted }}>{'   batch draft pending chapters'}</text>
       </box>
-      <box flexDirection="row" on:select={() => props.state.injectCommand('/kombinat critique')}>
+      <box flexDirection="row" on:select={() => props.state.injectCommand('/buchbinder critique')}>
         <text style={{ fg: c.pass, attributes: BOLD }}>{'▶ '}</text>
-        <text style={{ fg: c.blue }}>{'/kombinat critique'}</text>
+        <text style={{ fg: c.blue }}>{'/buchbinder critique'}</text>
         <text style={{ fg: c.textMuted }}>{'   batch critique with 95% score'}</text>
       </box>
-      <box flexDirection="row" on:select={() => props.state.injectCommand('/kombinat revise')}>
+      <box flexDirection="row" on:select={() => props.state.injectCommand('/buchbinder revise')}>
         <text style={{ fg: c.pass, attributes: BOLD }}>{'▶ '}</text>
-        <text style={{ fg: c.blue }}>{'/kombinat revise'}</text>
+        <text style={{ fg: c.blue }}>{'/buchbinder revise'}</text>
         <text style={{ fg: c.textMuted }}>{'   batch revise to 95%'}</text>
       </box>
-      <box flexDirection="row" on:select={() => props.state.injectCommand('/kombinat edit')}>
+      <box flexDirection="row" on:select={() => props.state.injectCommand('/buchbinder edit')}>
         <text style={{ fg: c.pass, attributes: BOLD }}>{'▶ '}</text>
-        <text style={{ fg: c.blue }}>{'/kombinat edit'}</text>
+        <text style={{ fg: c.blue }}>{'/buchbinder edit'}</text>
         <text style={{ fg: c.textMuted }}>{'   three-pass line/copy/proofread'}</text>
       </box>
-      <box flexDirection="row" on:select={() => props.state.injectCommand('/kombinat verify')}>
+      <box flexDirection="row" on:select={() => props.state.injectCommand('/buchbinder verify')}>
         <text style={{ fg: c.pass, attributes: BOLD }}>{'▶ '}</text>
-        <text style={{ fg: c.blue }}>{'/kombinat verify'}</text>
+        <text style={{ fg: c.blue }}>{'/buchbinder verify'}</text>
         <text style={{ fg: c.textMuted }}>{'   run all quality gates'}</text>
       </box>
-      <box flexDirection="row" on:select={() => props.state.injectCommand('/kombinat status')}>
+      <box flexDirection="row" on:select={() => props.state.injectCommand('/buchbinder status')}>
         <text style={{ fg: c.pass, attributes: BOLD }}>{'▶ '}</text>
-        <text style={{ fg: c.blue }}>{'/kombinat status'}</text>
+        <text style={{ fg: c.blue }}>{'/buchbinder status'}</text>
         <text style={{ fg: c.textMuted }}>{'   show project state'}</text>
       </box>
     </box>

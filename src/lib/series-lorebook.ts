@@ -206,7 +206,7 @@ export function linkBookToSeries(
 export function syncFromBook(projectRoot: string): { synced: string[]; warnings: string[] } {
   const result = { synced: [] as string[], warnings: [] as string[] };
   if (!seriesExists(projectRoot)) {
-    result.warnings.push('No series initialized. Run /kombinat series init first.');
+    result.warnings.push('No series initialized. Run /buchbinder series init first.');
     return result;
   }
 

@@ -11,7 +11,7 @@ export function ProvenanceDashboard(props: { state: SidebarState }) {
   return (
     <Show
       when={prov()}
-      fallback={<text style={{ fg: c.textMuted }}>{'No provenance data — run /kombinat verify'}</text>}
+      fallback={<text style={{ fg: c.textMuted }}>{'No provenance data — run /buchbinder verify'}</text>}
       keyed
     >
       {(p) => (

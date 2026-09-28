@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /**
- * XML Draft Chunker — splits kombinat XML drafts into semantic chunks
+ * XML Draft Chunker — splits buchbinder XML drafts into semantic chunks
  *
- * The kombinat draft schema is structurally nested, not prose. The markdown
+ * The buchbinder draft schema is structurally nested, not prose. The markdown
  * chunker doesn't know what a <scene> or <awareness-map> is, so it falls
  * through to "whole file = one chunk" — which is too coarse for semantic
  * search (a 3500-word chapter becomes one giant vector).
@@ -21,7 +21,7 @@
  *     for a 7-scene chapter, not 3 + 1. Continuation scenes are marked
  *     `continuation: true` in the chunk metadata.
  *
- * Schema (v1) — see test-kombinat/book/drafts/ for examples:
+ * Schema (v1) — see test-buchbinder/book/drafts/ for examples:
  *
  *   <chapter number="N" title="..." pacing="..." word-target="...">
  *     <metadata>
@@ -292,7 +292,7 @@ export function chunkWholeChapter(filePath, sourcePath, chapterNumber) {
 
 /**
  * Resolve a chapter number to its draft file path under a project root.
- * Uses the test-kombinat convention: book/drafts/chapter_NNNNN.xml
+ * Uses the test-buchbinder convention: book/drafts/chapter_NNNNN.xml
  * (5-digit zero-padded).
  *
  * @param {string} projectRoot Absolute path

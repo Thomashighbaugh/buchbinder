@@ -1,11 +1,11 @@
 ---
-name: kombinat-writer
-description: "Professional book writing workflow for OpenCode — fiction, non-fiction, and mixed projects. Provides the complete /kombinat methodology with a TUI menu system for research, drafting, critique, revision, citation management, editing, review, and publishing. Use when starting a book project, organizing writing, managing research, handling citations, or navigating any phase of a long-form writing project."
+name: buchbinder
+description: "Professional book writing workflow for OpenCode — fiction, non-fiction, and mixed projects. Provides the complete /buchbinder methodology with a TUI menu system for research, drafting, critique, revision, citation management, editing, review, and publishing. Use when starting a book project, organizing writing, managing research, handling citations, or navigating any phase of a long-form writing project."
 ---
 
-# Kombinat Writer — Professional Book Writing Methodology
+# Buchbinder — Professional Book Writing Methodology
 
-This skill contains the complete Kombinat Writer methodology for producing long-form written work with AI assistance. It covers three workflow tracks (fiction, non-fiction, mixed), the full command architecture, project file conventions, and how companion sub-skills activate per-phase.
+This skill contains the complete Buchbinder methodology for producing long-form written work with AI assistance. It covers three workflow tracks (fiction, non-fiction, mixed), the full command architecture, project file conventions, and how companion sub-skills activate per-phase.
 
 ## Core Principles
 
@@ -29,7 +29,7 @@ This skill contains the complete Kombinat Writer methodology for producing long-
 
 ## Command Architecture
 
-Kombinat Writer exposes a single hub command `/kombinat` with a TUI menu system for each workflow phase. When invoked without a subcommand, `/kombinat` presents a menu of available phases. The "Guided" option runs automatic state detection and presents a contextualised roadmap.
+Buchbinder exposes a single hub command `/buchbinder` with a TUI menu system for each workflow phase. When invoked without a subcommand, `/buchbinder` presents a menu of available phases. The "Guided" option runs automatic state detection and presents a contextualised roadmap.
 
 ### Phase Commands
 
@@ -55,7 +55,7 @@ Kombinat Writer exposes a single hub command `/kombinat` with a TUI menu system 
 
 ### Shorthand Aliases
 
-The `/kombinat` command uses the hubMenu tool for routing. Subcommands are selected via the TUI menu; direct dispatch works by appending the subcommand label (e.g. `/kombinat draft`).
+The `/buchbinder` command uses the hubMenu tool for routing. Subcommands are selected via the TUI menu; direct dispatch works by appending the subcommand label (e.g. `/buchbinder draft`).
 
 ---
 
@@ -65,9 +65,9 @@ The `/kombinat` command uses the hubMenu tool for routing. Subcommands are selec
 project-root/
 ├── .opencode/                    # Per-project OpenCode configuration
 │   ├── commands/
-│   │   └── kombinat.md               # Hub command (installed by kombinat-writer)
-│   ├── skills/                   # Sub-skills (installed by kombinat-writer)
-│   └── tools/                    # TypeScript tools (installed by kombinat-writer)
+│   │   └── buchbinder.md               # Hub command (installed by buchbinder)
+│   ├── skills/                   # Sub-skills (installed by buchbinder)
+│   └── tools/                    # TypeScript tools (installed by buchbinder)
 ├── book/                         # All book content (rename as needed)
 │   ├── track.json                # Track selection: fiction | non-fiction | mixed
 │   ├── meta.json                 # Bibliographic metadata
@@ -127,14 +127,14 @@ When any document exceeds ~500 lines, split into a folder with `_main.md` as the
 
 ## Plugin Maintenance: Refresh & Index
 
-The kombinat-writer plugin evolves. To sync an installed project with the latest plugin source without overwriting your project work, use:
+The buchbinder plugin evolves. To sync an installed project with the latest plugin source without overwriting your project work, use:
 
 ```bash
-npx kombinat-refresh        # idempotent: syncs plugin assets, rebuilds index, preserves local edits
-npx kombinat-index          # rebuild only the lore semantic index
+npx buchbinder-refresh        # idempotent: syncs plugin assets, rebuilds index, preserves local edits
+npx buchbinder-index          # rebuild only the lore semantic index
 ```
 
-`kombinat-refresh` writes a manifest at `.opencode/.kombinat-install-manifest.json` that records every file it installed (with per-file SHA256) so subsequent refreshes are diff-based — your HTML-comment overrides in phase specs are preserved across refreshes. Run `--force` to overwrite them (destructive).
+`buchbinder-refresh` writes a manifest at `.opencode/.buchbinder-install-manifest.json` that records every file it installed (with per-file SHA256) so subsequent refreshes are diff-based — your HTML-comment overrides in phase specs are preserved across refreshes. Run `--force` to overwrite them (destructive).
 
 The semantic lore index lives at `.opencode/cache/lore-index/index.json` and is consulted on every phase invocation. The index is built incrementally — re-running on an up-to-date index is a no-op. Index coverage includes: series lorebook, series outline, per-book knowledge, constitution, specification, book outline (whole + per-chapter), and XML drafts (chunked by `<metadata>`, `<awareness-map>`, and per-`<scene>`). See the README for full details.
 
@@ -281,7 +281,7 @@ These skills activate automatically based on context when installed:
 
 ## Conventions
 
-- **Phase-gate discipline**: Complete each phase's output before starting the next. The `/kombinat guided` subcommand enforces this.
+- **Phase-gate discipline**: Complete each phase's output before starting the next. The `/buchbinder guided` subcommand enforces this.
 - **One chapter per file**: `content/chapter_NNNNN.md` with zero-padded numbering.
 - **Context reload**: The pre-draft checklist ensures constitution, specification, outline, knowledge, tracking, and previous chapter are loaded before every new chapter.
 - **Split at 500 lines**: Any file approaching 500 lines should be split into a directory with `_main.md` as index.

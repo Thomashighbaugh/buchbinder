@@ -323,7 +323,7 @@ async function main() {
     // Load index (if present)
     const index = loadIndex(projectRoot)
     if (!index) {
-        console.error('[lore-query] No precomputed index found. Run `npx kombinat-index` to build one for faster retrieval. Continuing with on-the-fly embedding...')
+        console.error('[lore-query] No precomputed index found. Run `npx buchbinder-index` to build one for faster retrieval. Continuing with on-the-fly embedding...')
     }
 
     // Load pinned chapters (always from disk, not from index)

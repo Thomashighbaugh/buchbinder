@@ -1,6 +1,6 @@
 {
   "$schema": "https://opencode.ai/config.json",
   "plugin": [
-    "./.opencode/plugins/kombinat-sidebar/index.js"
+    "./.opencode/plugins/buchbinder-sidebar/index.js"
   ]
 }

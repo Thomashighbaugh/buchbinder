@@ -51,7 +51,7 @@ Identify narrative threads that diverge from the main plot. Verify each subplot 
 
 ## Automated Detection
 
-The `thread-matrix.ts` library (run during `/kombinat review` and `/kombinat verify`) provides automated thread tracking:
+The `thread-matrix.ts` library (run during `/buchbinder review` and `/buchbinder verify`) provides automated thread tracking:
 - **Matrix structure**: rows = threads, columns = chapters — each cell shows activity level
 - **Dropped threads**: introduced then no activity for 5+ chapters
 - **Orphaned threads**: set up with `sets-up` in outline but never paid off

@@ -1,8 +1,8 @@
-# Kombinat Writer — No Global Config Pollution
+# Buchbinder — No Global Config Pollution
 
 ## MANDATORY RULE
 
-The Kombinat Writer system MUST be completely self-contained within each project's `.opencode/` directory. Under NO circumstances may any part of the system be installed to, registered in, or reference:
+The Buchbinder system MUST be completely self-contained within each project's `.opencode/` directory. Under NO circumstances may any part of the system be installed to, registered in, or reference:
 
 - `~/.config/opencode/tui.json`
 - `~/.config/opencode/opencode.jsonc`
@@ -16,7 +16,7 @@ The Kombinat Writer system MUST be completely self-contained within each project
 
 ## What This Means in Practice
 
-1. **Never add the kombinat-sidebar plugin to `~/.config/opencode/tui.json`**
+1. **Never add the buchbinder-sidebar plugin to `~/.config/opencode/tui.json`**
 2. **Never copy plugin files to `~/.config/opencode/plugins/`**
 3. **Never suggest adding anything to global config as a "fix"**
 4. **Never install dependencies in `~/.config/opencode/node_modules/`**
@@ -28,7 +28,7 @@ ALL files go to `<project>/.opencode/`:
 
 | Asset | Destination |
 |-------|-------------|
-| Plugin (TUI) | `.opencode/plugins/kombinat-sidebar/` |
+| Plugin (TUI) | `.opencode/plugins/buchbinder-sidebar/` |
 | Plugin (hooks) | `.opencode/plugins/hooks/` |
 | Lib modules | `.opencode/plugins/lib/` |
 | Tools | `.opencode/tools/` |
@@ -40,4 +40,4 @@ ALL files go to `<project>/.opencode/`:
 
 ## Why
 
-This system must work identically when installed via `npx kombinat-writer` on any machine, for any user, without requiring any changes to their global OpenCode configuration. The install script (`bin/install.mjs`) is the sole mechanism for provisioning — it copies everything into the project's `.opencode/` and registers plugins in `.opencode/opencode.jsonc` and `.opencode/tui.json` (both project-local).
+This system must work identically when installed via `npx buchbinder` on any machine, for any user, without requiring any changes to their global OpenCode configuration. The install script (`bin/install.mjs`) is the sole mechanism for provisioning — it copies everything into the project's `.opencode/` and registers plugins in `.opencode/opencode.jsonc` and `.opencode/tui.json` (both project-local).

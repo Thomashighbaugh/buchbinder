@@ -7,7 +7,7 @@
  * write a manifest on completion, and by refresh.mjs to diff the
  * currently-installed state against the source.
  *
- * Manifest location: <DEST_DIR>/.kombinat-install-manifest.json
+ * Manifest location: <DEST_DIR>/.buchbinder-install-manifest.json
  *
  * Schema (v1):
  * {
@@ -15,7 +15,7 @@
  *   "installedAt": "2026-07-13T...Z",
  *   "packageVersion": "0.2.1",
  *   "packageCommit": "63e9f8c",
- *   "packageRoot": "/path/to/kombinat-writer",
+ *   "packageRoot": "/path/to/buchbinder",
  *   "files": [
  *     { "rel": "skills/fiction/genre-knowledge/SKILL.md", "sha256": "..." },
  *     ...
@@ -32,7 +32,7 @@ import { createHash } from 'node:crypto'
 import fs from 'fs-extra'
 import path from 'path'
 
-const MANIFEST_FILENAME = '.kombinat-install-manifest.json'
+const MANIFEST_FILENAME = '.buchbinder-install-manifest.json'
 const SCHEMA_VERSION = 1
 
 /**

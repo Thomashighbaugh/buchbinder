@@ -1,8 +1,8 @@
 /**
- * Kombinat Writer — Hub Data Types & Loader
+ * Buchbinder — Hub Data Types & Loader
  *
  * Ported from the global OpenCode hub system. Provides the type system
- * and spec loader for the kombinat hub's TUI command menu.
+ * and spec loader for the buchbinder hub's TUI command menu.
  *
  * Self-contained: no dependencies on global config or project state.
  */
@@ -60,12 +60,12 @@ export function getDelegation(sub: HubSubcommand): DelegationInfo {
 }
 
 // ─── Hub File Registry ───────────────────────────────────────────────────
-// Kombinat writer is self-contained. All hub files live in tools/hubs/kombinat/.
+// Buchbinder writer is self-contained. All hub files live in tools/hubs/buchbinder/.
 
 const HUBS_DIR = path.join(__dirname, "hubs")
 
 export const HUB_FILE_MAP: Record<string, string> = {
-  "kombinat": path.join(HUBS_DIR, "kombinat"),
+  "buchbinder": path.join(HUBS_DIR, "buchbinder"),
 }
 
 export function loadHub(name: string): HubDefinition | null {
@@ -74,7 +74,7 @@ export function loadHub(name: string): HubDefinition | null {
   try {
     const mod = require(hubDir)
     // The index.ts exports { subcommands: HubSubcommand[], specs: HubSubcommandSpec[] }
-    // We need the hub definition. For kombinat, we'll construct it.
+    // We need the hub definition. For buchbinder, we'll construct it.
     const specs = mod.specs || []
     const subcommands: HubSubcommand[] = specs.map((s: HubSubcommandSpec) => ({
       label: s.label, description: s.description, reminder: s.reminder,
@@ -93,7 +93,7 @@ export function loadHub(name: string): HubDefinition | null {
 // ─── Subcommand Spec Loader ──────────────────────────────────────────────
 
 const SUBCOMMAND_DIR_MAP: Record<string, string> = {
-  "kombinat": "kombinat",
+  "buchbinder": "buchbinder",
 }
 
 export function loadSubcommandSpec(hubName: string, subLabel: string): HubSubcommandSpec | null {
@@ -120,7 +120,7 @@ export function loadSubcommandSpecFull(hubName: string, subLabel: string): {
   const rulesContent: Array<{ name: string; content: string }> = []
   const relatedSkillMeta: Array<{ name: string; path: string; description: string }> = []
 
-  // Rules are in the kombinat-writer project's rules/ directory
+  // Rules are in the buchbinder project's rules/ directory
   if (spec.rules && spec.rules.length > 0) {
     const rulesDir = path.join(__dirname, '..', '..', 'rules')
     for (const ruleName of spec.rules) {
@@ -133,7 +133,7 @@ export function loadSubcommandSpecFull(hubName: string, subLabel: string): {
     }
   }
 
-  // Related skills are in the kombinat-writer project's skills/ directory
+  // Related skills are in the buchbinder project's skills/ directory
   if (spec.relatedSkills && spec.relatedSkills.length > 0) {
     const skillsDir = path.join(__dirname, '..', '..', 'skills')
     for (const skillName of spec.relatedSkills) {

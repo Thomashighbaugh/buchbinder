@@ -1,19 +1,19 @@
 #!/usr/bin/env node
 /**
- * Kombinat Writer — Per-Project Installer (OpenCode only)
+ * Buchbinder — Per-Project Installer (OpenCode only)
  *
- * Installs the kombinat-writer workflow into a book project's .opencode/ directory.
+ * Installs the buchbinder workflow into a book project's .opencode/ directory.
  * Copies skills, tools, lib, templates, slash commands, and the built TUI sidebar plugin.
- * Writes opencode.jsonc to register the plugin so the /kombinat instant menu loads.
+ * Writes opencode.jsonc to register the plugin so the /buchbinder instant menu loads.
  *
  * Usage:
- *   npx kombinat-writer                  # interactive (default)
- *   npx kombinat-writer --non-interactive # for postinstall / CI; uses defaults
- *   npx kombinat-writer --reset          # if a prior install exists, ask to start over
- *   npx kombinat-writer --force-reset    # same as --reset but skip the modified-locally check
+ *   npx buchbinder                  # interactive (default)
+ *   npx buchbinder --non-interactive # for postinstall / CI; uses defaults
+ *   npx buchbinder --reset          # if a prior install exists, ask to start over
+ *   npx buchbinder --force-reset    # same as --reset but skip the modified-locally check
  *
  * For idempotent in-place updates of an existing install, prefer:
- *   npx kombinat-refresh
+ *   npx buchbinder-refresh
  */
 import { confirm, select } from '@inquirer/prompts';
 import chalk from 'chalk';
@@ -78,15 +78,15 @@ async function resolveConflict(destPath) {
  * will not modify global state.
  */
 async function printPerProjectAck() {
-    console.log(chalk.white('\nKombinat Writer — per-project install'));
+    console.log(chalk.white('\nBuchbinder — per-project install'));
     console.log(chalk.white('─'.repeat(60)));
-    console.log(chalk.white('This installer will copy the kombinat-writer plugin into THIS'));
+    console.log(chalk.white('This installer will copy the buchbinder plugin into THIS'));
     console.log(chalk.white("directory's .opencode/ folder. It will:"));
     console.log('');
     console.log(chalk.white('  • Copy skills, tools, templates, slash commands, and the TUI plugin'));
     console.log(chalk.white('  • Create .opencode/opencode.jsonc, tui.json, and package.json'));
-    console.log(chalk.white('    (registering kombinat-sidebar as a project-local plugin)'));
-    console.log(chalk.white('  • Install the npm deps kombinat-writer needs to run'));
+    console.log(chalk.white('    (registering buchbinder-sidebar as a project-local plugin)'));
+    console.log(chalk.white('  • Install the npm deps buchbinder needs to run'));
     console.log(chalk.white('  • Create ./book, ./memory, ./output/manuscript if they don\'t exist'));
     console.log('');
     console.log(chalk.white('It will NOT:'));
@@ -103,7 +103,7 @@ async function printPerProjectAck() {
     console.log(chalk.cyan('    ollama pull pedrohml/mxbai-embed-large:latest'));
     console.log(chalk.cyan('    ollama pull hans-tech/bge-reranker-v2-m3:260522'));
     console.log('');
-    console.log(chalk.white('After install, use kombinat-refresh to sync updates without'));
+    console.log(chalk.white('After install, use buchbinder-refresh to sync updates without'));
     console.log(chalk.white('overwriting your project work.'));
     console.log('');
     const ok = await confirm({ message: 'Acknowledge and continue?', default: true });
@@ -254,10 +254,10 @@ function copyTemplates(track) {
 
 // ─── Sidebar Plugin (built bundle) ──────────────────────────────────────────
 async function copySidebarPlugin(overwriteAll, skipAll) {
-    // Prefer the pre-built bundle in dist/plugins/kombinat-sidebar/.
+    // Prefer the pre-built bundle in dist/plugins/buchbinder-sidebar/.
     // Fall back to source .tsx if no build exists (dev mode).
-    const builtDir = path.join(PACKAGE_ROOT, 'dist', 'plugins', 'kombinat-sidebar');
-    const destDir = path.join(DEST_DIR, 'plugins', 'kombinat-sidebar');
+    const builtDir = path.join(PACKAGE_ROOT, 'dist', 'plugins', 'buchbinder-sidebar');
+    const destDir = path.join(DEST_DIR, 'plugins', 'buchbinder-sidebar');
 
     if (fs.existsSync(builtDir)) {
         fs.ensureDirSync(destDir);
@@ -324,7 +324,7 @@ async function ensureProjectConfig() {
     const tuiJsonPath = path.join(DEST_DIR, 'tui.json');
     const opencodeJsoncPath = path.join(DEST_DIR, 'opencode.jsonc');
     const pkgJsonPath = path.join(DEST_DIR, 'package.json');
-    const PLUGIN_ENTRY = './plugins/kombinat-sidebar/index.js';
+    const PLUGIN_ENTRY = './plugins/buchbinder-sidebar/index.js';
     const HOOKS_ENTRY = './plugins/hooks/index.js';
 
     // ── .opencode/opencode.jsonc: register the plugins so OpenCode loads them ──
@@ -334,7 +334,7 @@ async function ensureProjectConfig() {
             plugin: [PLUGIN_ENTRY, HOOKS_ENTRY],
         };
         fs.writeFileSync(opencodeJsoncPath, JSON.stringify(config, null, 2) + '\n', 'utf-8');
-        success('Created .opencode/opencode.jsonc with kombinat-sidebar + hooks plugins registered');
+        success('Created .opencode/opencode.jsonc with buchbinder-sidebar + hooks plugins registered');
     } else {
         const raw = fs.readFileSync(opencodeJsoncPath, 'utf-8');
         let config;
@@ -347,7 +347,7 @@ async function ensureProjectConfig() {
         }
         if (config) {
             const plugins = Array.isArray(config.plugin) ? config.plugin : [];
-            const hasSidebar = plugins.some(p => typeof p === 'string' && p.endsWith('kombinat-sidebar/index.js'));
+            const hasSidebar = plugins.some(p => typeof p === 'string' && p.endsWith('buchbinder-sidebar/index.js'));
             const hasHooks = plugins.some(p => typeof p === 'string' && p.endsWith('hooks/index.js'));
             if (!hasSidebar) plugins.push(PLUGIN_ENTRY);
             if (!hasHooks) plugins.push(HOOKS_ENTRY);
@@ -370,7 +370,7 @@ async function ensureProjectConfig() {
         fs.writeJsonSync(tuiJsonPath, config, { spaces: 2 });
         let content = fs.readFileSync(tuiJsonPath, 'utf-8');
         if (!content.endsWith('\n')) { fs.writeFileSync(tuiJsonPath, content + '\n'); }
-        success('Created .opencode/tui.json with kombinat-sidebar plugin registered');
+        success('Created .opencode/tui.json with buchbinder-sidebar plugin registered');
     } else {
         const raw = fs.readFileSync(tuiJsonPath, 'utf-8');
         let config;
@@ -387,13 +387,13 @@ async function ensureProjectConfig() {
         }
         if (config) {
             const plugins = Array.isArray(config.plugin) ? config.plugin : [];
-            const hasEntry = plugins.some(p => typeof p === 'string' && p.endsWith('kombinat-sidebar/index.js'));
+            const hasEntry = plugins.some(p => typeof p === 'string' && p.endsWith('buchbinder-sidebar/index.js'));
             if (hasEntry) {
-                log('.opencode/tui.json already registers kombinat-sidebar — skipping');
+                log('.opencode/tui.json already registers buchbinder-sidebar — skipping');
             } else {
                 config.plugin = [...plugins, PLUGIN_ENTRY];
                 fs.writeFileSync(tuiJsonPath, JSON.stringify(config, null, 2) + '\n', 'utf-8');
-                success(`Added kombinat-sidebar to .opencode/tui.json plugin array`);
+                success(`Added buchbinder-sidebar to .opencode/tui.json plugin array`);
             }
         }
     }
@@ -508,7 +508,7 @@ async function initProjectStructure(track, nonInteractive = false, targetDir = p
     await instantiateTemplates(targetDir, track);
     const manifestPath = path.join(targetDir, 'manifest.md');
     if (!fs.existsSync(manifestPath)) {
-        fs.writeFileSync(manifestPath, `# ${track === 'fiction' ? 'Creative' : 'Intellectual'} Manifest\n\n*Generated by Kombinat Writer — replace with your principles.*\n\n## Core Values\n[Your central thesis, theme, or purpose]\n\n## Quality Baseline\n[Your non-negotiable standards]\n\n## Style Principles\n[Register, tone, conventions]\n\n## Content Principles\n[Structure, evidence, narrative norms]\n\n## Reader Contract\n[Audience expectations, content notes]\n\n## Revision Procedures\n[How revision decisions are made]\n`, 'utf-8');
+        fs.writeFileSync(manifestPath, `# ${track === 'fiction' ? 'Creative' : 'Intellectual'} Manifest\n\n*Generated by Buchbinder — replace with your principles.*\n\n## Core Values\n[Your central thesis, theme, or purpose]\n\n## Quality Baseline\n[Your non-negotiable standards]\n\n## Style Principles\n[Register, tone, conventions]\n\n## Content Principles\n[Structure, evidence, narrative norms]\n\n## Reader Contract\n[Audience expectations, content notes]\n\n## Revision Procedures\n[How revision decisions are made]\n`, 'utf-8');
     }
     success(`Project structure initialized at ${targetDir}`);
 }
@@ -536,10 +536,10 @@ function parseInstallArgs(argv) {
 async function main() {
     const args = parseInstallArgs(process.argv)
     if (args.help) {
-        console.log(chalk.white('kombinat-writer — per-project installer'))
+        console.log(chalk.white('buchbinder — per-project installer'))
         console.log('')
         console.log('Usage:')
-        console.log('  npx kombinat-writer [options]')
+        console.log('  npx buchbinder [options]')
         console.log('')
         console.log('Options:')
         console.log('  --non-interactive    Use defaults; skip prompts (for postinstall/CI)')
@@ -548,7 +548,7 @@ async function main() {
         console.log('  --postinstall        Alias for --non-interactive (used by npm postinstall)')
         console.log('  --help, -h           Show this help')
         console.log('')
-        console.log('For idempotent in-place updates, prefer: npx kombinat-refresh')
+        console.log('For idempotent in-place updates, prefer: npx buchbinder-refresh')
         process.exit(0)
     }
 
@@ -557,22 +557,22 @@ async function main() {
     if (existingManifest && !args.reset && !args.forceReset) {
         if (args.nonInteractive || args.postinstall) {
             // postinstall on an already-installed project → just exit (refresh will be run separately)
-            console.log(chalk.yellow('⚠ A prior kombinat-writer install is recorded in this project.'))
-            console.log(chalk.yellow(`  Manifest: ${path.join(DEST_DIR, '.kombinat-install-manifest.json')}`))
-            console.log(chalk.yellow('  Nothing to do. Use `npx kombinat-refresh` to sync updates.'))
+            console.log(chalk.yellow('⚠ A prior buchbinder install is recorded in this project.'))
+            console.log(chalk.yellow(`  Manifest: ${path.join(DEST_DIR, '.buchbinder-install-manifest.json')}`))
+            console.log(chalk.yellow('  Nothing to do. Use `npx buchbinder-refresh` to sync updates.'))
             process.exit(0)
         }
-        console.log(chalk.yellow('\n⚠ A prior kombinat-writer install is recorded in this project'))
+        console.log(chalk.yellow('\n⚠ A prior buchbinder install is recorded in this project'))
         console.log(chalk.yellow(`  (commit ${existingManifest.packageCommit || 'unknown'}, last installed ${existingManifest.installedAt}).`))
         console.log(chalk.yellow(''))
         console.log(chalk.white('  For an idempotent refresh that preserves your work:'))
-        console.log(chalk.cyan('      npx kombinat-refresh'))
+        console.log(chalk.cyan('      npx buchbinder-refresh'))
         console.log(chalk.yellow(''))
         console.log(chalk.white('  To start over from scratch (DESTRUCTIVE — overwrites every'))
         console.log(chalk.white('  plugin-owned file; you will lose any local edits to phase'))
         console.log(chalk.white('  specs and slash commands):'))
-        console.log(chalk.cyan('      npx kombinat-writer --reset'))
-        console.log(chalk.cyan('      npx kombinat-writer --force-reset   # skips the modified-locally check'))
+        console.log(chalk.cyan('      npx buchbinder --reset'))
+        console.log(chalk.cyan('      npx buchbinder --force-reset   # skips the modified-locally check'))
         console.log(chalk.yellow(''))
         console.log(chalk.yellow('  Refresh recommended. Exiting.'))
         process.exit(0)
@@ -598,8 +598,8 @@ async function main() {
         console.log(chalk.yellow('Resetting plugin assets to current source state...'))
     }
 
-    console.log(chalk.white('\nKombinat Writer — Professional Book Writing Workflow'));
-    console.log(chalk.gray('Installs the /kombinat writing workflow into .opencode/\n'));
+    console.log(chalk.white('\nBuchbinder — Professional Book Writing Workflow'));
+    console.log(chalk.gray('Installs the /buchbinder writing workflow into .opencode/\n'));
 
     // ── Per-project acknowledgement (interactive only) ──
     if (!args.nonInteractive) {
@@ -714,7 +714,7 @@ async function main() {
                 importedFiles.push(destPath);
             }
             if (importedFiles.length === 0 && rawInput.trim()) {
-                warn('No files could be imported — you can add them later via /kombinat manifest');
+                warn('No files could be imported — you can add them later via /buchbinder manifest');
             }
         }
 
@@ -886,9 +886,9 @@ async function main() {
     log('');
     log('  Installed to .opencode/:');
     log(`    ${chalk.green('\u2713')} skills/`);
-    log(`    ${chalk.green('\u2713')} tools/ (incl. hubs/kombinat/ + lib/)`);
+    log(`    ${chalk.green('\u2713')} tools/ (incl. hubs/buchbinder/ + lib/)`);
     log(`    ${chalk.green('\u2713')} templates/`);
-    log(`    ${chalk.green('\u2713')} plugins/kombinat-sidebar/ (TSX source — registers /kombinat menu)`);
+    log(`    ${chalk.green('\u2713')} plugins/buchbinder-sidebar/ (TSX source — registers /buchbinder menu)`);
     log('');
     log(`  ${chalk.green('\u2713')} tui.json — TUI keybinds + plugin path`);
     log(`  ${chalk.green('\u2713')} opencode.jsonc — plugin registered (loads the sidebar)`);
@@ -896,15 +896,15 @@ async function main() {
     log('');
     log('  Next steps:');
     log('    1. Open your project in OpenCode (restart if already open)');
-    log('    2. Verify plugin loaded: opencode debug info should list kombinat-sidebar');
-    log('    3. Type /kombinat to open the instant phase menu');
+    log('    2. Verify plugin loaded: opencode debug info should list buchbinder-sidebar');
+    log('    3. Type /buchbinder to open the instant phase menu');
     if (isSeries) {
         log(`    ✓ Series linked: ${seriesId}, book ${bookNumber}`);
     }
     if (importedFiles.length > 0) {
-        log(`    ${isSeries ? '3' : '3'}. Run /kombinat constitute — it will detect your imported ${importChoice === 'lorebook' ? 'lorebook' : 'premise'} file${importedFiles.length > 1 ? 's' : ''} and use it`);
+        log(`    ${isSeries ? '3' : '3'}. Run /buchbinder constitute — it will detect your imported ${importChoice === 'lorebook' ? 'lorebook' : 'premise'} file${importedFiles.length > 1 ? 's' : ''} and use it`);
     } else {
-        log('    3. Or invoke a specific phase directly (e.g. /kombinat outline)');
+        log('    3. Or invoke a specific phase directly (e.g. /buchbinder outline)');
     }
     log('');
     log('  Phases: guided, constitute, specify, clarify, research, outline,');

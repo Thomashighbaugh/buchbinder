@@ -44,7 +44,7 @@ When calling the \`task\` tool for each agent, structure your prompt explicitly:
 Once all four subagents return their reports, you (the Orchestrator) will:
 1.  **Reconcile Findings**: Cross-reference the reports. Does the Continuity Auditor's timeline issue explain the Structural Analyst's pacing sag?
 2.  **Deduplicate**: Merge overlapping critiques.
-3.  **Format the Master Report**: Compile the findings into the standard Kombinat Critique Matrix (Critical, Major, Minor), tagged by the reporting subagent's domain.
+3.  **Format the Master Report**: Compile the findings into the standard Buchbinder Critique Matrix (Critical, Major, Minor), tagged by the reporting subagent's domain.
 
 ## Phase 3: Verification (The Sanity Check)
 

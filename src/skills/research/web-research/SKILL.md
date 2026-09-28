@@ -7,7 +7,7 @@ description: "Web search strategies, query formulation, source credibility asses
 
 ## Search Strategy Formulation
 
-Construct searches using Boolean operators (`AND`, `OR`, `NOT`) to combine or exclude terms. Use `AND` to narrow results, `OR` to capture synonyms (`"climate change" OR "global warming"`), and `NOT` to exclude irrelevant contexts. Apply domain restriction (`site:.edu`, `site:.gov`, `site:.org`) and date filtering (`after:2022`, `before:2020`) to kombinate results. Use filetype filtering (`filetype:pdf`) to locate reports and papers.
+Construct searches using Boolean operators (`AND`, `OR`, `NOT`) to combine or exclude terms. Use `AND` to narrow results, `OR` to capture synonyms (`"climate change" OR "global warming"`), and `NOT` to exclude irrelevant contexts. Apply domain restriction (`site:.edu`, `site:.gov`, `site:.org`) and date filtering (`after:2022`, `before:2020`) to combine results. Use filetype filtering (`filetype:pdf`) to locate reports and papers.
 
 For complex topics, decompose the research question into 3–5 atomic queries, each targeting a distinct facet: historical context, current data, expert opinion, counter-arguments, and practical application. Use phrase matching (`"exact phrase"`) for proper nouns, titles, and legislation names.
 

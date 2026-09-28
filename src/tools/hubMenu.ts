@@ -1,7 +1,7 @@
 /**
- * Kombinat Writer — Hub Menu Router Tool
+ * Buchbinder — Hub Menu Router Tool
  *
- * Provides menu/route/list actions for the /kombinat command system.
+ * Provides menu/route/list actions for the /buchbinder command system.
  * The TUI plugin handles interactive menu selection; this tool handles
  * spec resolution and retrieval for the agent.
  */
@@ -16,7 +16,7 @@ import {
 const VALID_ACTIONS = ['menu', 'route', 'list'] as const
 
 export default tool({
-  description: "Kombinat Writer hub menu router. Use 'menu' to get subcommand options, 'route' to get full spec for a selected subcommand, 'list' to list all labels.",
+  description: "Buchbinder hub menu router. Use 'menu' to get subcommand options, 'route' to get full spec for a selected subcommand, 'list' to list all labels.",
   args: {
     action: tool.schema.string().describe(
       `Action: 'menu' returns menu JSON, 'route' returns full subcommand spec, 'list' lists all labels. Valid: ${VALID_ACTIONS.join(', ')}`
@@ -28,7 +28,7 @@ export default tool({
       return JSON.stringify({ error: `Invalid action '${args.action}'. Valid: ${VALID_ACTIONS.join(', ')}` })
     }
 
-    const hubName = "kombinat"
+    const hubName = "buchbinder"
 
     switch (args.action) {
       case 'list': {

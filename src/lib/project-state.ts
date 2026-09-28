@@ -7,7 +7,7 @@
  * - Which phase documents exist and their status
  * - Recommended next phase
  *
- * Used by /kombinat for state-aware navigation.
+ * Used by /buchbinder for state-aware navigation.
  */
 
 import fs from 'fs-extra';

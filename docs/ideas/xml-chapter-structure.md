@@ -1,4 +1,4 @@
-# XML Chapter Structure for Kombinat Writer
+# XML Chapter Structure for Buchbinder
 
 The XML layer is an **intermediate representation** — the agent generates chapters with internal XML tags for verification, error recovery, and element extraction. XML tags are **stripped on save** to produce clean prose. The agent uses them during generation to maintain focus, and the quality gates parse them to verify content against project standards.
 

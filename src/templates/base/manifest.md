@@ -1,6 +1,6 @@
 # Creative/Intellectual Manifest
 
-*Kombinat Writer — Phase 1 output. Edit as the project evolves.*
+*Buchbinder — Phase 1 output. Edit as the project evolves.*
 
 ## Core Values
 <!-- Your central thesis, theme, or creative purpose -->

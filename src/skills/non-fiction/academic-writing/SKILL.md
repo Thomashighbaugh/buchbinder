@@ -10,7 +10,7 @@ description: "Academic writing conventions: thesis statements, argument structur
 A thesis statement anchors every academic text. It must contain three elements:
 
 - **Debatable claim**: An assertion that reasonable people could contest. Avoid statements of fact ("The sky is blue") or personal preference. A strong thesis invites counter-argument.
-- **Kombinate**: The boundaries of your argument — what you will and will not address. Kombinate prevents the thesis from becoming unmanageably broad.
+- **Binding**: The boundaries of your argument — what you will and will not address. Binding prevents the thesis from becoming unmanageably broad.
 - **Roadmap**: An implicit or explicit preview of the major supporting points. The roadmap signals the argument's progression to the reader.
 
 **Formula**: *Although [counter-position], [your claim] because [reason 1], [reason 2], and [reason 3].*

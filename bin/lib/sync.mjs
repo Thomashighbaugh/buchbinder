@@ -2,7 +2,7 @@
 /**
  * Sync — shared copy/sync logic for install.mjs and refresh.mjs
  *
- * Both scripts need to copy the kombinat-writer plugin assets from the
+ * Both scripts need to copy the buchbinder plugin assets from the
  * package source to the consumer project's .opencode/ directory. The copy
  * logic lives here so install and refresh can share it.
  *
@@ -199,7 +199,7 @@ export function copyTemplates(destDir, track) {
 // ─── Sidebar Plugin ─────────────────────────────────────────────────────────
 
 /**
- * Copy the kombinat-sidebar TUI plugin from source into the consumer project.
+ * Copy the buchbinder-sidebar TUI plugin from source into the consumer project.
  *
  * Source of truth: src/plugins/ (TSX + TS, runs natively under bun — no
  * build step needed in the consumer). The TSX tree has subdirectories
@@ -207,13 +207,13 @@ export function copyTemplates(destDir, track) {
  * dist/ bundle collapses everything into a single minified file and is no
  * longer used.
  *
- * Plugin entry point in the consumer: .opencode/plugins/kombinat-sidebar/index.js
- * which re-exports from ./kombinat-sidebar.tsx (the .tsx extension is
+ * Plugin entry point in the consumer: .opencode/plugins/buchbinder-sidebar/index.js
+ * which re-exports from ./buchbinder-sidebar.tsx (the .tsx extension is
  * required because the index.js in src/plugins/ points to it directly).
  */
 export function copySidebarPlugin(destDir, mode, manifestFiles = null) {
     const srcDir = path.join(SRC_DIR, 'plugins')
-    const destDir2 = path.join(destDir, 'plugins', 'kombinat-sidebar')
+    const destDir2 = path.join(destDir, 'plugins', 'buchbinder-sidebar')
     if (!fs.existsSync(srcDir)) return { copied: 0, skipped: 0, source: 'none' }
 
     fs.ensureDirSync(destDir2)
@@ -237,7 +237,7 @@ export function copySidebarPlugin(destDir, mode, manifestFiles = null) {
                 srcPath,
                 destPath,
                 mode,
-                manifestFiles ? manifestFiles.get(`plugins/kombinat-sidebar/${entry.name}`) : null,
+                manifestFiles ? manifestFiles.get(`plugins/buchbinder-sidebar/${entry.name}`) : null,
             )
             if (result === 'copied') copied++
             else skipped++
@@ -266,8 +266,8 @@ export function copySidebarPlugin(destDir, mode, manifestFiles = null) {
             manifestFiles
                 ? new Map(
                       [...manifestFiles.entries()]
-                          .filter(([k]) => k.startsWith(`plugins/kombinat-sidebar/${entry.name}/`))
-                          .map(([k, v]) => [k.slice(`plugins/kombinat-sidebar/`.length), v])
+                          .filter(([k]) => k.startsWith(`plugins/buchbinder-sidebar/${entry.name}/`))
+                          .map(([k, v]) => [k.slice(`plugins/buchbinder-sidebar/`.length), v])
                   )
                 : null,
         )
@@ -321,7 +321,7 @@ function copyDirDereferenced(srcDir, destDir, mode, manifestFiles) {
 
 // ─── Project Config (tui.json, opencode.jsonc, package.json) ────────────────
 
-const PLUGIN_ENTRY = './plugins/kombinat-sidebar/index.js'
+const PLUGIN_ENTRY = './plugins/buchbinder-sidebar/index.js'
 const HOOKS_ENTRY = './plugins/hooks/index.js'
 
 const REQUIRED_DEPS = {
@@ -335,7 +335,7 @@ const REQUIRED_DEPS = {
 
 /**
  * Ensure tui.json, opencode.jsonc, and package.json exist and register the
- * kombinat-sidebar plugin. Additive only — never removes user-added keys.
+ * buchbinder-sidebar plugin. Additive only — never removes user-added keys.
  */
 export function ensureProjectConfig(destDir) {
     const tuiJsonPath = path.join(destDir, 'tui.json')
@@ -350,7 +350,7 @@ export function ensureProjectConfig(destDir) {
         const config = parseJsonc(tuiJsonPath)
         if (config) {
             const plugins = Array.isArray(config.plugin) ? config.plugin : []
-            if (!plugins.some(p => typeof p === 'string' && p.endsWith('kombinat-sidebar/index.js'))) {
+            if (!plugins.some(p => typeof p === 'string' && p.endsWith('buchbinder-sidebar/index.js'))) {
                 config.plugin = [...plugins, PLUGIN_ENTRY]
                 fs.writeFileSync(tuiJsonPath, JSON.stringify(config, null, 2) + '\n', 'utf-8')
             }
@@ -365,7 +365,7 @@ export function ensureProjectConfig(destDir) {
         const config = parseJsonc(opencodeJsoncPath)
         if (config) {
             const plugins = Array.isArray(config.plugin) ? config.plugin : []
-            const hasSidebar = plugins.some(p => typeof p === 'string' && p.endsWith('kombinat-sidebar/index.js'))
+            const hasSidebar = plugins.some(p => typeof p === 'string' && p.endsWith('buchbinder-sidebar/index.js'))
             const hasHooks = plugins.some(p => typeof p === 'string' && p.endsWith('hooks/index.js'))
             if (!hasSidebar) plugins.push(PLUGIN_ENTRY)
             if (!hasHooks) plugins.push(HOOKS_ENTRY)

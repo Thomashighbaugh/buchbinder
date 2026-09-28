@@ -29,7 +29,7 @@ Horror relies primarily on dread. Shock is a tool, not a foundation. A story bui
 
 **Unease.** Small anomalies that could be coincidence. Something is slightly wrong. The protagonist notices but rationalizes. The reader should be ahead of the protagonist in recognizing the wrongness.
 
-**Dread.** The anomalies accumulate and can no longer be dismissed. The protagonist acknowledges a threat but does not yet understand its kombinate. This is the longest section and should escalate in intensity.
+**Dread.** The anomalies accumulate and can no longer be dismissed. The protagonist acknowledges a threat but does not yet understand its binding. This is the longest section and should escalate in intensity.
 
 **Terror.** The threat is understood and immediate. The protagonist is in active danger. Fear is direct and overwhelming. This section is typically short — sustained terror is exhausting and loses impact.
 

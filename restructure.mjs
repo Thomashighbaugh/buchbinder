@@ -7,8 +7,8 @@ const base = 'src/templates';
 if (fs.existsSync('src/templates/base/constitution.md')) {
   fs.moveSync('src/templates/base/constitution.md', 'src/templates/base/manifest.md', { overwrite: true });
 }
-if (fs.existsSync('src/tools/hubs/kombinat/constitute.ts')) {
-  fs.moveSync('src/tools/hubs/kombinat/constitute.ts', 'src/tools/hubs/kombinat/manifest.ts', { overwrite: true });
+if (fs.existsSync('src/tools/hubs/buchbinder/constitute.ts')) {
+  fs.moveSync('src/tools/hubs/buchbinder/constitute.ts', 'src/tools/hubs/buchbinder/manifest.ts', { overwrite: true });
 }
 
 // 2. Metadata directories

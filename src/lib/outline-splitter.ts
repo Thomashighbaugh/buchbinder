@@ -2,7 +2,7 @@
  * Outline splitter — converts ./book/outline.md into per-chapter files.
  *
  * Used by:
- *   1. The outline phase of /kombinat (after writing outline.md, this
+ *   1. The outline phase of /buchbinder (after writing outline.md, this
  *      function is called to produce ./book/outline/chapter_NN.md and
  *      ./book/outline/_index.json).
  *   2. Disaster recovery: if per-chapter files or the index are ever lost,

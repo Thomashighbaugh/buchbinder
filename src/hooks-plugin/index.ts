@@ -1,5 +1,5 @@
 /**
- * Kombinat Writer — Token Efficiency & API Reduction Hooks
+ * Buchbinder — Token Efficiency & API Reduction Hooks
  *
  * Registered as a server-side plugin in .opencode/opencode.jsonc alongside
  * the TUI sidebar plugin. These hooks reduce API calls and token waste
@@ -84,10 +84,10 @@ interface PhaseState {
   nextStep?: string
 }
 
-/** Extract the kombinat phase from a message, if any. */
+/** Extract the buchbinder phase from a message, if any. */
 function detectPhase(text: string | undefined | null): string | null {
   if (!text || typeof text !== 'string') return null
-  const m = text.match(/\/kombinat(?:-router)?\s+(\S+)/)
+  const m = text.match(/\/buchbinder(?:-router)?\s+(\S+)/)
   return m ? m[1] : null
 }
 
@@ -126,13 +126,13 @@ const plugin: Plugin = async ({ directory, client }) => {
       if (!phaseState.currentPhase) return
 
       output.context.push(`
-## Kombinat Phase State (preserved across compaction)
+## Buchbinder Phase State (preserved across compaction)
 
 Current phase: ${phaseState.currentPhase || 'none'}
 Current chapter: ${phaseState.currentChapter || 'none'}
 Gate results: ${phaseState.gateSummary || 'none'}
 Last action: ${phaseState.lastAction || 'none'}
-Next step: ${phaseState.nextStep || 'Run /kombinat guided to assess state'}
+Next step: ${phaseState.nextStep || 'Run /buchbinder guided to assess state'}
 `)
     },
 
@@ -159,8 +159,8 @@ Next step: ${phaseState.nextStep || 'Run /kombinat guided to assess state'}
         if (s.includes('file-operations') || s.includes('security') || s.includes('completion-guardrail')) return true
         // Keep phase-relevant instructions
         if (s.includes(phase)) return true
-        // Keep kombinat-specific instructions
-        if (s.includes('kombinat') || s.includes('Kombinat')) return true
+        // Keep buchbinder-specific instructions
+        if (s.includes('buchbinder') || s.includes('Buchbinder')) return true
         // Drop everything else — the agent loads skills on demand
         return false
       })
@@ -225,7 +225,7 @@ Next step: ${phaseState.nextStep || 'Run /kombinat guided to assess state'}
 
     // ── 6. Skip synthetic continue when phase is complete ──
     // After a phase finishes, OpenCode adds a synthetic "continue" message
-    // to keep the agent going. For kombinat phases, this is wasteful —
+    // to keep the agent going. For buchbinder phases, this is wasteful —
     // the phase should end cleanly. Skip it.
     "experimental.compaction.autocontinue": async (input, output) => {
       const phase = detectPhase(getMessageText(input.message))

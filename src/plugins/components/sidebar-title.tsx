@@ -11,7 +11,7 @@ export function SidebarTitle(props: { session_id: string; title: string; state: 
   return (
     <box flexDirection="column">
       <text style={{ fg: c.header, attributes: BOLD }}>
-        {'Kombinat Writer'}
+        {'Buchbinder'}
       </text>
       <Show when={project()} fallback={<text style={{ fg: c.textMuted }}>{'No project detected'}</text>}>
         <text style={{ fg: c.textBright }}>

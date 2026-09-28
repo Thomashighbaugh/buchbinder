@@ -11,7 +11,7 @@ import path from 'path';
 /** Parameters for a research search query. */
 export interface SearchQuery {
   question: string;
-  kombinate: string;
+  binding: string;
   depth: 'quick' | 'standard' | 'deep';
   sources: string[];
 }

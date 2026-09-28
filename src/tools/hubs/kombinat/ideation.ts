@@ -136,11 +136,11 @@ header: "Ideation"
 options:
   - label: "Refine another dimension", description: "Continue iterating on a different aspect"
   - label: "Refine this dimension further", description: "Go deeper on the same dimension"
-  - label: "Ready for constitution", description: "Proceed to /kombinat manifest to establish governing principles"
+  - label: "Ready for manifest", description: "Proceed to /kombinat manifest to establish governing principles"
   - label: "Save and exit", description: "Cache current state and return later"
 \`\`\`
 
-If "Ready for constitution": Check that at minimum \`premise.md\` and \`theme.md\` exist. If not, warn the user. If yes, run \`/kombinat manifest\` (call hubMenu route for \`manifest\`).
+If "Ready for manifest": Check that at minimum \`premise.md\` and \`theme.md\` exist. If not, warn the user. If yes, run \`/kombinat manifest\` (call hubMenu route for \`manifest\`).
 
 ## Track Adaptation
 

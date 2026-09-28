@@ -145,7 +145,7 @@ If the user selects, call \`hubMenu\` with \`action: "route"\`, \`hub: "kombinat
 | \`scene-structure\` | \`skills/fiction/writing-techniques/scene-structure/SKILL.md\` | Scene structure for hook placement |
 | \`dialogue-techniques\` | \`skills/fiction/writing-techniques/dialogue-techniques/SKILL.md\` | Dialogue as hook |
 | \`opening-closing\` | \`src/lib/opening-closing.ts\` | Book-level opening/closing strength audit |`,
-  tools: ["bash"],
+  tools: ["bash", "question"],
   relatedSkills: ["scene-structure", "dialogue-techniques", "opening-closing"],
   examples: [
     { input: "/kombinat hook-review", approach: "Reviews opening and closing hooks for all chapters" },

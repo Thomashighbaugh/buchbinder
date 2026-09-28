@@ -126,7 +126,7 @@ If the user selects, call \`hubMenu\` with \`action: "route"\`, \`hub: "kombinat
 ## Supplement Skills
 
 None specific to this phase.`,
-  tools: ["bash"],
+  tools: ["bash", "question"],
   relatedSkills: ["consistency-checker"],
   examples: [
     { input: "/kombinat task-manager", approach: "Breaks outline into tracked tasks with per-chapter sub-status" },

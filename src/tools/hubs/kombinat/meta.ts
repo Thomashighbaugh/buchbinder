@@ -57,10 +57,20 @@ Check \`./book/meta.json\`. If it does not exist, create it with fields left bla
 }
 \`\`\`
 
-### 4. Next Steps
+### 4. Next Steps (Auto-Handoff)
 
-"Metadata saved. View with \`/kombinat meta view\`. Used by \`/kombinat publish\` for format generation."`,
-  tools: ["bash"],
+"Metadata saved. View with \`/kombinat meta view\`. Used by \`/kombinat publish\` for format generation."
+
+After saving metadata, hand off using the \`question\` tool (Rule A — multiple candidates):
+
+Question: "Metadata saved. What next?"
+Options:
+- **Publish** → Run \`/kombinat publish\` (call hubMenu route for \`publish\`)
+- **Review** → Run \`/kombinat review\` (call hubMenu route for \`review\`)
+- **Stop** → End turn
+
+If the user selects a phase, call \`hubMenu\` with \`action: "route"\`, \`subcommand: <chosen>\` and execute it immediately. Do NOT just tell them to type it — run it.`,
+  tools: ["bash", "question"],
   relatedSkills: ["style-enforcer"],
   examples: [
     { input: "/kombinat meta set title=\"My Novel\" author=\"Author Name\"", approach: "Sets title and author metadata fields" },

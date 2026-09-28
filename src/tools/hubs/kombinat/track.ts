@@ -53,14 +53,24 @@ For \`validate\` actions:
 - Check plot threads have resolution or \`[Active]\` status
 - Verify all sources are cited in chapters (non-fiction)
 
-### 5. Next Steps
+### 5. Next Steps (Auto-Handoff)
 
 "Tracking [entity] updated/queried/validated."
+
+After the tracking operation, hand off using the \`question\` tool (Rule A — multiple candidates):
+
+Question: "Tracking complete. What next?"
+Options:
+- **Timeline** → Run \`/kombinat timeline\` (call hubMenu route for \`timeline\`)
+- **Verify** → Run \`/kombinat verify\` (call hubMenu route for \`verify\`)
+- **Stop** → End turn
+
+If the user selects a phase, call \`hubMenu\` with \`action: "route"\`, \`subcommand: <chosen>\` and execute it immediately. Do NOT just tell them to type it — run it.
 
 ## Supplement Skills
 
 None specific to this utility.`,
-  tools: ["bash"],
+  tools: ["bash", "question"],
   relatedSkills: ["consistency-checker", "forgotten-elements"],
   examples: [
     { input: "/kombinat track character update Eira state=anxious", approach: "Updates character Eira's emotional state in the tracking file" },

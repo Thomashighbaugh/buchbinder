@@ -176,6 +176,18 @@ For all verify sub-commands:
 4. Report results in structured format
 5. Do NOT modify any files unless explicitly requested (voice-init generates profiles, but other checks are read-only)
 
+## Next Steps (Auto-Handoff)
+
+After reporting the verify results, hand off using the \`question\` tool (Rule A — multiple candidates):
+
+Question: "Verification complete. What next?"
+Options:
+- **Fix issues** → Run \`/kombinat revise\` (call hubMenu route for \`revise\`) if revision-verify failed, or \`/kombinat edit\` (call hubMenu route for \`edit\`) for line-level issues
+- **Review** → Run \`/kombinat review\` (call hubMenu route for \`review\`)
+- **Stop** → End turn
+
+If the user selects a phase, call \`hubMenu\` with \`action: "route"\`, \`subcommand: <chosen>\` and execute it immediately. Do NOT just tell them to type it — run it.
+
 ## Supplement Skills
 
 | Skill | File | Purpose |
@@ -217,7 +229,7 @@ For all verify sub-commands:
 | \`feedback-memory\` | \`src/lib/feedback-memory.ts\` | Rejection reason memory |
 | \`provenance\` | \`src/lib/provenance.ts\` | Change provenance tracking |
 | \`phase-preview\` | \`src/lib/phase-preview.ts\` | Phase pre-execution confirmation |`,
-  tools: ["bash"],
+  tools: ["bash", "question"],
   relatedSkills: ["pre-draft-checklist", "continuity-auditor", "forgotten-elements", "style-enforcer", "fact-checker", "citation-validator"],
   examples: [
     { input: "/kombinat verify voice-init", approach: "Generates voice profiles from all existing chapters" },

@@ -373,7 +373,7 @@ The draft phase integrates these HITL features:
   rules: [
     "Whenever the user makes a decision that alters narrative context, metanarrative, formatting, or tracking states, you MUST proactively update the relevant files in ./book/metadata/ and ./book/tracking/ before completing the turn."
   ],
-  tools: ["loadSkill", "bash"],
+  tools: ["loadSkill", "bash", "question"],
   relatedSkills: ["pre-draft-checklist", "scene-architecture", "dialogue-techniques", "psychological-interiority", "argument-structure", "academic-writing", "phase-preview", "authorial-intent", "creative-constraints", "provenance"],
   examples: [
     { input: "/kombinat draft", approach: "Drafts all pending chapters (up to 6) in one batch with shared context loaded once" },

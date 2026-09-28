@@ -316,7 +316,7 @@ None specific to this phase.
   rules: [
     "Whenever the user makes a decision that alters narrative context, metanarrative, formatting, or tracking states, you MUST proactively update the relevant files in ./book/metadata/ and ./book/tracking/ before completing the turn."
   ],
-  tools: ["bash"],
+  tools: ["bash", "question"],
   relatedSkills: ["continuity-auditor", "forgotten-elements", "style-enforcer", "phase-preview", "authorial-intent", "diff-approval", "creative-constraints", "provenance"],
   examples: [
     { input: "/kombinat revise", approach: "Loads latest critique round, revises all affected chapters (up to 6), runs revision-verify gate" },

@@ -80,7 +80,7 @@ If the user selects a phase, call \`hubMenu\` with \`action: "route"\`, \`hub: "
 |-------|------|---------|
 | \`citation-styles\` | \`skills/non-fiction/citation-styles/SKILL.md\` | Citation format reference for all styles |
 | \`source-evaluation\` | \`skills/non-fiction/source-evaluation/SKILL.md\` | Source credibility assessment |`,
-  tools: ["loadSkill", "bash"],
+  tools: ["loadSkill", "bash", "question"],
   relatedSkills: ["citation-styles", "source-evaluation"],
   examples: [
     { input: "/kombinat cite add \"Author (2024) Title. Publisher.\"", approach: "Ingests a new source and adds it to the source database" },

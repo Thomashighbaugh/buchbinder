@@ -158,18 +158,26 @@ Update \`./book/meta.json\` with:
 - Version number
 - Format availability (which formats were successfully exported)
 
-### 9. Next Steps
+### 9. Next Steps (Auto-Handoff)
 
 "Manuscript exported to [formats]. Verification: [all passed / N failures]. Files in \`output/\`."
 
-This is the terminal phase. If there are failures, offer to fix them via \`/kombinat edit\` using the \`question\` tool. Otherwise, congratulate the user — the manuscript is done.
+This is the terminal phase. Hand off using the \`question\` tool (Rule A — multiple candidates):
+
+Question: "Publish complete. What next?"
+Options:
+- **Edit** (if verification failures) → Run \`/kombinat edit\` (call hubMenu route for \`edit\`) to fix failures
+- **Review** → Run \`/kombinat review\` (call hubMenu route for \`review\`)
+- **Stop** → End turn (congratulate the user — the manuscript is done)
+
+If the user selects a phase, call \`hubMenu\` with \`action: "route"\`, \`subcommand: <chosen>\` and execute it immediately. Do NOT just tell them to type it — run it.
 
 ## Supplement Skills
 
 | Skill | File | Purpose |
 |-------|------|---------|
 | \`publish-export\` | \`src/lib/publish-export.ts\` | Export engine (pandoc + fallback + verification) |`,
-  tools: ["bash"],
+  tools: ["bash", "question"],
   relatedSkills: ["style-enforcer", "consistency-checker", "citation-validator"],
   examples: [
     { input: "/kombinat publish epub", approach: "Exports manuscript to EPUB via pandoc with post-export verification" },

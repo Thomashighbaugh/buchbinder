@@ -125,9 +125,20 @@ Phase Workflow:
   [PENDING] 10. Edit       — Line-level editing pass
   [PENDING] 11. Review     — Broad project QA
   [PENDING] 12. Publish    — Format export and submission
-
-To continue, type: /kombinat clarify
 \`\`\`
+
+### 4b. Hand Off to the Recommended Phase (MANDATORY)
+
+After presenting the roadmap, do NOT end with "type /kombinat X". Hand off using the \`question\` tool:
+
+- **If exactly one phase is recommended** (Rule B — confirm): 
+  Question: "Proceed to <phase>?"
+  Options: **Yes** → run it · **Stop** → end turn
+- **If multiple phases are plausible** (Rule A — select):
+  Question: "Which phase next?"
+  Options: the recommended phase(s) + **Stop**
+
+When the user selects/confirms, call \`hubMenu\` with \`action: "route"\`, \`subcommand: <chosen>\` and execute that phase immediately. Do NOT tell them to type it — run it.
 
 ### 5. Manual Drafting Guidance
 

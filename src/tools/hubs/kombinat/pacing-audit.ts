@@ -123,7 +123,7 @@ If the user selects, call \`hubMenu\` with \`action: "route"\`, \`hub: "kombinat
 | Skill | File | Purpose |
 |-------|------|---------|
 | \`scene-structure\` | \`skills/fiction/writing-techniques/scene-structure/SKILL.md\` | Scene framework for pacing analysis |`,
-  tools: ["bash"],
+  tools: ["bash", "question"],
   relatedSkills: ["scene-structure"],
   examples: [
     { input: "/kombinat pacing-audit", approach: "Analyzes pacing across all chapters" },

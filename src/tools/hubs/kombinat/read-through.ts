@@ -179,7 +179,7 @@ If the user selects, call \`hubMenu\` with \`action: "route"\`, \`hub: "kombinat
 |-------|------|---------|
 | \`developmental-editor\` | \`skills/critique/developmental-editor/SKILL.md\` | Structural reader perspective |
 | \`audience-surrogate\` | \`skills/critique/audience-surrogate/SKILL.md\` | Experience reader perspective |`,
-  tools: ["bash"],
+  tools: ["bash", "question"],
   relatedSkills: ["developmental-editor", "audience-surrogate"],
   examples: [
     { input: "/kombinat read-through", approach: "Sequential read-through of all chapters as a reader" },

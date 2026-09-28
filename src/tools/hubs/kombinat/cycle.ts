@@ -157,7 +157,7 @@ If the user selects, call \`hubMenu\` with \`action: "route"\`, \`hub: "kombinat
 ## Supplement Skills
 
 Uses skills from draft, critique, revise, edit, and verify phases.`,
-  tools: ["loadSkill", "bash"],
+  tools: ["loadSkill", "bash", "question"],
   relatedSkills: ["developmental-editor", "audience-surrogate", "domain-expert", "cultural-consultant", "pre-draft-checklist", "continuity-auditor", "forgotten-elements", "style-enforcer"],
   examples: [
     { input: "/kombinat cycle", approach: "Runs full editorial cycle for all pending chapters (up to 6): draft→critique→revise→edit→continuity→done" },

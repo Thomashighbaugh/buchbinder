@@ -254,7 +254,7 @@ If the user selects, call \`hubMenu\` with \`action: "route"\`, \`hub: "kombinat
 | \`knowledge-state\` | \`src/lib/knowledge-state.ts\` | Knowledge state matrix |
 | \`thread-matrix\` | \`src/lib/thread-matrix.ts\` | Thread tracking matrix |
 | \`dependency-graph\` | \`src/lib/dependency-graph.ts\` | Chapter dependency graph |`,
-  tools: ["loadSkill", "bash"],
+  tools: ["loadSkill", "bash", "question"],
   relatedSkills: ["continuity-auditor", "forgotten-elements", "fact-checker", "citation-validator", "style-enforcer"],
   examples: [{ input: "/kombinat review final", approach: "Runs final readiness assessment with continuity scan before publication" }],
   warnings: ["Continuity scan is a HARD BLOCK — contradictions between chapters (character state, timeline, plot threads, location, relationships, objects, knowledge, voice) must be resolved before publication", "Forgotten threads (dormant for 5+ chapters) and voice drift are warnings, not blocks"]

@@ -47,10 +47,20 @@ Cross-reference timeline entries against all written chapters. Flag:
 - Chronological contradictions (event B occurs before event A despite timeline showing A before B)
 - Impossible elapsed times between events
 
-### 5. Next Steps
+### 5. Next Steps (Auto-Handoff)
 
-"Timeline verified. No contradictions found." or "Timeline has [N] gaps. Recommended: \`/kombinat specify\` to clarify dates, or add missing events with \`/kombinat timeline add\`."`,
-  tools: ["bash"],
+"Timeline verified. No contradictions found." or "Timeline has [N] gaps. Recommended: \`/kombinat specify\` to clarify dates, or add missing events with \`/kombinat timeline add\`."
+
+After verifying the timeline, hand off using the \`question\` tool (Rule A — multiple candidates):
+
+Question: "Timeline verified. What next?"
+Options:
+- **Specify** (if gaps found) → Run \`/kombinat specify\` (call hubMenu route for \`specify\`)
+- **Track** → Run \`/kombinat track\` (call hubMenu route for \`track\`)
+- **Stop** → End turn
+
+If the user selects a phase, call \`hubMenu\` with \`action: "route"\`, \`subcommand: <chosen>\` and execute it immediately. Do NOT just tell them to type it — run it.`,
+  tools: ["bash", "question"],
   relatedSkills: ["consistency-checker"],
   examples: [
     { input: "/kombinat timeline view", approach: "Displays the full project timeline sorted chronologically" },

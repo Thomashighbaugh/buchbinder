@@ -50,7 +50,7 @@ Options:
 - **No — I'll continue later** → Stop
 
 If the user selects, call \`hubMenu\` with \`action: "route"\`, \`hub: "kombinat"\`, \`subcommand: "draft"\` and execute it immediately.`,
-  tools: ["bash"],
+  tools: ["bash", "question"],
   relatedSkills: ["scene-structure", "dialogue-techniques"],
   examples: [
     { input: "/kombinat drafter new A haunted lighthouse keeper discovers a message in a bottle", approach: "Creates a new loose draft from the raw idea" },

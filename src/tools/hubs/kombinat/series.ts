@@ -179,13 +179,26 @@ For all series sub-commands:
 2. Execute the corresponding workflow
 3. Report results in structured format
 
+## Next Steps (Auto-Handoff)
+
+After the series operation, hand off using the \`question\` tool (Rule A — multiple candidates):
+
+Question: "Series operation complete. What next?"
+Options:
+- **Manifest** (after series init) → Run \`/kombinat manifest\` (call hubMenu route for \`manifest\`) to inherit lorebook into the book
+- **Specify** → Run \`/kombinat specify\` (call hubMenu route for \`specify\`)
+- **Series status** → Run \`/kombinat series status\` (call hubMenu route for \`series\`)
+- **Stop** → End turn
+
+If the user selects a phase, call \`hubMenu\` with \`action: "route"\`, \`subcommand: <chosen>\` and execute it immediately. Do NOT just tell them to type it — run it.
+
 ## Supplement Skills
 
 | Skill | File | Purpose |
 |-------|------|---------|
 | \`series-lorebook\` | \`src/lib/series-lorebook.ts\` | Series lorebook engine |
 | \`lorebook-import\` | \`src/lib/lorebook-import.ts\` | External format converter |`,
-  tools: ["bash"],
+  tools: ["bash", "question"],
   relatedSkills: ["consistency-checker", "forgotten-elements"],
   examples: [
     { input: "/kombinat series init", approach: "Creates series lorebook structure, links current book as book 1" },

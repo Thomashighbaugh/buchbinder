@@ -218,7 +218,7 @@ The edit phase integrates these HITL features:
   rules: [
     "Whenever the user makes a decision that alters narrative context, metanarrative, formatting, or tracking states, you MUST proactively update the relevant files in ./book/metadata/ and ./book/tracking/ before completing the turn."
   ],
-  tools: ["loadSkill", "bash"],
+  tools: ["loadSkill", "bash", "question"],
   relatedSkills: ["punctuation-emotional-effect", "style-enforcer", "continuity-auditor", "academic-writing", "phase-preview", "authorial-intent", "diff-approval", "severity-tiers", "veto-system", "feedback-memory", "creative-constraints", "provenance"],
   examples: [
     { input: "/kombinat edit", approach: "Edits all [R] chapters (up to 6) with style sheet enforcement" },

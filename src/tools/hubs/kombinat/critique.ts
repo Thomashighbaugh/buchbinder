@@ -293,7 +293,7 @@ The critique phase integrates these HITL features:
 | \`severity-tiers\` | \`src/lib/severity-tiers.ts\` | Suggestion severity tiers |
 | \`veto-system\` | \`src/lib/veto-system.ts\` | Veto with \`|\` key |
 | \`feedback-memory\` | \`src/lib/feedback-memory.ts\` | Rejection reason memory |`,
-  tools: ["loadSkill", "bash", "task"],
+  tools: ["loadSkill", "bash", "task", "question"],
   relatedSkills: ["alpha-reader", "beta-reader", "peer-review", "sensitivity-reader", "phase-preview", "severity-tiers", "veto-system", "feedback-memory"],
   examples: [
     { input: "/kombinat critique", approach: "Critiques all [FR] chapters (up to 6) with auto-selected mode" },

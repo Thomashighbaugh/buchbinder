@@ -58,7 +58,40 @@ When the user selects an option, proceed to Case 2 with that subcommand.
 6. Execute the phase workflow described in `detailedDescription`, respecting `rulesContent` and `warnings`.
 7. If `phaseArgs` has content, use it as input to the phase (e.g. chapter number, topic, mode, sub-command for verify).
 8. Save output to the appropriate `./book/` files as specified in the spec.
-9. End with a brief next-step suggestion from the spec's transition guidance.
+9. **Hand off to the next phase using the `question` tool — never just suggest a command.** The user must not have to type a subcommand. Follow the Handoff Protocol below.
+
+## Handoff Protocol (MANDATORY — applies to every phase)
+
+At the end of every phase, determine the natural next phase(s) from the spec's transition guidance, then use the `question` tool to hand off. **Do NOT end with "type /kombinat X" or a bare suggestion — the user selects from options or confirms, and you execute the hand-off immediately.**
+
+### Rule A — Multiple candidate next phases → let the user SELECT
+If the phase has more than one plausible next phase (e.g. after `manifest` the user may go to `specify` or `research`; after `draft` the user may `critique` or `draft` the next batch), present them as selectable options:
+
+```
+question: "Phase complete. What next?"
+header: "Kombinat Writer"
+options:
+  - label: "<phase-a>", description: "<one-line why>"
+  - label: "<phase-b>", description: "<one-line why>"
+  - label: "stop", description: "I'll continue later"
+```
+
+### Rule B — Exactly one next phase → CONFIRM before moving on
+If there is exactly one natural next phase, ask the user to confirm the hand-off (not just proceed silently):
+
+```
+question: "Phase complete. Proceed to <phase>?"
+header: "Kombinat Writer"
+options:
+  - label: "yes", description: "Continue to <phase>"
+  - label: "stop", description: "I'll continue later"
+```
+
+### Rule C — Execute the hand-off immediately
+When the user selects a phase (Rule A) or confirms (Rule B), **call `hubMenu` with `action: "route"`, `subcommand: <chosen>` and execute that phase immediately.** Do NOT tell the user to type it. If the user chooses `stop`, end the turn with a one-line summary and the current state.
+
+### Rule D — Terminal / utility phases
+For terminal phases (`publish`) or pure utilities (`meta`, `track`, `timeline`, `verify`, `series`, `refresh`, `refresh-index`), still offer a hand-off: either the next logical phase (Rule B) or a short menu of relevant follow-ups (Rule A). If genuinely nothing follows, offer `stop` and a menu of the most useful next phases.
 
 ### Case 3: $ARGUMENTS starts with an invalid subcommand
 Tell the user it's not a valid subcommand and show the list from the top of this prompt. Do NOT call any tool.

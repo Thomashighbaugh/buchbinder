@@ -43,7 +43,7 @@ Run step 0 above. Abort with clear error if \`buildVizDataset\` throws or the da
 Before running any review mode, retrieve the most relevant lore context for this review:
 
 \`\`\`bash
-bun .opencode/tools/lib/scripts/lore-query.mjs \
+bun .opencode/lib/scripts/lore-query.mjs \
   --query "Review context for [book title] — continuity scan across all chapters, checking character profiles, world rules, timeline, glossary, and plot threads for consistency" \
   --top 5 --rerank
 \`\`\`

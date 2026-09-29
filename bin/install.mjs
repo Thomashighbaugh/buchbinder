@@ -171,31 +171,34 @@ async function copyToolsAndLib(overwriteAll, skipAll) {
         }
     }
     await walkDir(srcTools);
-    // Copy lib/ to plugins/lib/ — all imports point there.
-    // tools/ import ../plugins/lib/, the sidebar plugin imports ../../lib/.
+    // Copy lib/ to .opencode/lib/ AND .opencode/plugins/lib/:
+    //   .opencode/lib/         — canonical: tools import ../lib, lore-query.mjs lives here
+    //   .opencode/plugins/lib/ — the sidebar plugin imports ../../lib
     const srcLib = path.join(SRC_DIR, 'lib');
     if (fs.existsSync(srcLib)) {
-        const libDest = path.join(DEST_DIR, 'plugins', 'lib');
-        fs.ensureDirSync(libDest);
-        for (const file of fs.readdirSync(srcLib).filter(f => (f.endsWith('.ts') && !f.endsWith('.d.ts')) || f.endsWith('.mjs'))) {
-            const srcFile = path.join(srcLib, file);
-            const destFile = path.join(libDest, file);
-            if (newSkipAll) { skipped++; continue; }
-            if (fs.existsSync(destFile) && !newOverwriteAll) { skipped++; continue; }
-            fs.copySync(srcFile, destFile, { overwrite: true });
-            copied++;
-        }
-        const srcScripts = path.join(srcLib, 'scripts');
-        if (fs.existsSync(srcScripts)) {
-            const destScripts = path.join(libDest, 'scripts');
-            fs.ensureDirSync(destScripts);
-            for (const file of fs.readdirSync(srcScripts)) {
-                const srcFile = path.join(srcScripts, file);
-                const destFile = path.join(destScripts, file);
+        const libDests = [path.join(DEST_DIR, 'lib'), path.join(DEST_DIR, 'plugins', 'lib')];
+        for (const libDest of libDests) {
+            fs.ensureDirSync(libDest);
+            for (const file of fs.readdirSync(srcLib).filter(f => (f.endsWith('.ts') && !f.endsWith('.d.ts')) || f.endsWith('.mjs'))) {
+                const srcFile = path.join(srcLib, file);
+                const destFile = path.join(libDest, file);
                 if (newSkipAll) { skipped++; continue; }
                 if (fs.existsSync(destFile) && !newOverwriteAll) { skipped++; continue; }
                 fs.copySync(srcFile, destFile, { overwrite: true });
                 copied++;
+            }
+            const srcScripts = path.join(srcLib, 'scripts');
+            if (fs.existsSync(srcScripts)) {
+                const destScripts = path.join(libDest, 'scripts');
+                fs.ensureDirSync(destScripts);
+                for (const file of fs.readdirSync(srcScripts)) {
+                    const srcFile = path.join(srcScripts, file);
+                    const destFile = path.join(destScripts, file);
+                    if (newSkipAll) { skipped++; continue; }
+                    if (fs.existsSync(destFile) && !newOverwriteAll) { skipped++; continue; }
+                    fs.copySync(srcFile, destFile, { overwrite: true });
+                    copied++;
+                }
             }
         }
     }
@@ -405,6 +408,7 @@ async function ensureProjectConfig() {
         '@opentui/solid': '>=0.1.97',
         'solid-js': '^1.9.0',
         'fs-extra': '^11.0.0',
+        '@huggingface/transformers': '^4.3.0',
     };
 
     let pkg = {};
@@ -856,6 +860,19 @@ async function main() {
         await ensureProjectConfig();
     }
 
+    // ── Prefetch the local ONNX models (embedder, reranker, classifier) ──
+    // Downloads into the shared model cache so first query is offline + instant.
+    // Tolerant: a fetch failure warns and retrieval degrades gracefully.
+    if (process.env.BUCHBINDER_SKIP_MODELS !== '1') {
+        try {
+            log('');
+            log('  Fetching local ONNX models (embedder, reranker, classifier)...');
+            execSync(`node ${path.join(PKG_ROOT, 'bin', 'fetch-models.mjs')}`, { stdio: 'inherit' });
+        } catch (err) {
+            warn(`Model prefetch skipped: ${err.message}`);
+        }
+    }
+
     header('Installation Complete');
 
     // ── Write the install manifest ──
@@ -886,13 +903,13 @@ async function main() {
     log('');
     log('  Installed to .opencode/:');
     log(`    ${chalk.green('\u2713')} skills/`);
-    log(`    ${chalk.green('\u2713')} tools/ (incl. hubs/buchbinder/ + lib/)`);
+    log(`    ${chalk.green('\u2713')} tools/ (incl. hubs/buchbinder/) + lib/ + plugins/lib/`);
     log(`    ${chalk.green('\u2713')} templates/`);
     log(`    ${chalk.green('\u2713')} plugins/buchbinder-sidebar/ (TSX source — registers /buchbinder menu)`);
     log('');
     log(`  ${chalk.green('\u2713')} tui.json — TUI keybinds + plugin path`);
     log(`  ${chalk.green('\u2713')} opencode.jsonc — plugin registered (loads the sidebar)`);
-    log(`  ${chalk.green('\u2713')} package.json — runtime deps (solid-js, @opentui/solid, fs-extra)`);
+    log(`  ${chalk.green('\u2713')} package.json — runtime deps (solid-js, @opentui/solid, fs-extra, @huggingface/transformers)`);
     log('');
     log('  Next steps:');
     log('    1. Open your project in OpenCode (restart if already open)');

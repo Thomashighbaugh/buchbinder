@@ -2,8 +2,13 @@
 /**
  * Lore Query — Semantic Lorebook Retriever
  *
- * Reads lorebook/knowledge/outline/draft files, retrieves the most relevant
- * chunks for a given query using local Ollama models (embedding + reranker).
+ * Reads lorebook/knowledge/outline/draft files and retrieves the most relevant
+ * chunks for a given query using a two-stage retrieval pipeline:
+ *   1. Embedding — the configured embedding backend (ONNX by default; Ollama
+ *      opt-in via EMBED_BACKEND=ollama) ranks candidates by cosine similarity.
+ *   2. Reranking — an optional in-process ONNX cross-encoder
+ *      (@huggingface/transformers, default Xenova/bge-reranker-base) re-scores
+ *      the top candidates jointly. See ../reranker.mjs.
  *
  * Modes:
  *   query    (default) — Retrieve top-K chunks for a query. Uses the
@@ -18,30 +23,31 @@
  *                      (bypasses the index; reads the file directly via
  *                      xml-draft-chunker.chunkWholeChapter).
  *   --pin-side SIDE    Which adjacent chapters to pin: 'previous', 'next',
- *                      'both'. Default: 'previous'. Resolves to:
- *                        previous → N-1 (and N if also requested)
- *                        next     → N+1
- *                        both     → N-1 and N+1
+ *                      'both'. Default: 'previous'.
  *
  * Usage:
  *   bun lore-query.mjs [project-root] --query "..." [--top 5] [--rerank]
+ *                      [--rerank-backend onnx|ollama|none]
  *                      [--pin-chapter N] [--pin-side previous|next|both]
  *   bun lore-query.mjs [project-root] --build [--force]
  *   bun lore-query.mjs [project-root] --status
  *
  * Project root defaults to process.cwd().
- *
- * Outputs a formatted markdown block with the most relevant lore context
- * for injection into subagent prompts during outline/draft/critique/revise.
  */
 
 import { existsSync, readFileSync } from 'fs'
 import { resolve } from 'path'
 import { loadIndex, buildIndex, printStatus, scanSources, chunkSource } from '../index-builder.mjs'
 import { chunkWholeChapter, resolveDraftFilePath } from '../xml-draft-chunker.mjs'
+import { embed, activeEmbedBackend, activeEmbedModel } from '../embedder.mjs'
+import { rerankDocuments as onnxRerank, RERANK_MODEL as ONNX_RERANK_MODEL, isRerankDisabled } from '../reranker.mjs'
 
 const OLLAMA_URL = process.env.OLLAMA_URL || 'http://127.0.0.1:11434'
-const RERANK_MODEL = process.env.RERANK_MODEL || 'hans-tech/bge-reranker-v2-m3:260522'
+
+// Rerank backend: 'onnx' (default, in-process cross-encoder) | 'ollama' | 'none'
+const RERANK_BACKEND = process.env.RERANK_BACKEND || 'onnx'
+// Only used by the 'ollama' backend — the ONNX model id lives in reranker.mjs.
+const OLLAMA_RERANK_MODEL = process.env.OLLAMA_RERANK_MODEL || 'hans-tech/bge-reranker-v2-m3:260522'
 
 // ─── Cosine Similarity ─────────────────────────────────────────────────────
 
@@ -55,78 +61,68 @@ function cosineSimilarity(a, b) {
     return dot / (Math.sqrt(na) * Math.sqrt(nb))
 }
 
-// ─── Embedding ─────────────────────────────────────────────────────────────
-
-async function getEmbedding(text) {
-    const res = await fetch(`${OLLAMA_URL}/api/embed`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model: process.env.EMBED_MODEL || 'pedrohml/mxbai-embed-large:latest', input: text }),
-    })
-    if (!res.ok) throw new Error(`Embed error: ${res.status} ${res.statusText}`)
-    const data = await res.json()
-    return data.embeddings[0]
-}
-
 // ─── Reranking ─────────────────────────────────────────────────────────────
 
 /**
- * Rerank documents using a BGE-style reranker model via Ollama's /api/generate.
+ * Rerank candidate documents against the query.
  *
- * Some Ollama versions don't expose a dedicated /api/rerank endpoint, so we
- * fall back to /api/generate with a prompt template that asks the model to
- * score each document's relevance. The BGE reranker template is documented at
- * https://huggingface.co/BAAI/bge-reranker-v2-m3 — we use the standard
- * "query: ... passage: ..." prefix.
+ * Backends (selected by RERANK_BACKEND / --rerank-backend):
+ *   • onnx   (default) — in-process ONNX cross-encoder (@huggingface/transformers,
+ *                        Xenova/bge-reranker-base). No server, no provider calls.
+ *   • ollama           — POST ${OLLAMA_URL}/api/rerank (only useful on Ollama
+ *                        builds that expose that endpoint).
+ *   • none             — skip reranking.
  *
- * The prompt asks the model to print JSON; we parse out the scores. If
- * parsing fails or the model returns non-numeric output, the cosine scores
- * are used as-is (graceful degradation).
+ * Returns a new, score-sorted array of the input documents. Throws on failure;
+ * callers fall back to cosine distance ordering.
  */
-async function rerank(query, documents) {
-    const documentsList = documents.map((d, i) => `[${i}] ${d.text.slice(0, 500)}`).join('\n')
-    const prompt = `You are a relevance scorer. Given a query and a list of documents, score each document's relevance to the query on a scale from 0.0 to 1.0. Output ONLY a JSON array of numbers, one per document, in the same order.
+async function rerankOnnx(query, documents) {
+    const ranked = await onnxRerank(query, documents.map(d => d.text))
+    return ranked.map(r => ({ ...documents[r.index], score: r.score }))
+}
 
-Query: ${query}
-
-Documents:
-${documentsList}
-
-Scores (JSON array):`
-
-    const res = await fetch(`${OLLAMA_URL}/api/generate`, {
+async function rerankOllama(query, documents) {
+    const res = await fetch(`${OLLAMA_URL}/api/rerank`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-            model: RERANK_MODEL,
-            prompt,
-            stream: false,
-            options: { temperature: 0.0 },
+            model: OLLAMA_RERANK_MODEL,
+            query,
+            documents: documents.map(d => d.text),
         }),
     })
-    if (!res.ok) throw new Error(`Rerank error: ${res.status} ${res.statusText}`)
+    if (!res.ok) throw new Error(`Ollama rerank error: ${res.status} ${res.statusText}`)
     const data = await res.json()
-    const text = (data.response || '').trim()
+    const results = data.results || data.scores || data.rankings
+    if (!Array.isArray(results)) throw new Error('Ollama /api/rerank returned no results array')
+    return results
+        .map(r => {
+            const idx = typeof r === 'number' ? null : (r.index ?? r.corpus_id)
+            const score = typeof r === 'number' ? r : (r.relevance_score ?? r.score)
+            const doc = idx != null && documents[idx] ? documents[idx] : null
+            return doc ? { ...doc, score } : null
+        })
+        .filter(Boolean)
+        .sort((a, b) => b.score - a.score)
+}
 
-    // Try to extract a JSON array of numbers
-    const match = text.match(/\[[\d\s,\.\-eE]+\]/)
-    if (!match) throw new Error(`Rerank model returned non-JSON output: ${text.slice(0, 100)}`)
-    let scores
-    try {
-        scores = JSON.parse(match[0])
-    } catch {
-        throw new Error(`Rerank model returned unparseable JSON: ${match[0]}`)
+async function rerank(query, documents, backend = RERANK_BACKEND) {
+    if (backend === 'none' || isRerankDisabled()) {
+        throw new Error('reranking disabled')
     }
-    if (!Array.isArray(scores) || scores.length !== documents.length) {
-        throw new Error(`Rerank model returned ${scores.length} scores for ${documents.length} documents`)
-    }
+    if (backend === 'ollama') return rerankOllama(query, documents)
+    return rerankOnnx(query, documents)
+}
 
-    return documents.map((d, i) => ({ ...d, score: scores[i] }))
+/** Human-readable label for the active reranker (for transparency in output). */
+function rerankLabel(backend) {
+    if (backend === 'ollama') return `ollama (${OLLAMA_RERANK_MODEL})`
+    return `onnx (${ONNX_RERANK_MODEL})`
 }
 
 // ─── Index-backed query ────────────────────────────────────────────────────
 
-async function queryWithIndex(index, queryVec, topK, doRerank) {
+async function queryWithIndex(index, queryVec, query, topK, doRerank, backend = RERANK_BACKEND) {
     // Score every chunk in the index against the query vector
     const scored = []
     for (const chunk of index.chunks) {
@@ -138,10 +134,13 @@ async function queryWithIndex(index, queryVec, topK, doRerank) {
     const candidates = scored.slice(0, doRerank ? topK * 3 : topK)
     if (doRerank && candidates.length > 1) {
         try {
-            return await rerank(query, candidates)
+            return await rerank(query, candidates, backend)
         } catch (err) {
-            console.error(`[lore-query] Rerank failed: ${err.message}`)
-            console.error(`[lore-query] Is Ollama running with ${RERANK_MODEL}?`)
+            console.error(`[lore-query] Rerank failed (backend=${backend}): ${err.message}`)
+            if (backend === 'onnx') {
+                console.error(`[lore-query] Is @huggingface/transformers installed and ${ONNX_RERANK_MODEL} cached?`)
+            }
+            console.error('[lore-query] Falling back to distance ordering.')
             return candidates
         }
     }
@@ -150,7 +149,7 @@ async function queryWithIndex(index, queryVec, topK, doRerank) {
 
 // ─── Fallback: re-embed on the fly (no index) ──────────────────────────────
 
-async function queryWithoutIndex(projectRoot, query, topK, doRerank) {
+async function queryWithoutIndex(projectRoot, query, topK, doRerank, backend, embedBackend, embedModel) {
     // Re-embed everything by walking sources again
     const sources = scanSources(projectRoot)
     const allChunks = []
@@ -162,16 +161,17 @@ async function queryWithoutIndex(projectRoot, query, topK, doRerank) {
 
     let queryVec
     try {
-        queryVec = await getEmbedding(query)
+        const [v] = await embed([query], { backend: embedBackend, model: embedModel })
+        queryVec = v
     } catch (err) {
-        console.error(`[lore-query] Embedding failed: ${err.message}`)
+        console.error(`[lore-query] Embedding failed (${embedBackend}): ${err.message}`)
         return []
     }
 
     const scored = []
     for (const chunk of allChunks) {
         try {
-            const vec = await getEmbedding(chunk.text)
+            const [vec] = await embed([chunk.text], { backend: embedBackend, model: embedModel })
             scored.push({ ...chunk, score: cosineSimilarity(queryVec, vec) })
         } catch {
             // skip
@@ -181,7 +181,7 @@ async function queryWithoutIndex(projectRoot, query, topK, doRerank) {
     const candidates = scored.slice(0, doRerank ? topK * 3 : topK)
     if (doRerank && candidates.length > 1) {
         try {
-            return await rerank(query, candidates)
+            return await rerank(query, candidates, backend)
         } catch {
             return candidates
         }
@@ -191,14 +191,6 @@ async function queryWithoutIndex(projectRoot, query, topK, doRerank) {
 
 // ─── Pinned chapter resolution ─────────────────────────────────────────────
 
-/**
- * Resolve a set of chapter numbers to pin given the --pin-chapter and
- * --pin-side flags. Returns an array of chapter numbers in N-1, N, N+1 order.
- *
- * @param {number} chapter
- * @param {'previous'|'next'|'both'} side
- * @returns {number[]}
- */
 function resolvePins(chapter, side) {
     const pins = []
     if (side === 'previous' || side === 'both') {
@@ -210,10 +202,6 @@ function resolvePins(chapter, side) {
     return pins
 }
 
-/**
- * Read pinned chapters from disk and return them as chunks to be prepended
- * to the query output.
- */
 function loadPinnedChapters(projectRoot, chapterNumbers) {
     const pinned = []
     for (const n of chapterNumbers) {
@@ -227,17 +215,27 @@ function loadPinnedChapters(projectRoot, chapterNumbers) {
 
 // ─── Output formatting ─────────────────────────────────────────────────────
 
-function formatOutput(query, pinned, semantic, topK) {
+/** Format a 0..1 relevance score as a percentage, avoiding a misleading "0%". */
+function fmtPct(score) {
+    const pct = score * 100
+    if (pct > 0 && pct < 1) return '<1%'
+    return `${pct.toFixed(0)}%`
+}
+
+function formatOutput(query, pinned, semantic, topK, rerankInfo = null) {
     const lines = []
     lines.push('## 📚 Relevant Lore Context')
     lines.push('')
     lines.push(`*Retrieved for query: "${query}"*`)
     lines.push(`*Source: series lorebook + per-book knowledge + outline + drafts*`)
+    if (rerankInfo) {
+        lines.push(`*Reranker: ${rerankInfo}*`)
+    }
     if (pinned.length > 0) {
         const labels = pinned.map(p => p.sourcePath || p.source).join(', ')
         lines.push(`*Pinned (adjacent chapters, verbatim for continuity): ${labels}*`)
     }
-    lines.push(`*Semantic top-${Math.min(semantic.length, topK)} (relevance: ${semantic.slice(0, topK).map(c => `${(c.score * 100).toFixed(0)}%`).join(', ')})*`)
+    lines.push(`*Semantic top-${Math.min(semantic.length, topK)} (relevance: ${semantic.slice(0, topK).map(c => fmtPct(c.score)).join(', ')})*`)
     lines.push('')
     lines.push('---')
     lines.push('')
@@ -253,7 +251,7 @@ function formatOutput(query, pinned, semantic, topK) {
     }
 
     for (const chunk of semantic.slice(0, topK)) {
-        lines.push(`**From: \`${chunk.sourcePath}${chunk.heading ? '#' + chunk.heading : ''}\`**  (relevance: ${(chunk.score * 100).toFixed(0)}%)`)
+        lines.push(`**From: \`${chunk.sourcePath}${chunk.heading ? '#' + chunk.heading : ''}\`**  (relevance: ${fmtPct(chunk.score)})`)
         lines.push('')
         const fence = chunk.kind === 'draft' ? 'xml' : 'markdown'
         lines.push('```' + fence)
@@ -276,6 +274,7 @@ async function main() {
     let query = ''
     let topK = 5
     let doRerank = false
+    let rerankBackend = RERANK_BACKEND
     let mode = 'query' // 'query' | 'build' | 'status'
     let force = false
     let pinChapter = null
@@ -289,6 +288,8 @@ async function main() {
             topK = parseInt(args[++i], 10) || 5
         } else if (a === '--rerank') {
             doRerank = true
+        } else if (a === '--rerank-backend') {
+            rerankBackend = args[++i] || RERANK_BACKEND
         } else if (a === '--build') {
             mode = 'build'
         } else if (a === '--status') {
@@ -314,16 +315,22 @@ async function main() {
 
     // ── query mode ──
     if (!query) {
-        console.error('Usage: bun lore-query.mjs [project-root] --query "..." [--top N] [--rerank]')
+        console.error('Usage: bun lore-query.mjs [project-root] --query "..." [--top N] [--rerank] [--rerank-backend onnx|ollama|none]')
         console.error('       bun lore-query.mjs [project-root] --build [--force]')
         console.error('       bun lore-query.mjs [project-root] --status')
         process.exit(1)
     }
 
-    // Load index (if present)
+    // Load index (if present). Use the index's recorded embedding backend/model
+    // so an existing index keeps working after a config change.
     const index = loadIndex(projectRoot)
     if (!index) {
         console.error('[lore-query] No precomputed index found. Run `npx buchbinder-index` to build one for faster retrieval. Continuing with on-the-fly embedding...')
+    }
+    const embedBackend = index?.embedBackend || activeEmbedBackend()
+    const embedModel = index?.embedModel || activeEmbedModel(embedBackend)
+    if (index && (embedBackend !== activeEmbedBackend() || embedModel !== activeEmbedModel(activeEmbedBackend()))) {
+        console.error(`[lore-query] Index embedder (${embedBackend}: ${embedModel}) differs from configured (${activeEmbedBackend()}: ${activeEmbedModel()}). Using the index's embedder; run \`npx buchbinder-index --force\` to rebuild with the new one.`)
     }
 
     // Load pinned chapters (always from disk, not from index)
@@ -332,10 +339,11 @@ async function main() {
     // Get query embedding
     let queryVec
     try {
-        queryVec = await getEmbedding(query)
+        const [v] = await embed([query], { backend: embedBackend, model: embedModel })
+        queryVec = v
     } catch (err) {
-        console.error(`[lore-query] Embedding failed: ${err.message}`)
-        console.error('[lore-query] Is Ollama running? Falling back to lore-context.ts full-file read.')
+        console.error(`[lore-query] Embedding failed (${embedBackend}: ${embedModel}): ${err.message}`)
+        console.error('[lore-query] Falling back to lore-context.ts full-file read.')
         console.log('')
         return
     }
@@ -343,12 +351,13 @@ async function main() {
     // Score chunks
     let semantic
     if (index) {
-        semantic = await queryWithIndex(index, queryVec, topK, doRerank)
+        semantic = await queryWithIndex(index, queryVec, query, topK, doRerank, rerankBackend)
     } else {
-        semantic = await queryWithoutIndex(projectRoot, query, topK, doRerank)
+        semantic = await queryWithoutIndex(projectRoot, query, topK, doRerank, rerankBackend, embedBackend, embedModel)
     }
 
-    console.log(formatOutput(query, pinned, semantic, topK))
+    const rerankInfo = doRerank && rerankBackend !== 'none' ? rerankLabel(rerankBackend) : null
+    console.log(formatOutput(query, pinned, semantic, topK, rerankInfo))
 }
 
 main().catch(err => {

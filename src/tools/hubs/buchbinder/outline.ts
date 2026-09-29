@@ -35,7 +35,7 @@ Before loading source documents, retrieve the most relevant lore context for thi
 
 **Run the lore query script:**
 \`\`\`bash
-bun .opencode/tools/lib/scripts/lore-query.mjs \
+bun .opencode/lib/scripts/lore-query.mjs \
   --query "Outline for [book title] — characters, world, timeline, and terminology relevant to structuring a [N]-chapter [fiction/non-fiction] book" \
   --top 5 --rerank
 \`\`\`

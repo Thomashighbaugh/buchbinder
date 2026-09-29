@@ -26,7 +26,7 @@ Before the pre-draft gate, retrieve the most relevant lore context for the chapt
 
 **Run the lore query script:**
 \`\`\`bash
-bun .opencode/tools/lib/scripts/lore-query.mjs \
+bun .opencode/lib/scripts/lore-query.mjs \
   --query "Draft context: [book title] — characters present in chapters [range], world rules, voice profiles, and terminology for drafting chapters [N-M]" \
   --top 5 --rerank
 \`\`\`

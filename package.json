@@ -7,7 +7,8 @@
   "bin": {
     "buchbinder": "bin/install.mjs",
     "buchbinder-refresh": "bin/refresh.mjs",
-    "buchbinder-index": "bin/build-lore-index.mjs"
+    "buchbinder-index": "bin/build-lore-index.mjs",
+    "buchbinder-models": "bin/fetch-models.mjs"
   },
   "scripts": {
     "build": "tsc",
@@ -54,6 +55,7 @@
     "url": "https://github.com/sponsors/Thomashighbaugh"
   },
   "dependencies": {
+    "@huggingface/transformers": "^4.3.0",
     "@inquirer/prompts": "^7.0.0",
     "@opentui/core": ">=0.1.97",
     "@opentui/solid": ">=0.1.97",

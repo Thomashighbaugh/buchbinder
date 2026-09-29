@@ -39,7 +39,7 @@ npx buchbinder-index
 Or, equivalently, the lore-query script's \`--build\` flag:
 
 \`\`\`bash
-bun .opencode/tools/lib/scripts/lore-query.mjs --build
+bun .opencode/lib/scripts/lore-query.mjs --build
 \`\`\`
 
 Both delegate to the same underlying logic in \`src/lib/index-builder.mjs\`.
@@ -49,7 +49,7 @@ Both delegate to the same underlying logic in \`src/lib/index-builder.mjs\`.
 After the build completes, confirm the index is fresh:
 
 \`\`\`bash
-bun .opencode/tools/lib/scripts/lore-query.mjs --status
+bun .opencode/lib/scripts/lore-query.mjs --status
 \`\`\`
 
 Expected output: a list of source files and chunk counts, the embed model version, and how long ago the index was built.

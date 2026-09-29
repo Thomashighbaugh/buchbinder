@@ -35,6 +35,79 @@ The shift from non-agentic Python scripts to an agentic workflow design was insp
 - Pandoc integration for production-quality export with fallback generators
 - Agentic workflow design (inspired by Claude Code, built on OpenCode) replacing Fiction Fabricator's non-agentic Python CLI model
 - 8 human-in-the-loop features: phase preview, authorial intent capture, diff-based approval, suggestion severity tiers, veto system (`|`), feedback memory, non-negotiables (creative constraints), change provenance tracking
+- Per-project encapsulation rather than an MCP server: the entire workflow installs into each project's own `.opencode/`, so it can be tailored per book and leaves nothing behind in a global config (see [Why per-project, not an MCP server](#why-per-project-not-an-mcp-server))
+
+---
+
+## Why per-project, not an MCP server
+
+Buchbinder's direct inspiration, [novel-writer-english](https://github.com/JeroTan/novel-writer-english), ships a **read-only story-lookup MCP server**: its installer registers a `novel-writer` server in each AI tool's project configuration (`.mcp.json`, `opencode.json`, `.gemini/settings.json`, `.codex/config.toml`) so that any agent can call tools like `list_chapters` or `search_character` against canonical story data.
+
+Buchbinder deliberately does the opposite. It is not a server a project connects to; it is an **agentic workflow a project contains**, installed only into that project's own `.opencode/` directory. That choice is not incidental — it buys several things a shared MCP server cannot:
+
+- **Granular, per-project configuration.** The 26 subcommand specs, the quality gates, the skills, the templates, and the style sheets are files *inside your project*, not a shared service. You can rewrite the outline gate for one novel, swap the critique modes for another, and add a genre-specific phase for a third without any change leaking into your other books. Configuration granularity bottoms out at the individual project — and, through the HTML-comment override workflow, at the individual phase spec within it.
+- **Nothing lingers where it is not needed.** No global install, no mutation of `~/.config/opencode`, no machine-wide server registration to remember and later remove. A project that uses Buchbinder carries the whole workflow in its own `.opencode/`; a project that stops using it can delete that directory and be free of it entirely. An MCP server, by contrast, stays registered in each tool's configuration long after the one project that needed it is finished.
+- **One install, many private projects.** Install the package once and scaffold as many book projects as you like. Because each project's workflow, manuscripts, and research live only in that project's own tree — and because Buchbinder never requires a project to be a public repository or an MCP-visible workspace — you can run a dozen unpublished, sensitive, or embargoed projects side by side without exposing any of them to a shared service or to public VCS. The tooling is public; the work stays private.
+- **A guided workflow, not a tool surface.** An MCP server hands an agent a set of callable functions and leaves the *when* and *how* to the agent's judgement. Buchbinder instead encodes the writing process itself: a `/buchbinder` hub with state detection, an ordered phase system with hard-block gates, and a TUI menu that reports what the project needs next. The author is guided through constitution → specify → clarify → research → outline → draft → critique → revise → edit → review → publish, rather than handed a toolbox and left to orchestrate it.
+- **Modular by construction.** Skills activate by description, tools load per project, and templates instantiate per book. A fiction project gets the fiction track's phases and gates; a non-fiction project gets citation and fact-check phases instead. The same core is recombined to fit each project's real needs rather than a lowest-common-denominator tool contract.
+
+In short: an MCP server is infrastructure a project *connects to*; Buchbinder is a workflow a project *contains*. For long-form writing — where the unit of work is one book, with its own canon and its own evolving process — containment gives the better ergonomics and the better security story.
+
+---
+
+## Agentic AI, end to end
+
+Buchbinder is a **compound, agentic AI system** — not a prompt pack and not a single chat loop. It orchestrates LLM inference across a deterministic state machine of writing phases, calls its own typed tools, retrieves from a per-project semantic index, evaluates every transition against hard-block gates, and returns control to the author at deliberate checkpoints. The engineering surface spans the full modern agent stack:
+
+- **LLM orchestration** across a twelve-phase workflow (fiction), with per-phase agents, context budgets, and explicit exit criteria
+- **Tool use / function calling** through project-local TypeScript tools (`hubMenu`, `split-outline`, `cite`, `track`, …) registered with OpenCode's tool API
+- **Retrieval-augmented generation** with a local embedding index and reranking over each project's canon — semantic lore injection instead of context stuffing
+- **Context engineering** — awareness maps that load a chapter's own outline slice, pinned adjacent chapters, and modular style sheets rather than the whole manuscript
+- **Evaluation and quality gates** — 26 evidence-based, hard-block gates across 8 categories that make "the model says it's good" an unacceptable answer
+- **Multi-agent critique** — an adversarial two-agent dialectic and 3–5 persona readers as first-class critique modes
+- **Human-in-the-loop (HITL)** — phase preview, authorial-intent capture, diff-based approval, severity tiers, a veto key, and feedback memory
+- **Observability and provenance** — per-change provenance tracking and JSON checkpoints with content hashing for reproducible resume
+
+The goal is **output quality, not output volume**: given a premise, the workflow is engineered to produce a manuscript that is internally consistent, voice-stable, structurally sound, and — for non-fiction — correctly cited. Human-quality or better, with the review, revision, and proofreading loops a professional editor would run.
+
+Exactly one artifact is deliberately left to a human: the **book cover**. Everything else is produced end to end — outline, draft, critique, revision, three-pass edit, continuity audit, bibliography, and multi-format export. Covers are excluded on purpose: today's generic image models return covers that are interchangeable and forgettable, and a cover is the one place a book most needs a distinct visual identity. Buchbinder would rather hand you a finished, publishable interior and let a designer (or a carefully art-directed image model) give it a face.
+
+As a **reference implementation**, Buchbinder is a complete, shipped example of end-to-end agentic system design — a working case study in pairing an LLM workflow with deterministic guardrails, semantic retrieval, first-class UI, and reproducible per-project packaging.
+
+---
+
+## Built on OpenCode's SDK and plugin surface
+
+Buchbinder exercises OpenCode's **SDK and plugin API** in ways most coding agents simply do not permit. It registers a project-local TUI plugin that renders a custom sidebar (SolidJS + OpenTUI), defines its own keybinds, opens select dialogs, raises toasts, and injects prompts back into the agent — a bespoke interface, versioned alongside the workflow it drives.
+
+That is a real differentiator. Where other coding agents expose no supported extension surface — or leave UI extension to **third-party plugins** with no maintainer and no compatibility guarantee — OpenCode's native, project-local plugin model means Buchbinder's interface ships with the project, needs no external dependency, and cannot silently rot when a third party stops shipping updates.
+
+---
+
+## Nix-flake-inspired architecture
+
+Buchbinder's packaging is a deliberate nod to **Nix flakes**: declarative, per-project, pinned, and composable.
+
+- **Declarative per-project definition** — a project's `.opencode/` is its manifest: the plugin, its commands, its skills, its tools, and its templates, all described in place.
+- **Dependency isolation** — every project pins its own copy and its own versions. A book project created today installs and behaves the same way a year from now on another machine.
+- **Diff-based, non-destructive sync** — `buchbinder-refresh` updates only what changed and preserves local edits; the HTML-comment override workflow plays the role of an overlay.
+- **Maximum control through granularity** — modularity at the level of skills, tools, templates, and even individual phase specs means you override exactly what you want and inherit the rest.
+
+The payoff is control without sprawl: reproducibility and isolation in the Nix tradition, scoped to a single book rather than a whole system.
+
+---
+
+## On dependencies, and when "Not Invented Here" does not apply
+
+The usual advice — *don't reinvent the wheel; use a dependency* — treats "Not Invented Here" as an anti-pattern. That framing assumes a reimplementation means owning and maintaining a library, with a team, for years.
+
+The assumption collapses when three things hold at once:
+
+1. the needed functionality is small and self-contained,
+2. a correct implementation costs **minutes to hours** (when done well), and
+3. the code can be produced by a well-prompted LLM through multi-pass review-and-revise cycles at **pennies on the dollar**.
+
+Under those conditions, vendoring the functionality is not Not-Invented-Here stubbornness — it is a rational trade of a trivial, one-time cost for permanent control. No third-party maintainer to depend on, no abandoned plugin to migrate away from, no supply-chain surface you did not choose, and a result you can read, audit, and change in place. Buchbinder applies this deliberately, and still reaches for a dependency where a dependency genuinely is the better tool (`fs-extra`, `fast-xml-parser`, `solid-js`, `@opentui/*`). The point is not to avoid dependencies; it is to stop cargo-culting the heuristic that says reimplementation is always wrong.
 
 ---
 
@@ -258,21 +331,21 @@ book/series/lorebook/
 
 When generating content (outline, draft, critique, revise, review), Buchbinder uses **semantic lore retrieval** to inject only the most relevant lore into the prompt — not the entire lorebook. This keeps the context window focused and reduces token usage.
 
-The retrieval pipeline uses local Ollama models:
+The retrieval pipeline is **two-stage** and fully local. Both stages default to **ONNX** (in-process, via `@huggingface/transformers`) — Ollama is an opt-in extra backend, not a requirement:
 
-1. **Embedding** — `pedrohml/mxbai-embed-large:latest` — Chunks lore files by section (## headings) and embeds each chunk
+1. **Embedding** — `Xenova/bge-base-en-v1.5` (ONNX, 768-d; `EMBED_BACKEND=onnx`, the default) or `pedrohml/mxbai-embed-large:latest` (Ollama, 1024-d; `EMBED_BACKEND=ollama`) — Chunks lore files by section (## headings) and embeds each chunk
 2. **Vector search** — Cosine similarity between the task query and lore chunks
-3. **Reranking** (optional) — `hans-tech/bge-reranker-v2-m3:260522` — Re-scores the top candidates for precision
+3. **Reranking** (optional, `--rerank`) — an **in-process ONNX cross-encoder** (`Xenova/bge-reranker-base`) re-scores the top candidates jointly. Because a cross-encoder sees the query and the passage together, it reorders candidates more accurately than distance alone.
 
-**Setup:** Pull the required models:
+**Setup:** nothing to pull by hand — `npx buchbinder` fetches the ONNX models (embedder + reranker + classifier, ≈0.5 GB) into a shared cache (`~/.cache/buchbinder/models`) during install. To fetch or re-fetch them later:
+
 ```bash
-ollama pull pedrohml/mxbai-embed-large:latest
-ollama pull hans-tech/bge-reranker-v2-m3:260522
+npx buchbinder-models
 ```
 
-These models run locally — no data leaves your machine. The query script (`lore-query.mjs`) is installed as `.opencode/tools/lib/scripts/lore-query.mjs` and called automatically by the phase workflows.
+Everything runs locally — no data leaves your machine, and no provider API requests are made. The query script (`lore-query.mjs`) is installed as `.opencode/lib/scripts/lore-query.mjs` and called automatically by the phase workflows. The ONNX runtime (`@huggingface/transformers`) is added to the project's `.opencode/package.json` by the installer.
 
-If Ollama is not running or the models are missing, the system falls back to reading lore files directly — no functionality is lost, only the selective retrieval optimization.
+If a model or the ONNX runtime is unavailable, the system degrades gracefully — embedding falls back to distance-only retrieval, then to reading lore files directly. No functionality is lost, only the selective retrieval optimization.
 
 External lorebook import supports:
 - **SillyTavern** character cards (PNG embedded JSON, JSON files)
@@ -308,17 +381,49 @@ The index is built once and reused on every phase invocation. Without the index,
 npx buchbinder-index
 
 # Or from the lore-query script itself
-bun .opencode/tools/lib/scripts/lore-query.mjs --build
+bun .opencode/lib/scripts/lore-query.mjs --build
 
 # Check status (chunk count, age, embedder version)
-bun .opencode/tools/lib/scripts/lore-query.mjs --status
+bun .opencode/lib/scripts/lore-query.mjs --status
 ```
 
 The index build is **incremental**: re-running on an up-to-date index is a no-op. Only source files whose content has changed since the last build are re-chunked and re-embedded. `npx buchbinder-refresh` (see below) rebuilds the index automatically when source files have changed.
 
-**Set `EMBED_MODEL` and `RERANK_MODEL` env vars** to override the default model names. Defaults:
-- `EMBED_MODEL=pedrohml/mxbai-embed-large:latest`
-- `RERANK_MODEL=hans-tech/bge-reranker-v2-m3:260522`
+**Env overrides.** Retrieval defaults, all overridable:
+
+| Var | Default | Purpose |
+|-----|---------|---------|
+| `EMBED_BACKEND` | `onnx` | `onnx` (default) \| `ollama` |
+| `ONNX_EMBED_MODEL` | `Xenova/bge-base-en-v1.5` | ONNX embedding model (768-d) |
+| `OLLAMA_EMBED_MODEL` | `pedrohml/mxbai-embed-large:latest` | Ollama embedding model (`EMBED_MODEL` is an alias) |
+| `RERANK_MODEL` | `Xenova/bge-reranker-base` | ONNX cross-encoder |
+| `RERANK_BACKEND` | `onnx` | `onnx` \| `ollama` \| `none` |
+| `CLASSIFIER_MODEL` | `Xenova/nli-deberta-v3-xsmall` | zero-shot / NLI classifier |
+| `ONNX_DTYPE` | `q8` | ONNX weight dtype |
+| `ONNX_CACHE_DIR` | `~/.cache/buchbinder/models` | shared ONNX model cache |
+| `ONNX_OFFLINE` | unset | `1` — never download; use cache or fall back |
+| `RERANK_MAX_LENGTH` | `512` | reranker tokenizer truncation length |
+| `RERANK_DISABLED` | unset | `1` — force distance-only retrieval |
+| `OLLAMA_URL` | `http://127.0.0.1:11434` | Ollama endpoint (only for the `ollama` backends) |
+
+#### Local ONNX model stack
+
+Three small Transformers.js models power retrieval and quality evidence. They are fetched once into a shared, machine-wide cache and reused by every Buchbinder project:
+
+| Role | Model | ≈Size |
+|------|-------|-------|
+| Embeddings | `Xenova/bge-base-en-v1.5` | 110 MB |
+| Reranking | `Xenova/bge-reranker-base` | 280 MB |
+| Classification (NLI) | `Xenova/nli-deberta-v3-xsmall` | 70 MB |
+
+The classifier turns qualitative judgements into local, reproducible evidence — useful for the hard-block quality gates ("does this chapter entail its outline beat?"), the premise stress-test, and non-fiction claim↔source checks:
+
+```bash
+# Zero-shot ranking of labels for a passage
+node .opencode/lib/classifier.mjs --labels "foreshadowing,pacing,continuity" "the passage text"
+# NLI entailment between a premise and a hypothesis
+node .opencode/lib/classifier.mjs --entail "Chapter 7 pays off the locket from Chapter 2" "the locket resurfaces"
+```
 
 #### Pinned Adjacent Chapters
 
@@ -326,12 +431,12 @@ For draft, critique, and revise phases, the lore query can **pin** specific chap
 
 ```bash
 # /buchbinder draft Chapter 5 → include the entire prior chapter (4) verbatim
-bun .opencode/tools/lib/scripts/lore-query.mjs \
+bun .opencode/lib/scripts/lore-query.mjs \
   --query "Draft context for chapter 5" \
   --pin-chapter 5 --pin-side previous --top 5 --rerank
 
 # /buchbinder critique Chapter 5 → include both N-1 and N+1 verbatim
-bun .opencode/tools/lib/scripts/lore-query.mjs \
+bun .opencode/lib/scripts/lore-query.mjs \
   --query "Critique context for chapter 5" \
   --pin-chapter 5 --pin-side both --top 5 --rerank
 ```
@@ -397,7 +502,7 @@ The override survives refreshes because `npx buchbinder-refresh` diffs your file
 
 ### Per-project Install Model
 
-Buchbinder installs **per-project**, not globally. Each book project has its own `.opencode/` directory containing its own copy of the plugin's skills, tools, templates, slash commands, and TUI sidebar plugin. This mirrors the Nix/dependency-isolation pattern: pinning per project means a project created today will build the same way a year from now on a different machine.
+Buchbinder installs **per-project**, not globally. Each book project has its own `.opencode/` directory containing its own copy of the plugin's skills, tools, templates, slash commands, and TUI sidebar plugin. This mirrors the Nix/dependency-isolation pattern: pinning per project means a project created today will build the same way a year from now on a different machine. This containment — and why it is preferable to an MCP-server approach — is covered in [Why per-project, not an MCP server](#why-per-project-not-an-mcp-server).
 
 The install writes `.opencode/opencode.jsonc`, `.opencode/tui.json`, and `.opencode/package.json` to register the buchbinder-sidebar plugin as a project-local plugin. It does **not** touch your global opencode config, `~/.config/opencode`, or your global `node_modules`. Plugin-owned subtrees are: `skills/`, `tools/`, `templates/`, `commands/`, `plugins/`, plus the three config files. Everything else under `.opencode/` (and the project-root `book/`, `memory/`, `output/`, `series/` directories) is project-owned and never touched by install or refresh.
 
@@ -651,6 +756,12 @@ Source structure:
 - `src/skills/` — 34 SKILL.md files across 5 categories
 - `src/templates/` — Track templates (fiction, non-fiction, series)
 - `bin/install.mjs` — Interactive installer
+
+---
+
+## Keywords
+
+Agentic AI · LLM orchestration · multi-agent systems · compound AI systems · tool calling / function calling · retrieval-augmented generation (RAG) · semantic search · embeddings · reranking · vector retrieval · prompt engineering · context engineering · evaluation harness · quality gates · deterministic pipelines · workflow state machines · human-in-the-loop (HITL) · Model Context Protocol (MCP) · TypeScript · OpenCode SDK · OpenCode plugin API · SolidJS · OpenTUI · TUI design · per-project configuration · dependency isolation · Nix flakes · reproducible builds · supply-chain security · checkpointing · observability · provenance · structured output · XML structuring · long-form content generation · creative-writing automation · publishing pipeline · Pandoc.
 
 ---
 

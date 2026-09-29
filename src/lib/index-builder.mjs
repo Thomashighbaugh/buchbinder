@@ -3,21 +3,24 @@
  * Index Builder — builds the lore/knowledge/outline/draft retrieval index
  *
  * Scans a project's lore, knowledge, outline, and draft files; chunks them
- * using the right chunker per source kind; embeds each chunk via local
- * Ollama; writes the on-disk JSON index at:
+ * using the right chunker per source kind; embeds each chunk via the configured
+ * embedding backend (ONNX by default, Ollama opt-in — see embedder.mjs); writes
+ * the on-disk JSON index at:
  *
  *     <projectRoot>/.opencode/cache/lore-index/index.json
  *
  * The index is the source of truth for runtime query (lore-query.mjs). When
  * the index is missing, the query falls back to re-embedding on the fly
- * (slow, but functional). When Ollama is unreachable, the query falls back
- * to reading the full lore files (lore-context.ts path).
+ * (slow, but functional). When the embedder is unreachable, the query falls
+ * back to reading the full lore files (lore-context.ts path).
  *
  * Indexing is incremental: re-running on an up-to-date index is a no-op
- * because per-source file hashes are checked before re-embedding.
+ * because per-source file hashes are checked before re-embedding. Changing the
+ * embedding backend or model invalidates the index and triggers a full rebuild
+ * (vectors from different models are not comparable).
  *
  * Usage:
- *   node index-builder.mjs [project-root] [--quiet]
+ *   node index-builder.mjs [project-root] [--quiet] [--force]
  *   node index-builder.mjs --status [project-root]
  */
 
@@ -27,11 +30,10 @@ import { join, resolve, dirname } from 'path'
 
 import { chunkMarkdownFile, classifySourceKind } from './md-chunker.mjs'
 import { chunkXmlDraftFile, resolveDraftFilePath } from './xml-draft-chunker.mjs'
+import { embed, activeEmbedBackend, activeEmbedModel } from './embedder.mjs'
 
-const OLLAMA_URL = process.env.OLLAMA_URL || 'http://127.0.0.1:11434'
-const EMBED_MODEL = process.env.EMBED_MODEL || 'pedrohml/mxbai-embed-large:latest'
 const INDEX_FILENAME = 'index.json'
-const INDEX_SCHEMA_VERSION = 1
+const INDEX_SCHEMA_VERSION = 2
 
 // ─── Source patterns (kept in sync with lore-context.ts LORE_PATHS) ────────
 
@@ -172,23 +174,6 @@ export function chunkSource(source, projectRoot) {
     }))
 }
 
-// ─── Embedding ──────────────────────────────────────────────────────────────
-
-/**
- * Embed a single text via Ollama. Returns a Float32Array-as-array of length
- * matching the model's output dimension.
- */
-async function getEmbedding(text) {
-    const res = await fetch(`${OLLAMA_URL}/api/embed`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model: EMBED_MODEL, input: text }),
-    })
-    if (!res.ok) throw new Error(`Embed error: ${res.status} ${res.statusText}`)
-    const data = await res.json()
-    return data.embeddings[0]
-}
-
 // ─── Index read/write ───────────────────────────────────────────────────────
 
 /**
@@ -230,17 +215,19 @@ export function writeIndex(projectRoot, index) {
  *   {
  *     sourcesTotal, sourcesAdded, sourcesUpdated, sourcesUnchanged,
  *     chunksTotal, chunksAdded, chunksEmbedded, chunksReused,
- *     durationMs, indexPath
+ *     durationMs, indexPath, embedBackend, embedModel, embedDim
  *   }
  *
  * Strategy:
  *   1. Scan sources.
- *   2. For each source: hash the file. If the prior index has a source
+ *   2. If the embedding backend/model changed, discard the prior index
+ *      (vectors from different models are not comparable).
+ *   3. For each source: hash the file. If the prior index has a source
  *      entry with the same hash, keep its chunks (and embeddings) as-is.
- *   3. If the hash changed (or it's a new source), re-chunk the file and
+ *   4. If the hash changed (or it's a new source), re-chunk the file and
  *      re-embed all its chunks.
- *   4. If a source disappeared from disk, drop its chunks.
- *   5. Write the new index.
+ *   5. If a source disappeared from disk, drop its chunks.
+ *   6. Write the new index.
  *
  * @param {string} projectRoot
  * @param {object} [opts] { quiet?: boolean, force?: boolean }
@@ -248,19 +235,20 @@ export function writeIndex(projectRoot, index) {
 export async function buildIndex(projectRoot, opts = {}) {
     const t0 = Date.now()
     const sources = scanSources(projectRoot)
-    const prev = opts.force ? null : loadIndex(projectRoot)
+
+    const embedBackend = activeEmbedBackend()
+    const embedModel = activeEmbedModel(embedBackend)
+
+    let prev = opts.force ? null : loadIndex(projectRoot)
+    if (prev && (prev.embedBackend !== embedBackend || prev.embedModel !== embedModel)) {
+        // Vectors are incompatible across models/backends — rebuild everything.
+        prev = null
+    }
 
     // Build a lookup of prev sources by path
     const prevSources = new Map()
     if (prev && Array.isArray(prev.sources)) {
         for (const s of prev.sources) prevSources.set(s.path, s)
-    }
-
-    // Build a lookup of prev chunks by id (for reusing embeddings when a
-    // source is unchanged)
-    const prevChunksById = new Map()
-    if (prev && Array.isArray(prev.chunks)) {
-        for (const c of prev.chunks) prevChunksById.set(c.id, c)
     }
 
     const newSources = []
@@ -307,7 +295,8 @@ export async function buildIndex(projectRoot, opts = {}) {
             const id = `chunk-${String(chunkIdCounter).padStart(5, '0')}`
             let embedding = null
             try {
-                embedding = await getEmbedding(c.text)
+                const [vec] = await embed([c.text], { backend: embedBackend, model: embedModel })
+                embedding = vec
                 chunksEmbedded++
             } catch (err) {
                 if (!opts.quiet) {
@@ -334,11 +323,14 @@ export async function buildIndex(projectRoot, opts = {}) {
         }
     }
 
+    const embedDim = newChunks.find(c => c.embedding)?.embedding.length ?? null
     const index = {
         schemaVersion: INDEX_SCHEMA_VERSION,
         builtAt: new Date().toISOString(),
         projectRoot,
-        embedModel: EMBED_MODEL,
+        embedBackend,
+        embedModel,
+        embedDim,
         chunkCount: newChunks.length,
         sources: newSources,
         chunks: newChunks,
@@ -357,6 +349,9 @@ export async function buildIndex(projectRoot, opts = {}) {
         chunksReused,
         durationMs,
         indexPath: getIndexPath(projectRoot),
+        embedBackend,
+        embedModel,
+        embedDim,
     }
 }
 
@@ -379,7 +374,7 @@ export function printStatus(projectRoot) {
     const ageHours = (ageMs / 3600000).toFixed(1)
     console.log(`Index: ${getIndexPath(projectRoot)}`)
     console.log(`  Built:     ${index.builtAt} (${ageHours}h ago)`)
-    console.log(`  Embedder:  ${index.embedModel}`)
+    console.log(`  Embedder:  ${index.embedModel} (${index.embedBackend || 'ollama'}${index.embedDim ? `, ${index.embedDim}-d` : ''})`)
     console.log(`  Sources:   ${index.sources.length} (${Object.entries(byKind).map(([k, v]) => `${k}:${v}`).join(', ')})`)
     console.log(`  Chunks:    ${index.chunks.length} (${index.chunks.filter(c => c.embedding).length} embedded)`)
 }
@@ -414,12 +409,13 @@ async function main() {
         summary = await buildIndex(projectRoot, { quiet, force })
     } catch (err) {
         console.error(`[index-builder] Build failed: ${err.message}`)
-        console.error(`[index-builder] Is Ollama running at ${OLLAMA_URL} with ${EMBED_MODEL}?`)
+        console.error(`[index-builder] Embedding backend: ${activeEmbedBackend()} (${activeEmbedModel()}). For the ollama backend, ensure Ollama is running.`)
         process.exit(2)
     }
 
     if (!quiet) {
         console.log(`[index-builder] Done in ${(summary.durationMs / 1000).toFixed(1)}s`)
+        console.log(`  Embedder:  ${summary.embedModel} (${summary.embedBackend}${summary.embedDim ? `, ${summary.embedDim}-d` : ''})`)
         console.log(`  Sources:   ${summary.sourcesTotal} (${summary.sourcesAdded} added, ${summary.sourcesUpdated} updated, ${summary.sourcesUnchanged} unchanged)`)
         console.log(`  Chunks:    ${summary.chunksTotal} (${summary.chunksAdded} new, ${summary.chunksEmbedded} embedded, ${summary.chunksReused} reused)`)
         console.log(`  Index:     ${summary.indexPath}`)

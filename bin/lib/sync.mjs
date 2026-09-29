@@ -96,31 +96,35 @@ export function copyToolsAndLib(destDir, mode, manifestFiles = null) {
     // tools/ import ../plugins/lib/, the sidebar plugin imports ../../lib/.
     const srcLib = path.join(SRC_DIR, 'lib')
     if (fs.existsSync(srcLib)) {
-        const libDest = path.join(destDir, 'plugins', 'lib')
-        fs.ensureDirSync(libDest)
-        for (const file of fs.readdirSync(srcLib).filter(f => (f.endsWith('.ts') && !f.endsWith('.d.ts')) || f.endsWith('.mjs'))) {
-            const result = smartCopyFile(
-                path.join(srcLib, file),
-                path.join(libDest, file),
-                mode,
-                manifestFiles ? manifestFiles.get(`plugins/lib/${file}`) : null,
-            )
-            if (result === 'copied') copied++
-            else skipped++
-        }
-        const srcScripts = path.join(srcLib, 'scripts')
-        if (fs.existsSync(srcScripts)) {
-            const destScripts = path.join(libDest, 'scripts')
-            fs.ensureDirSync(destScripts)
-            for (const file of fs.readdirSync(srcScripts)) {
+        // lib/ installs to two locations:
+        //   .opencode/lib/         — canonical: tools import ../lib, lore-query.mjs lives here
+        //   .opencode/plugins/lib/ — the sidebar plugin imports ../../lib
+        for (const [relPrefix, libDest] of [['lib', path.join(destDir, 'lib')], ['plugins/lib', path.join(destDir, 'plugins', 'lib')]]) {
+            fs.ensureDirSync(libDest)
+            for (const file of fs.readdirSync(srcLib).filter(f => (f.endsWith('.ts') && !f.endsWith('.d.ts')) || f.endsWith('.mjs'))) {
                 const result = smartCopyFile(
-                    path.join(srcScripts, file),
-                    path.join(destScripts, file),
+                    path.join(srcLib, file),
+                    path.join(libDest, file),
                     mode,
-                    manifestFiles ? manifestFiles.get(`plugins/lib/scripts/${file}`) : null,
+                    manifestFiles ? manifestFiles.get(`${relPrefix}/${file}`) : null,
                 )
                 if (result === 'copied') copied++
                 else skipped++
+            }
+            const srcScripts = path.join(srcLib, 'scripts')
+            if (fs.existsSync(srcScripts)) {
+                const destScripts = path.join(libDest, 'scripts')
+                fs.ensureDirSync(destScripts)
+                for (const file of fs.readdirSync(srcScripts)) {
+                    const result = smartCopyFile(
+                        path.join(srcScripts, file),
+                        path.join(destScripts, file),
+                        mode,
+                        manifestFiles ? manifestFiles.get(`${relPrefix}/scripts/${file}`) : null,
+                    )
+                    if (result === 'copied') copied++
+                    else skipped++
+                }
             }
         }
     }
@@ -331,6 +335,7 @@ const REQUIRED_DEPS = {
     'solid-js': '^1.9.0',
     'fs-extra': '^11.0.0',
     'fast-xml-parser': '^5.10.1',
+    '@huggingface/transformers': '^4.3.0',
 }
 
 /**

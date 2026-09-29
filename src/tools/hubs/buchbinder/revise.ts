@@ -27,7 +27,7 @@ Before planning revisions, retrieve the most relevant lore context. The lorebook
 
 **Run the lore query script:**
 \`\`\`bash
-bun .opencode/tools/lib/scripts/lore-query.mjs \
+bun .opencode/lib/scripts/lore-query.mjs \
   --query "Revision context for [book title] — critique items about characters, world rules, consistency, and terminology that need cross-referencing against established lore" \
   --top 5 --rerank
 \`\`\`

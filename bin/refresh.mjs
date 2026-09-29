@@ -271,6 +271,18 @@ async function main() {
         log(`  ${newFiles.length} new files added`)
     }
 
+    // ── Prefetch the local ONNX models (embedder, reranker, classifier) ──
+    // Shared, machine-wide cache — skipped when BUCHBINDER_SKIP_MODELS=1.
+    if (!args.skipModels && process.env.BUCHBINDER_SKIP_MODELS !== '1') {
+        try {
+            log('')
+            log('  Fetching local ONNX models (embedder, reranker, classifier)...')
+            execSync(`node ${path.join(PACKAGE_ROOT, 'bin', 'fetch-models.mjs')}`, { stdio: 'inherit' })
+        } catch (err) {
+            warn(`Model prefetch skipped: ${err.message}`)
+        }
+    }
+
     // ── Write the new manifest ──
     const finalManifest = buildManifest(destDir, {
         packageVersion: readPackageVersion(),

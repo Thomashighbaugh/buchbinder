@@ -167,6 +167,34 @@ Run a specific quality gate on demand:
 - \`/buchbinder verify gates dependency-graph\` — generate chapter dependency graph
 - \`/buchbinder verify gates ai-slop Chapter 3\` — scan for AI writing slop patterns (ozone, stock clichés, structural tells)
 
+### NLI evidence step (runs inside \`post-draft\` · \`revision-verify\`)
+
+Two gates gain a local NLI evidence step — chosen because NLI is decisive exactly when a *delivered artifact* must entail a *claimed property* of it. It is **not** a separate subcommand; it runs *inside* the gate process, after the structural checks, and appends evidence:
+
+| Gate | Question the classifier answers |
+|------|---------------------------------|
+| \`post-draft\` | Does the drafted **prose** (delivered) entail the awareness-map claims the draft makes about itself (payoff-from / sets-up / anchor — the claims)? |
+| \`revision-verify\` | Does the **revision entry** (delivered) entail the critique item's **recommendation** (the claim) — i.e. actually address it? |
+
+Gates whose relation is *correspondence* rather than entailment (e.g. an outline's setup↔payoff pairing) are deliberately **not** run through NLI — the classifier scores those unreliably, and a noisy step erodes gate trust.
+
+**Run it alongside the gate:**
+\`\`\`bash
+node .opencode/lib/nli-gates.mjs --gate post-draft . --chapter 3
+node .opencode/lib/nli-gates.mjs --gate revision-verify . --round 1
+\`\`\`
+
+Or programmatically: \`runGateWithNli(gateType, projectRoot, options)\` in \`./lib/quality-gates.ts\` runs the structural gate and appends this evidence (a no-op if the classifier is unavailable).
+
+**Output discipline — surgical by design.** Only the most suspicious findings surface, lowest entailment first, capped, plus a one-line pass/fail summary. Full findings are persisted for later access:
+
+- \`.opencode/cache/nli-evidence/<gate>.json\` — every scored finding
+- \`.opencode/cache/nli-evidence/<gate>.md\` — the exact block to inject into gate evidence
+
+Env: \`NLI_MAX_SCAN\` (pairs scored, default 12), \`NLI_MAX_PAIRS\` (findings surfaced, default 6), \`NLI_WARN_THRESHOLD\` (default 0.5).
+
+**Rule:** append the NLI block to the gate's evidence and let it *inform*. A low entailment score must never hard-block on its own — pair it with a concrete, human-readable reason or treat it as a warning.
+
 ## Execution
 
 For all verify sub-commands:
@@ -200,6 +228,7 @@ If the user selects a phase, call \`hubMenu\` with \`action: "route"\`, \`subcom
 | \`citation-validator\` | \`skills/quality-assurance/citation-validator/SKILL.md\` | Citation verification (non-fiction) |
 | \`voice-profile\` | \`src/lib/voice-profile.ts\` | Voice fingerprinting engine |
 | \`quality-gates\` | \`src/lib/quality-gates.ts\` | Gate runner |
+| \`nli-gates\` | \`src/lib/nli-gates.mjs\` | Local NLI gate evidence (outline / post-draft / revision-verify) |
 | \`metadata\` | \`src/lib/metadata.ts\` | Style sheet enforcement |
 | \`checkpoints\` | \`src/lib/checkpoints.ts\` | Checkpoint system |
 | \`prose-quality\` | \`src/lib/prose-quality.ts\` | Prose quality scorecard |

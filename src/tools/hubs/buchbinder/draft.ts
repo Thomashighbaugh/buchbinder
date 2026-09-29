@@ -245,6 +245,12 @@ After drafting each chapter, run the post-draft quality gate:
    - Flag drift: sentence length shift, sensory density shift, register mismatch, contraction change
    - **If voice drift detected: BLOCK. Report specific deviations. Do not save until drift is corrected.**
 
+9. **NLI evidence step** (advisory — does NOT block on its own): after the structural checks, run the local classifier to test whether the drafted **prose** actually entails the awareness-map claims the draft makes about itself:
+   \`\`\`bash
+   node .opencode/lib/nli-gates.mjs --gate post-draft . --chapter [N]
+   \`\`\`
+   Append the compact block (most-suspicious findings, capped) to the gate evidence. A low entailment is a **warning** with a concrete reason, never a hard block by itself. Full findings persist to \`.opencode/cache/nli-evidence/post-draft.json\`.
+
 **If any gate check fails, STOP. Report specific failures with evidence. Do not save until corrected.** In batch mode, this stops the entire batch — fix the failed chapter before continuing.
 
 #### e) Style Sheet Check

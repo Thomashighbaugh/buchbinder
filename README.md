@@ -425,6 +425,14 @@ node .opencode/lib/classifier.mjs --labels "foreshadowing,pacing,continuity" "th
 node .opencode/lib/classifier.mjs --entail "Chapter 7 pays off the locket from Chapter 2" "the locket resurfaces"
 ```
 
+**Wired into the gates.** The classifier runs as a step *inside* two quality gates, chosen because NLI is decisive when a delivered artifact must entail a claimed property: `post-draft` (does the prose entail the draft's own awareness-map claims) and `revision-verify` (does each revision entry entail the critique recommendation it claims to address). Gates whose relation is *correspondence* rather than entailment — such as the outline's setup↔payoff pairing — are deliberately left out, because NLI scores those unreliably and a noisy step erodes gate trust:
+
+```bash
+node .opencode/lib/nli-gates.mjs --gate post-draft . --chapter 3
+```
+
+Findings are deliberately surgical — lowest entailment first, capped — and persisted to `.opencode/cache/nli-evidence/<gate>.{json,md}` so the evidence is available exactly when the gate runs.
+
 #### Pinned Adjacent Chapters
 
 For draft, critique, and revise phases, the lore query can **pin** specific chapters to be included **verbatim** in the context, regardless of semantic score. This is critical for continuity — the agent drafting chapter N needs the exact last scene of N-1.

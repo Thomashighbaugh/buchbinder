@@ -4,6 +4,7 @@
  */
 
 import { bar } from './format.js'
+import type { ThreadMatrix } from '../../lib/thread-matrix.js'
 
 /**
  * Pacing heartbeat — vertical bars showing intensity per chapter.
@@ -30,7 +31,7 @@ export function pacingChart(data: { chapter: number; intensity: number }[], widt
  * Thread matrix heatmap — chapters x threads showing presence (█) or absence (░).
  */
 export function threadMatrix(
-  threads: { threadId: string; threadName: string; chapters: number[] }[],
+  threads: ThreadMatrix['threads'],
   totalChapters: number,
   maxThreads: number = 8
 ): string[] {
@@ -51,10 +52,10 @@ export function threadMatrix(
   lines.push(header)
 
   for (const t of threads.slice(0, maxThreads)) {
-    const name = t.threadName.slice(0, 12).padEnd(12)
+    const name = t.name.slice(0, 12).padEnd(12)
     let row = name + ' '
     for (let c = 1; c <= Math.min(totalChapters, 20); c++) {
-      row += t.chapters.includes(c) ? '█' : '░'
+      row += t.statusByChapter[c] ? '█' : '░'
     }
     lines.push(row)
   }

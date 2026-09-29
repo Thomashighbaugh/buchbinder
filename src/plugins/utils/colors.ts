@@ -65,4 +65,12 @@ export const c = {
   // Highlights
   accent: colors.magenta,
   orange: colors.orange,
+
+  // Direct Sanatana accents — used by chart/sidebar components
+  red: colors.red,
+  yellow: colors.yellow,
+  green: colors.green,
+  cyan: colors.cyan,
+  blue: colors.blue,
+  magenta: colors.magenta,
 } as const

@@ -71,7 +71,8 @@
     "typescript": "^5.7.0"
   },
   "overrides": {
-    "brace-expansion": "^2.1.2"
+    "brace-expansion": "^2.1.4",
+    "@babel/core": "^7.29.7"
   },
   "files": [
     "bin/",

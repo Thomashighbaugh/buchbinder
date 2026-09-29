@@ -161,6 +161,12 @@ After all revisions are applied across all chapters in the batch, run the revisi
 **Gate Result**: PASS / FAIL
 \`\`\`
 
+**NLI evidence step** (advisory — does NOT block on its own): after the cross-reference check, verify semantically that each addressed item's **revision entry** actually entails the critique **recommendation**:
+\`\`\`bash
+node .opencode/lib/nli-gates.mjs --gate revision-verify . --round [R]
+\`\`\`
+Append the compact block to the gate evidence; a low entailment means the item was marked addressed but the revision may not implement the recommendation. Findings persist to \`.opencode/cache/nli-evidence/revision-verify.json\`.
+
 **If gate fails: STOP. Report specific failures. Do not mark revisions complete.**
 
 ### 5b. Post-Revision Score (REQUIRED — gates the cycle)

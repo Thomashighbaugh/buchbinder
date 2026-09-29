@@ -869,6 +869,51 @@ export function runGate(
   }
 }
 
+// ─── NLI-augmented Gate Runner ──────────────────────────────────────────────
+
+/**
+ * Gates for which a local NLI evidence step is defined. These are the gates
+ * where NLI is decisive — a delivered artifact must entail a claimed property:
+ * a draft's prose must entail its own awareness-map claims, and a revision
+ * entry must entail the critique recommendation it addresses. Gates whose
+ * relation is *correspondence* rather than entailment (e.g. an outline's
+ * setup↔payoff pairing) are deliberately excluded. See `nli-gates.mjs`.
+ */
+export const NLI_GATE_TYPES = ['post-draft', 'revision-verify'] as const
+
+/**
+ * Run a gate and, when an NLI step is defined for it, append local classifier
+ * evidence (and persist it to `.opencode/cache/nli-evidence/<gate>.json`).
+ *
+ * Opt-in and failure-tolerant: if `@huggingface/transformers`, the model, or
+ * the NLI module is unavailable, the result is identical to `runGate()`.
+ */
+export async function runGateWithNli(
+  gateType: 'outline' | 'pre-draft' | 'post-draft' | 'revision-verify' | 'continuity-check' | 'non-negotiables',
+  projectRoot: string,
+  options?: { chapterNumber?: number; xmlContent?: string; critiqueRound?: number; contentToCheck?: string }
+): Promise<GateResult> {
+  const result = runGate(gateType, projectRoot, options);
+  if (!(NLI_GATE_TYPES as readonly string[]).includes(gateType)) return result;
+  try {
+    // Dynamic specifier (non-literal) so the TS build does not need to resolve
+    // the .mjs module; it loads at runtime from the same lib/ directory.
+    const spec = '../lib/nli-gates.mjs';
+    const mod: any = await import(spec);
+    const nli = await mod.runNliGate(gateType, {
+      projectRoot,
+      chapterNumber: options?.chapterNumber,
+      critiqueRound: options?.critiqueRound,
+    });
+    if (nli && !nli.skipped && Array.isArray(nli.evidence) && nli.evidence.length > 0) {
+      result.evidence.push(...nli.evidence);
+    }
+  } catch {
+    /* NLI is optional — never fail a gate because of it */
+  }
+  return result;
+}
+
 // ─── Non-Negotiables Gate ───────────────────────────────────────────────────
 //
 // Checks content against the author's declared creative constraints.

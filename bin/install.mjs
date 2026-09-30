@@ -96,11 +96,13 @@ async function printPerProjectAck() {
     console.log(chalk.white('    your global node_modules'));
     console.log(chalk.white('  • Touch existing book/, memory/, or output/ contents'));
     console.log('');
-    console.log(chalk.white('Lore retrieval, when enabled, uses LOCAL Ollama models'));
-    console.log(chalk.white('(pedrohml/mxbai-embed-large). No'));
-    console.log(chalk.white('network calls. No telemetry. Pull the embedding model with:'));
+    console.log(chalk.white('Lore retrieval uses LOCAL, in-process ONNX models'));
+    console.log(chalk.white('(embedder + reranker + classifier) — no network calls at query'));
+    console.log(chalk.white('time, no telemetry. The models are fetched once, during install,'));
+    console.log(chalk.white('into a shared cache (~/.cache/buchbinder/models).'));
     console.log('');
-    console.log(chalk.cyan('    ollama pull pedrohml/mxbai-embed-large:latest'));
+    console.log(chalk.white('Ollama is optional — set EMBED_BACKEND=ollama to use local Ollama'));
+    console.log(chalk.white('embeddings instead (ollama pull pedrohml/mxbai-embed-large:latest).'));
     console.log('');
     console.log(chalk.white('After install, use buchbinder-refresh to sync updates without'));
     console.log(chalk.white('overwriting your project work.'));

@@ -97,11 +97,10 @@ async function printPerProjectAck() {
     console.log(chalk.white('  • Touch existing book/, memory/, or output/ contents'));
     console.log('');
     console.log(chalk.white('Lore retrieval, when enabled, uses LOCAL Ollama models'));
-    console.log(chalk.white('(pedrohml/mxbai-embed-large, hans-tech/bge-reranker-v2-m3). No'));
-    console.log(chalk.white('network calls. No telemetry. Pull the models with:'));
+    console.log(chalk.white('(pedrohml/mxbai-embed-large). No'));
+    console.log(chalk.white('network calls. No telemetry. Pull the embedding model with:'));
     console.log('');
     console.log(chalk.cyan('    ollama pull pedrohml/mxbai-embed-large:latest'));
-    console.log(chalk.cyan('    ollama pull hans-tech/bge-reranker-v2-m3:260522'));
     console.log('');
     console.log(chalk.white('After install, use buchbinder-refresh to sync updates without'));
     console.log(chalk.white('overwriting your project work.'));

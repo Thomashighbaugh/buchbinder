@@ -91,5 +91,9 @@
   ],
   "engines": {
     "node": ">=18.0.0"
-  }
+  },
+  "trustedDependencies": [
+    "onnxruntime-node",
+    "protobufjs"
+  ]
 }

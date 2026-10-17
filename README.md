@@ -113,9 +113,20 @@ Under those conditions, vendoring the functionality is not Not-Invented-Here stu
 
 ## Quick Start
 
+One command, from your book project directory — empty or not:
+
 ```bash
-# In your book project directory
 npx buchbinder
+```
+
+No clone, no `npm install`, no prerequisites. The installer carries its own
+runtime dependencies and bootstraps them on first run (into the package tree,
+never into your project or your global config), so there is nothing to set up
+before you invoke it. Until the package is on the public registry, the same
+install works straight from git:
+
+```bash
+npx github:Thomashighbaugh/buchbinder
 ```
 
 The interactive installer will:
@@ -125,6 +136,11 @@ The interactive installer will:
 4. Initialize track metadata
 
 After installation, type `/buchbinder` in OpenCode to open the workflow menu, or type `/buchbinder <subcommand>` for direct dispatch.
+
+> **Why "one command"?** Running the installer from a source checkout needs no
+> prior `npm install` either — `node bin/install.mjs` self-bootstraps the same
+> way. The installer installs things; requiring its own dependencies to be
+> installed before it can install anything would be circular.
 
 ---
 

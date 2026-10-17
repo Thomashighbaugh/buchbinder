@@ -404,14 +404,10 @@ async function ensureProjectConfig() {
     }
 
     // ── package.json: ensure runtime deps for the plugin ──
-    const REQUIRED_DEPS = {
-        '@opencode-ai/plugin': '1.17.9',
-        '@opentui/core': '>=0.1.97',
-        '@opentui/solid': '>=0.1.97',
-        'solid-js': '^1.9.0',
-        'fs-extra': '^11.0.0',
-        '@huggingface/transformers': '^4.3.0',
-    };
+    // REQUIRED_DEPS is the single source of truth in ./sync.mjs — the previous
+    // local copy had drifted (it was missing fast-xml-parser, which
+    // src/lib/xml-draft-chunker.mjs imports), so interactive installs shipped a
+    // .opencode/package.json that was missing a dependency the tools load.
 
     let pkg = {};
     if (fs.existsSync(pkgJsonPath)) {

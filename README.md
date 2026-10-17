@@ -787,7 +787,9 @@ Source structure:
 - `src/lib/` — 32 library files (gates, voice, checkpoints, analyses, etc.)
 - `src/skills/` — 34 SKILL.md files across 5 categories
 - `src/templates/` — Track templates (fiction, non-fiction, series)
-- `bin/install.mjs` — Interactive installer
+- `bin/install.mjs`, `bin/refresh.mjs` — self-bootstrapping launchers (call `ensureDeps()`, then load the CLI body)
+- `bin/lib/bootstrap.mjs` — resolves/installs the package's own runtime deps so the bins run from a bare clone
+- `bin/lib/install-cli.mjs`, `bin/lib/refresh-cli.mjs` — the installer / refresher bodies
 
 ---
 

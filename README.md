@@ -405,17 +405,16 @@ The index is built once and reused on every phase invocation. Without the index,
 | `book/outline.md`, `book/outline/chapter_*.md` | Markdown headings / one-per-file | Whole-book + per-chapter outline |
 | `book/drafts/chapter_*.xml` | **XML chunker** (see below) | Drafted chapters |
 
-**Build / refresh the index:**
+**Build / refresh the index** — from inside the project:
 ```bash
-# Build or incrementally update the index (from a Buchbinder checkout)
-node bin/build-lore-index.mjs
-
-# Or from the lore-query script itself
-bun .opencode/lib/scripts/lore-query.mjs --build
+# Build or incrementally update the index
+node .opencode/lib/scripts/lore-query.mjs --build
 
 # Check status (chunk count, age, embedder version)
-bun .opencode/lib/scripts/lore-query.mjs --status
+node .opencode/lib/scripts/lore-query.mjs --status
 ```
+
+Or use the slash command: `/buchbinder refresh-index`.
 
 The index build is **incremental**: re-running on an up-to-date index is a no-op. Only source files whose content has changed since the last build are re-chunked and re-embedded. A refresh (see below) rebuilds the index automatically when source files have changed.
 
@@ -548,30 +547,24 @@ The first time you install, the installer prints an acknowledgement screen expla
 
 ### Refreshing an Existing Install
 
-Once a project is installed, updating is a prompt, not a flag: re-run the
-install one-liner and choose **Refresh**. It syncs changed/new files, rebuilds
-the index, and preserves your local edits.
+Once a project is installed, updating is a prompt, not a flag. Two equivalent ways:
 
-From a Buchbinder checkout you can also run it directly (flags optional):
+- **In OpenCode:** `/buchbinder refresh`.
+- **In a shell, from the project:** re-run the install one-liner and choose **Refresh**.
+
+Both shell out to the installed `.opencode/lib/scripts/refresh.mjs`, which
+re-fetches the Buchbinder package (the installer does not keep it in the
+project), runs refresh from it, and removes the download. Either way it syncs
+changed/new files, rebuilds the index, and preserves your local edits.
+
+From a Buchbinder checkout you can also run refresh directly; the arguments are
+all optional:
 
 ```bash
-# Default: sync changed/new files, preserve your local edits
-node bin/refresh.mjs
-
-# Also remove files that disappeared from source
-node bin/refresh.mjs --prune
-
-# Overwrite locally-modified files (destructive)
-node bin/refresh.mjs --force
-
-# Skip the sidebar TypeScript build (faster, for iteration)
-node bin/refresh.mjs --skip-build
-
-# Skip the lore index rebuild
-node bin/refresh.mjs --skip-index
-
-# For postinstall / CI: skip prompts, defaults track='fiction'
-node bin/refresh.mjs --postinstall
+node bin/refresh.mjs                 # sync changed files, preserve local edits, rebuild index
+node bin/refresh.mjs --prune         # also remove files that disappeared from source
+node bin/refresh.mjs --force         # overwrite locally-modified files (destructive)
+node bin/refresh.mjs --skip-index    # skip the lore index rebuild
 ```
 
 `buchbinder-refresh`:

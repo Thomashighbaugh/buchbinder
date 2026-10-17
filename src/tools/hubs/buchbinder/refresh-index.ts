@@ -22,7 +22,7 @@ The index is built incrementally: re-running on an up-to-date index is a no-op (
 - After adding new chapters to \`./book/drafts/\` (so the new chapter is available for semantic retrieval)
 - After upgrading the embed model or changing Ollama model names
 - To recover from a corrupted or accidentally-deleted index
-- After running \`node bin/refresh.mjs\` if it reported an index-build failure
+- After running \`/buchbinder refresh\` if it reported an index-build failure
 
 You do NOT need to run this on every \`/buchbinder\` invocation — \`lore-query.mjs\` falls back to on-the-fly embedding when no index exists. The index exists to make queries fast (one embedding fetch per query, not per chunk).
 
@@ -33,7 +33,7 @@ You do NOT need to run this on every \`/buchbinder\` invocation — \`lore-query
 The simplest way to refresh the index from inside OpenCode is to call the index CLI:
 
 \`\`\`bash
-node bin/build-lore-index.mjs
+node .opencode/lib/scripts/lore-query.mjs --build
 \`\`\`
 
 Or, equivalently, the lore-query script's \`--build\` flag:
@@ -42,7 +42,7 @@ Or, equivalently, the lore-query script's \`--build\` flag:
 bun .opencode/lib/scripts/lore-query.mjs --build
 \`\`\`
 
-Both delegate to the same underlying logic in \`src/lib/index-builder.mjs\`.
+It wraps the installed index builder at \`.opencode/lib/index-builder.mjs\`.
 
 ### 2. Verify the build
 
@@ -56,7 +56,7 @@ Expected output: a list of source files and chunk counts, the embed model versio
 
 ### 3. If the build fails
 
-The most common failure is Ollama being unreachable or the embed model being missing. Verify:
+The default embedder is a local ONNX model fetched during install; if the build fails the model cache is usually missing — re-run the installer to re-fetch it. If you set EMBED_BACKEND=ollama, check that Ollama is running and the model is pulled.
 
 \`\`\`bash
 # Is Ollama running?
@@ -93,7 +93,7 @@ Both run locally via Ollama — no network calls, no telemetry.
 ## Related Commands
 
 - \`/buchbinder outline\`, \`/buchbinder draft\`, \`/buchbinder critique\`, \`/buchbinder revise\`, \`/buchbinder review\` — All use the index for semantic lore retrieval
-- \`node bin/refresh.mjs\` — Idempotent plugin sync; rebuilds the index automatically when source files have changed
+- \`/buchbinder refresh\` — Idempotent plugin sync; rebuilds the index automatically when source files have changed
 - \`/buchbinder manifest\` — Import a lorebook; should be followed by \`/buchbinder refresh-index\`
 `,
 }

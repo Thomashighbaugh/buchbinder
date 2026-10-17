@@ -325,12 +325,12 @@ async function main() {
     // so an existing index keeps working after a config change.
     const index = loadIndex(projectRoot)
     if (!index) {
-        console.error('[lore-query] No precomputed index found. Run `node bin/build-lore-index.mjs` to build one for faster retrieval. Continuing with on-the-fly embedding...')
+        console.error('[lore-query] No precomputed index found. Run `node .opencode/lib/scripts/lore-query.mjs --build` to build one for faster retrieval. Continuing with on-the-fly embedding...')
     }
     const embedBackend = index?.embedBackend || activeEmbedBackend()
     const embedModel = index?.embedModel || activeEmbedModel(embedBackend)
     if (index && (embedBackend !== activeEmbedBackend() || embedModel !== activeEmbedModel(activeEmbedBackend()))) {
-        console.error(`[lore-query] Index embedder (${embedBackend}: ${embedModel}) differs from configured (${activeEmbedBackend()}: ${activeEmbedModel()}). Using the index's embedder; run \`node bin/build-lore-index.mjs --force\` to rebuild with the new one.`)
+        console.error(`[lore-query] Index embedder (${embedBackend}: ${embedModel}) differs from configured (${activeEmbedBackend()}: ${activeEmbedModel()}). Using the index's embedder; run \`node .opencode/lib/scripts/lore-query.mjs --build --force\` to rebuild with the new one.`)
     }
 
     // Load pinned chapters (always from disk, not from index)

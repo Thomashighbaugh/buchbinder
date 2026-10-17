@@ -768,10 +768,18 @@ Shared context (constitution, specification, knowledge, tracking, style sheet) i
 ```bash
 git clone <repo>
 cd buchbinder
-npm install
-npx tsc --noEmit    # Type check
-node bin/install.mjs test-dir   # Test installation
+node bin/install.mjs --help    # Runs with no node_modules — it self-bootstraps
+npm install                    # Only needed to typecheck/build, not to run the installer
+npx tsc --noEmit               # Type check
+node bin/install.mjs           # Install into the current directory
 ```
+
+`bin/install.mjs` and `bin/refresh.mjs` are three-line launchers: they call
+`ensureDeps()` (`bin/lib/bootstrap.mjs`) and then dynamically import the real
+CLI body (`bin/lib/install-cli.mjs`, `bin/lib/refresh-cli.mjs`). That
+indirection is what lets the bin run from a bare clone — the third-party
+imports (`chalk`, `fs-extra`, `@inquirer/prompts`) are only resolved *after*
+the dependencies they need have been installed.
 
 Source structure:
 - `src/commands/buchbinder-router.md` — Hub phase router (direct `/buchbinder-router <phase>`)

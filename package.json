@@ -72,7 +72,9 @@
   },
   "overrides": {
     "brace-expansion": "^2.1.4",
-    "@babel/core": "^7.29.7"
+    "@babel/core": "^7.29.7",
+    "seroval": "^1.6.3",
+    "seroval-plugins": "^1.6.3"
   },
   "files": [
     "bin/",

@@ -28,6 +28,7 @@ A coarse outline ("Chapter 5: They argue and reconcile") forces the LLM to impro
 | Setup/payoff | Foreshadowing → payoff chains | Prerequisite → synthesis chains | Both |
 | Tracking init | Character state, plot, timeline | Source index, argument status | Both |
 | Output | \`outline.md\` with per-chapter scene beats and anchor map | \`outline.md\` with per-section claim/evidence beats | \`outline.md\` with dual hierarchy |
+| Scene preview (fiction) | Each scene beat carries a rendered prose \`**Preview:**\` in the writing style key | \u2014 | \u2014 |
 
 ## Pre-Execution: Load Relevant Lore Context (CRITICAL)
 
@@ -60,6 +61,7 @@ If the script outputs nothing (no lore files exist, or all models are unavailabl
 ## Prerequisites
 
 - Fiction: \`./book/specification.md\` must exist
+- Fiction: \`./book/metadata/style-key.md\` must exist and be author-approved (generated at constitution by \`/buchbinder manifest\`) \u2014 the scene previews are written in this key
 - Non-fiction: \`./book/research/\` should have source notes
 - \`./book/constitution.md\` must exist (for pacing strategy reference)
 
@@ -109,8 +111,11 @@ For each chapter/section, produce an entry with ALL of the following fields. Thi
 ### Scene Beats
 
 - **Scene 1:** [One-line goal]. Conflict: [One-line conflict].
+  **Preview:** [One to two sentences of *actual book prose* for this scene, written in the writing style key \u2014 a sample of the scene, not a summary of it.]
 - **Scene 2:** [One-line goal]. Conflict: [One-line conflict].
+  **Preview:** [Rendered prose sample, in the key.]
 - **Scene 3:** [One-line goal]. Conflict: [One-line conflict].
+  **Preview:** [Rendered prose sample, in the key.]
 
 ### Setup / Payoff
 
@@ -125,6 +130,10 @@ For each chapter/section, produce an entry with ALL of the following fields. Thi
 \`\`\`
 
 **Minimum 2 scenes per chapter.** Each scene must have a goal (what the scene accomplishes) and a conflict (what opposes it). Vague one-liners without goal/conflict fail the gate.
+
+**Scene Preview (fiction only).** Each scene beat also carries a \`**Preview:**\` \u2014 one or two sentences of the book's *actual prose* in the writing style key (\`./book/metadata/style-key.md\`), rendering that scene rather than describing it.
+
+This is the whole point of previewing at outline time: the author reads the finished surface while it is still free to change. The style key is cheapest to fix here \u2014 a preview that reads wrong means the key is wrong, and revising a key costs minutes while revising forty thousand drafted words costs days. A preview must be prose in the key; a summary ("they argue in the rain") is not a preview and fails the gate. Non-fiction sections do not carry previews.
 
 **Setup/payoff chains:** Every chapter except the first must declare at least one \`payoff-from\` reference pointing back to a chapter that set it up. Every chapter except the last must declare at least one \`sets-up\` reference pointing forward to a chapter that pays it off. The first chapter may have an empty payoff-from; the last may have an empty sets-up.
 
@@ -153,6 +162,7 @@ Run the outline gate. The gate checks:
 | Pacing tag | Declared per chapter | Hard |
 | Pacing distribution | Not lopsided (4+ chapters) | Hard |
 | Open threads | Declared for middle chapters | Warning |
+| Scene previews (fiction) | Every scene beat carries a non-empty \`**Preview:**\` in the writing style key | Hard (fiction) |
 | \`./book/outline.md\` exists | File present on disk, non-empty | Hard |
 | \`./book/outline/chapter_NN.md\` per chapter | One file per chapter, non-empty | Hard |
 | \`./book/outline/_index.json\` valid | Parseable JSON, lists every chapter | Hard |
@@ -298,6 +308,7 @@ The gate produces evidence, not just pass/fail. Each check reports what it found
 
 | Skill | File | Purpose |
 |-------|------|---------|
+| \`author-voice-key\` | \`skills/fiction/writing-techniques/author-voice-key/SKILL.md\` | Writing style key \u2014 renders the scene previews in the book's prose voice (fiction) |
 | \`scene-architecture\` | \`skills/fiction/writing-techniques/scene-architecture/SKILL.md\` | Scene framework per chapter (fiction) |
 | \`pacing-rhythm\` | \`skills/fiction/writing-techniques/pacing-rhythm/SKILL.md\` | Pacing archetype enforcement |
 | \`argument-structure\` | \`skills/non-fiction/argument-structure/SKILL.md\` | Argument flow and evidence placement |
@@ -306,7 +317,7 @@ The gate produces evidence, not just pass/fail. Each check reports what it found
     "Whenever the user makes a decision that alters narrative context, metanarrative, formatting, or tracking states, you MUST proactively update the relevant files in ./book/metadata/ and ./book/tracking/ before completing the turn."
   ],
   tools: ["loadSkill", "bash", "question"],
-  relatedSkills: ["scene-architecture", "pacing-rhythm", "argument-structure", "strategic-reversal"],
+  relatedSkills: ["author-voice-key", "scene-architecture", "pacing-rhythm", "argument-structure", "strategic-reversal"],
   examples: [
     { input: "/buchbinder outline 3 acts, 12 chapters each", approach: "Builds a 36-chapter outline with scene beats, setup/payoff chains, and continuity anchors per chapter. Gate runs — if it fails, revises up to 3 cycles." },
     { input: "/buchbinder outline", approach: "Interviews for structure (arcs, chapters, pacing), then builds fine-grained chapter map. Gate enforces scene beats, setup/payoff bidirectionality, and continuity anchors before proceeding." },
@@ -320,7 +331,9 @@ The gate produces evidence, not just pass/fail. Each check reports what it found
     "The outline MUST be persisted to disk in BOTH formats: ./book/outline.md AND ./book/outline/chapter_NN.md per chapter — the agent's memory is NOT a substitute for the file on disk",
     "Per-chapter outline files are the user's primary editing surface — one file per chapter lets the user edit a single chapter without scrolling through the whole book",
     "./book/outline/_index.json is REQUIRED — it is the machine-readable manifest the drafting phase uses to load just one chapter's outline at a time",
-    "The outline is the single source of truth for the entire book — if everything else is lost, ./book/outline.md is what lets work resume"
+    "The outline is the single source of truth for the entire book — if everything else is lost, ./book/outline.md is what lets work resume",
+    "Fiction: every scene beat MUST carry a rendered **Preview:** in the writing style key — a summary is not a preview and fails the gate",
+    "Fiction: if a preview reads wrong, revise the style key (./book/metadata/style-key.md), not just the preview — the key is what the whole book will be written in"
   ]
 }
 

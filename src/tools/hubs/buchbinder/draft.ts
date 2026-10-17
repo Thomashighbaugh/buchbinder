@@ -64,8 +64,9 @@ If no chapter specified, read \`./book/tasks.md\` and collect all tasks with sta
 
 Run the pre-draft quality gate. For batch mode, the shared context (constitution, track, specification, outline, knowledge, tracking) is loaded ONCE and verified with evidence. Per-chapter items (previous chapter, drafts, existing chapter) are checked per chapter.
 
-**The 13 required items:**
-1. \`./book/constitution.md\` — Creative/intellectual principles
+**The 14 required items:**
+1. \`./book/manifest.md\` — Creative/intellectual principles (the constitution)
+1b. \`./book/metadata/style-key.md\` — **Fiction only:** the writing style key. The drafted prose must be written in this key *and* must hold to its reference \`references/good-prose.md\`. If it is missing or not author-approved, BLOCK with: "No writing style key — run \`/buchbinder manifest\` to generate one; fiction prose must be written in a declared key." Non-fiction and mixed tracks skip this item.
 2. \`./book/track.json\` — Track and project metadata
 3. \`./book/specification.md\` or \`./book/specification/_main.md\` — Story blueprint (fiction)
 4. \`./book/outline.md\` — The chapter's structural context
@@ -145,6 +146,13 @@ Write the chapter using XML tags as an intermediate representation. The XML is N
       <anchor name="[object/state]">[How it appears in this draft]</anchor>
     </continuity-anchors>
   </awareness-map>
+
+  <style-key source="book/metadata/style-key.md">
+    <voice author="[Author]" weight="[N]%">[How the lead narrative voice is doing the telling in this chapter — distance, attitude, tense-pressure]</voice>
+    <thematic-focus author="[Author]" weight="[N]%">[How the book's subject pressures this chapter]</thematic-focus>
+    <writing-style author="[Author]" weight="[N]%">[The surface moves actually used — sentence shape, diction, punctuation]</writing-style>
+    <good-prose>[Which of the 30 good-prose qualities this chapter leans on hardest, and where]</good-prose>
+  </style-key>
 
   <scene number="1" type="[transition|action|dialogue|revelation|resolution]" goal="[Scene goal]" conflict="[Scene conflict]">
     <narration register="[tense|observing|immersive|reflective]" sensory-focus="[senses]">
@@ -245,6 +253,17 @@ After drafting each chapter, run the post-draft quality gate:
    - Flag drift: sentence length shift, sensory density shift, register mismatch, contraction change
    - **If voice drift detected: BLOCK. Report specific deviations. Do not save until drift is corrected.**
 
+8b. **Style-key conformance (fiction — HARD BLOCK)**: compare the drafted prose against \`./book/metadata/style-key.md\`, using the key's own lines, not an impression:
+   - **Sentences** — does the drafted sentence-length distribution and clause habit match the key's "Sentences" line?
+   - **Diction** — does word choice match the key's "Diction" line (latinate vs plain, concreteness, adjectives carried or cut)?
+   - **Dialogue** — attribution habits, subtext density, and quotation-mark convention as declared.
+   - **Interiority** — the depth and method of interior access as declared.
+   - **What it refuses** — the drafted prose must not make the move the key says it will not make.
+   - **Good prose** — the prose must also hold to the key's reference \`references/good-prose.md\`. Score the chapter against a small, relevant subset (typically: control of voice, varied cadence, precision of word choice, concreteness over abstraction, subtext, restrained emotion, compression) and report what was found.
+   - **Pastiche check** — if the prose reads as imitation of the lead author rather than as *this book*, flag it: the key is being over-applied. That is a block; the fix is to pull the weights back toward the book, not to keep writing.
+   - **Exempt:** character voice may vary from the key inside dialogue and direct interior monologue only. Narration drift is never exempt.
+   **If conformance fails and cannot be corrected within the chapter, BLOCK and say which key line was violated.**
+
 9. **NLI evidence step** (advisory — does NOT block on its own): after the structural checks, run the local classifier to test whether the drafted **prose** actually entails the awareness-map claims the draft makes about itself:
    \`\`\`bash
    node .opencode/lib/nli-gates.mjs --gate post-draft . --chapter [N]
@@ -275,6 +294,8 @@ Run the prose quality analysis on the drafted XML:
 - **Crutch word frequency** — warn if >5 per 1000 words
 
 Produces a scorecard per chapter. Blocking metrics (filter words, adverbs, passive, info-dump, tense/POV) must pass before save. Warning metrics are reported but don't block.
+
+These metrics catch mechanical failure. They do **not** catch bad prose that is mechanically clean — that is what the style-key conformance gate (8b) and the \`good-prose.md\` qualities are for. Both run; neither substitutes for the other.
 
 **If any blocking metric fails: STOP. Report the specific failure with count, density, and threshold. Do not save until corrected.**
 
@@ -368,6 +389,7 @@ The draft phase integrates these HITL features:
 |-------|------|---------|
 | \`pre-draft-checklist\` | \`skills/quality-assurance/pre-draft-checklist/SKILL.md\` | Checklist reference (now enforced by gate) |
 | \`scene-architecture\` | \`skills/fiction/writing-techniques/scene-architecture/SKILL.md\` | Scene framework (fiction) |
+| \`author-voice-key\` | \`skills/fiction/writing-techniques/author-voice-key/SKILL.md\` | The writing style key the prose must be written in (fiction) |
 | \`dialogue-techniques\` | \`skills/fiction/writing-techniques/dialogue-techniques/SKILL.md\` | Dialogue quality (fiction) |
 | \`psychological-interiority\` | \`skills/fiction/writing-techniques/psychological-interiority/SKILL.md\` | Internal reactions (fiction) |
 | \`argument-structure\` | \`skills/non-fiction/argument-structure/SKILL.md\` | Evidence presentation (non-fiction) |
@@ -380,14 +402,16 @@ The draft phase integrates these HITL features:
     "Whenever the user makes a decision that alters narrative context, metanarrative, formatting, or tracking states, you MUST proactively update the relevant files in ./book/metadata/ and ./book/tracking/ before completing the turn."
   ],
   tools: ["loadSkill", "bash", "question"],
-  relatedSkills: ["pre-draft-checklist", "scene-architecture", "dialogue-techniques", "psychological-interiority", "argument-structure", "academic-writing", "phase-preview", "authorial-intent", "creative-constraints", "provenance"],
+  relatedSkills: ["author-voice-key", "pre-draft-checklist", "scene-architecture", "dialogue-techniques", "psychological-interiority", "argument-structure", "academic-writing", "phase-preview", "authorial-intent", "creative-constraints", "provenance"],
   examples: [
     { input: "/buchbinder draft", approach: "Drafts all pending chapters (up to 6) in one batch with shared context loaded once" },
     { input: "/buchbinder draft 3-8", approach: "Drafts chapters 3 through 8 in one batch" },
     { input: "/buchbinder draft Chapter 5", approach: "Single-chapter override — drafts only chapter 5" },
     { input: "/buchbinder draft all", approach: "Drafts ALL pending chapters regardless of batch limit — use with caution on large manuscripts" }
   ],
-  warnings: ["Batch mode is the DEFAULT — single-chapter requires explicit chapter number", "Batch stops on first gate failure — fix the failed chapter before continuing", "Tracking state is updated between chapters in the batch for cross-chapter continuity", "Pre-draft gate runs once for shared context, then per-chapter for previous chapter and existing chapter checks", "Prose quality scorecard runs after post-draft gate — filter words, adverbs, passive, info-dump, tense/POV are hard blocks", "Echo detection runs after prose quality — word echo and crutch words are hard blocks", "Beat arc check verifies <beatchange> tags exist — no beat data means no arc analysis (hard block)"]
+  warnings: ["Batch mode is the DEFAULT — single-chapter requires explicit chapter number", "Batch stops on first gate failure — fix the failed chapter before continuing", "Tracking state is updated between chapters in the batch for cross-chapter continuity", "Pre-draft gate runs once for shared context, then per-chapter for previous chapter and existing chapter checks", "Prose quality scorecard runs after post-draft gate — filter words, adverbs, passive, info-dump, tense/POV are hard blocks", "Echo detection runs after prose quality — word echo and crutch words are hard blocks", "Beat arc check verifies <beatchange> tags exist — no beat data means no arc analysis (hard block)",
+    "Fiction: prose must be written in the writing style key (./book/metadata/style-key.md) AND hold to good-prose.md — style-key conformance is a hard block, not a matter of taste",
+    "Fiction: narration must not drift from the key; only dialogue and direct interior monologue may carry a distinct character voice"]
 }
 
 export default spec

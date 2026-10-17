@@ -131,6 +131,51 @@ Interview the user to fill each manifest section. Use the \`question\` tool for 
 - How are revision decisions made? Authorial discretion vs. structured critique response?
 - Non-fiction: how are factual errors handled post-publication?
 
+### 2b. Writing Style Key (FICTION ONLY)
+
+**Fiction:** before anything is drafted, the book needs one explicit answer to "what does this sound like?" This step generates that answer, shows it to the author, and offers an edit. **Non-fiction and mixed: skip this step entirely** — there is no author key. Non-fiction carries register and citation conventions instead; say so in one line and continue.
+
+1. Load the \`author-voice-key\` skill and its three references: \`references/author-voices.md\` (the blurb retold in 76 author voices), \`references/author-combinations.md\` (35 three-author blends, with roles and weights), and \`references/good-prose.md\` (the 30 qualities of good prose).
+
+2. From the premise, thematic statement, tone, and register decisions gathered above, choose a blend of **three** authors using the same three-role structure as the combinations reference:
+
+| Role | What it supplies | Weight |
+|------|------------------|--------|
+| **Narrative voice** (lead) | Who is telling it, from where, with what attitude | 45–60% |
+| **Thematic focus** | What the book is really about | 25–35% |
+| **Writing style** | Sentence shape, diction, surface texture | 15–25% |
+
+   The three roles must pull in different directions — a key whose three authors agree produces flat pastiche. Choose the thematic-focus author for what *this book* is about, and the style author for the sentence *this book* needs.
+
+3. Render a **sample paragraph** of 3–6 sentences in the key, using *this book's* premise — never the reference blurb. The author must hear the actual surface of their own book.
+
+4. Present the key (roles, weights, rationale, sample) and **ask whether the author wants to edit it**, using the \`question\` tool:
+
+\`\`\`
+question: "Here is your writing style key. It will govern every line of prose. Keep it, or change it?"
+header: "Style Key"
+options:
+  - label: "Use this key", description: "Accept as-is and write it to ./book/metadata/style-key.md"
+  - label: "Adjust a role", description: "Keep the authors; change what one of them is doing"
+  - label: "Swap an author", description: "Replace one of the three with a different voice from the reference"
+  - label: "Re-weight", description: "Same three authors, different proportions"
+  - label: "Regenerate", description: "Propose a different blend for this book"
+  - label: "Choose the authors myself", description: "I'll name the three authors and the weights"
+\`\`\`
+
+   Loop until the author accepts. Never write the key without making this offer, and never present the key as final before the author has seen the sample paragraph.
+
+5. Write the approved key to \`./book/metadata/style-key.md\` using the structure defined in the \`author-voice-key\` skill (Key, Why these three, Sample, The voice in practice, Conformity, Failure mode, Provenance). Mark it author-approved, with the date.
+
+6. Record a one-line summary in the manifest's **Style Principles** section so the manifest and the key never disagree, and note that fiction prose must conform to this key *and* to \`references/good-prose.md\`.
+
+**What the key governs:**
+- **Prose** — every drafting, revision, and editing pass is written in this key, and must also hold to \`references/good-prose.md\`. Character voice may vary from the key inside dialogue and direct interior monologue only; the narration does not drift.
+- **Outlining** — the outline's scene beats carry a rendered \`**Preview:**\` line per scene, in this key, so the author reads the finished surface before a word is drafted. The key is cheapest to change here.
+- **Drift checks** — the style sheet and prose-quality gates measure conformity against the key's own "Sentences / Diction / Dialogue / Interiority / What it refuses" lines, not against an impression.
+
+**Gate (fiction):** \`./book/metadata/style-key.md\` must exist, be author-approved, and contain the Key + Sample sections before the outline phase will accept a scene preview. For non-fiction this file is absent by design, and its absence is not a failure.
+
 ### 3. Load Supplement Skills
 
 If available, load the following skills for guided questions:
@@ -179,6 +224,8 @@ Populate the manifest template with the user's answers. Save to \`./book/manifes
 ## Style Principles
 [Register, tone, sentence-level preferences, atmosphere]
 
+[Fiction: the author key at \`./book/metadata/style-key.md\` governs the prose — cite it here and keep the two in sync.]
+
 ## Content Principles
 [Character/structure depth, worldbuilding/argument binding, complexity]
 
@@ -207,6 +254,8 @@ For Mixed track, offer both options in the question.
 
 | Skill | File | Purpose |
 |-------|------|---------|
+| \`author-voice-key\` | \`skills/fiction/writing-techniques/author-voice-key/SKILL.md\` | Writing style key \u2014 author blend, prose conformity, scene previews (fiction) |
+| \`author-voice-key\` | \`skills/fiction/writing-techniques/author-voice-key/SKILL.md\` | Writing style key \u2014 author blend, prose conformity, scene previews (fiction) |
 | \`pacing-rhythm\` | \`skills/fiction/writing-techniques/pacing-rhythm/SKILL.md\` | Pacing archetype selection (fiction) |
 | \`character-depth\` | \`skills/fiction/writing-techniques/character-depth/SKILL.md\` | Character depth approach (fiction) |
 | \`academic-writing\` | \`skills/non-fiction/academic-writing/SKILL.md\` | Thesis and argument structure (non-fiction) |
@@ -219,12 +268,15 @@ If skill files are not found, continue without them.`,
     "Whenever the user makes a decision that alters narrative context, metanarrative, formatting, or tracking states, you MUST proactively update the relevant files in ./book/metadata/ and ./book/tracking/ before completing the turn."
   ],
   tools: ["loadSkill", "bash", "question"],
-  relatedSkills: ["pacing-rhythm", "character-depth", "academic-writing", "citation-styles", "creative-constraints", "lorebook-import"],
+  relatedSkills: ["author-voice-key", "pacing-rhythm", "character-depth", "academic-writing", "citation-styles", "creative-constraints", "lorebook-import"],
   examples: [
     { input: "/buchbinder manifest I want to write a literary fantasy novel with deep character work", approach: "Asks about premise/lorebook import, then interviews the user via question tool to fill each manifest section, saves to ./book/manifest.md." },
     { input: "/buchbinder manifest", approach: "Asks about premise/lorebook import, checks for existing manifest (offers diff-based update if found), otherwise starts fresh interview." }
   ],
-  warnings: []
+  warnings: [
+    "Fiction: the writing style key (./book/metadata/style-key.md) is generated here and offered for edit — never write it without showing the author the sample paragraph first",
+    "Non-fiction and mixed: skip the style key entirely — there is no author key for those tracks"
+  ]
 }
 
 export default spec

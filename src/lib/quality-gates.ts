@@ -59,6 +59,11 @@ export interface GateResult {
 //   5. Pacing distribution — The set of pacing tags across all chapters
 //      must roughly match the manifest's declared pacing strategy.
 //      A lopsided distribution (e.g. all Rising, no Calm) is a hard block.
+//   6. Scene previews (fiction only) — Every scene beat carries a
+//      rendered "**Preview:**" — a sentence or two of actual book prose in
+//      the writing style key (book/metadata/style-key.md). A summary is not a
+//      preview. The key itself must exist before outlining, and this check
+//      applies only when book/track.json says fiction.
 //
 // The gate is structural — it does not evaluate literary quality, only
 // whether the outline provides enough scaffolding for consistent drafting.
@@ -68,7 +73,7 @@ export interface OutlineChapter {
   number: number;
   title: string;
   pacing: string;
-  scenes: Array<{ goal: string; conflict: string }>;
+  scenes: Array<{ goal: string; conflict: string; preview: string }>;
   setsUp: string[];        // forward references (e.g. "Ch7: reveal traitor")
   payoffFrom: string[];    // backward references (e.g. "Ch2: planted dagger")
   charactersPresent: string[];
@@ -107,11 +112,12 @@ function parseOutline(content: string): OutlineChapter[] {
 }
 
 function parseChapterBlock(num: number, title: string, block: string): OutlineChapter {
-  const scenes: Array<{ goal: string; conflict: string }> = [];
+  const scenes: Array<{ goal: string; conflict: string; preview: string }> = [];
   // Scene lines: "- **Scene 1:** Goal. Conflict." or "### Scene 1" followed by goal/conflict
   const sceneRegex = /(?:[-*]\s*\*\*Scene\s+\d+:?\*\*|###\s+Scene\s+\d+)\s*(.*)$/gim;
   const sceneMatches = [...block.matchAll(sceneRegex)];
-  for (const sm of sceneMatches) {
+  for (let si = 0; si < sceneMatches.length; si++) {
+    const sm = sceneMatches[si];
     const line = sm[1].trim();
     // Extract goal/conflict from the same line or look for "Goal:"/"Conflict:" nearby
     let goal = '';
@@ -125,7 +131,14 @@ function parseChapterBlock(num: number, title: string, block: string): OutlineCh
       const conflictMatch = block.slice(sm.index ?? 0).match(/Conflict:?\s*(.+)$/im);
       if (conflictMatch) conflict = conflictMatch[1].trim();
     }
-    scenes.push({ goal, conflict });
+    // Scene preview (fiction): a rendered sentence or two of book prose in the
+    // writing style key. Scoped to this scene's chunk so a later scene's
+    // preview is never attributed to this one.
+    const start = sm.index ?? 0;
+    const end = si + 1 < sceneMatches.length ? (sceneMatches[si + 1].index ?? block.length) : block.length;
+    const previewMatch = block.slice(start, end).match(/\*\*Preview:?\*\*:?\s*(.+)$/im);
+    const preview = previewMatch ? previewMatch[1].trim() : '';
+    scenes.push({ goal, conflict, preview });
   }
 
   // Extract sets-up / payoff-from
@@ -160,6 +173,16 @@ function extractListField(block: string, regex: RegExp): string[] {
 function extractField(block: string, regex: RegExp): string {
   const match = block.match(regex);
   return match ? match[1].trim() : '';
+}
+
+/** Read the project track. Defaults to 'fiction' when unreadable. */
+function readTrack(projectRoot: string): string {
+  try {
+    const raw = fs.readFileSync(path.join(projectRoot, 'book', 'track.json'), 'utf-8');
+    return String(JSON.parse(raw).track || 'fiction').toLowerCase();
+  } catch {
+    return 'fiction';
+  }
 }
 
 /** Verify the outline has scene beats, setup/payoff pairs, continuity anchors, and pacing distribution. */
@@ -201,6 +224,20 @@ export function outlineGate(
   }
   evidence.push(`✓ Parsed ${chapters.length} chapter entries`);
 
+  const track = readTrack(projectRoot);
+
+  // 2b. Fiction: the writing style key must exist before outlining — the
+  // scene previews are rendered in it, so an absent key means the gate cannot
+  // be satisfied and the outline would be written in no declared voice.
+  if (track === 'fiction') {
+    const keyPath = path.join(projectRoot, 'book', 'metadata', 'style-key.md');
+    if (!fs.existsSync(keyPath)) {
+      blocking.push('Style key: book/metadata/style-key.md is missing — fiction outlines render a prose preview per scene in this key. Run /buchbinder manifest to generate it.');
+    } else {
+      evidence.push('✓ Style key found: book/metadata/style-key.md');
+    }
+  }
+
   // 3. Per-chapter checks
   const totalChapters = chapters.length;
 
@@ -224,6 +261,23 @@ export function outlineGate(
       }
       if (!sceneBlock) {
         evidence.push(`✓ ${label}: ${ch.scenes.length} scenes with goals and conflicts`);
+      }
+
+      // 3a-ii. Scene previews (fiction only): a rendered sample of book prose,
+      // not a summary. This is where the style key is cheapest to change, so
+      // the outline must actually show the finished surface.
+      if (track === 'fiction') {
+        let previewBlock = false;
+        for (let i = 0; i < ch.scenes.length; i++) {
+          const pv = ch.scenes[i].preview || '';
+          if (pv.length < 20) {
+            blocking.push(`${label}, Scene ${i + 1}: Missing or too-thin **Preview:** — render a sentence or two of book prose in the writing style key. A summary is not a preview.`);
+            previewBlock = true;
+          }
+        }
+        if (!previewBlock) {
+          evidence.push(`✓ ${label}: ${ch.scenes.length} scene preview(s) rendered`);
+        }
       }
     }
 
@@ -371,6 +425,19 @@ export function preDraftGate(
   const blocking: string[] = [];
   const warnings: string[] = [];
   const evidence: string[] = [];
+
+  // Fiction only: the writing style key is required context. Fiction prose is
+  // written in this key AND must hold to its good-prose reference.
+  if (readTrack(projectRoot) === 'fiction') {
+    const keyPath = path.join(projectRoot, 'book', 'metadata', 'style-key.md');
+    if (!fs.existsSync(keyPath)) {
+      blocking.push('Writing style key: book/metadata/style-key.md is missing (fiction) — run /buchbinder manifest to generate it. Fiction prose must be written in a declared key and must hold to good-prose.md.');
+    } else if (fs.statSync(keyPath).size === 0) {
+      blocking.push('Writing style key: book/metadata/style-key.md is empty (fiction) — regenerate it via /buchbinder manifest.');
+    } else {
+      evidence.push('✓ Writing style key: book/metadata/style-key.md found');
+    }
+  }
 
   for (const item of REQUIRED_CONTEXT_ITEMS) {
     let resolvedPath = item.path;

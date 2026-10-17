@@ -257,31 +257,22 @@ function copyTemplates(track) {
     success('Templates copied');
 }
 
-// ─── Sidebar Plugin (built bundle) ──────────────────────────────────────────
+// ─── Sidebar Plugin (source-direct) ─────────────────────────────────────────
+// The TUI plugin is installed as TSX/TS source and loaded natively by OpenCode
+// under bun. There is NO pre-built bundle to prefer: src/plugins/tsconfig.json
+// is `noEmit: true`, nothing bundles a dist/, and dist/ is gitignored — so
+// source-direct is the only path, not a fallback. The non-interactive/refresh
+// path (copySidebarPlugin in ./sync.mjs) does exactly the same thing.
 async function copySidebarPlugin(overwriteAll, skipAll) {
-    // Prefer the pre-built bundle in dist/plugins/buchbinder-sidebar/.
-    // Fall back to source .tsx if no build exists (dev mode).
-    const builtDir = path.join(PACKAGE_ROOT, 'dist', 'plugins', 'buchbinder-sidebar');
-    const destDir = path.join(DEST_DIR, 'plugins', 'buchbinder-sidebar');
-
-    if (fs.existsSync(builtDir)) {
-        fs.ensureDirSync(destDir);
-        let copied = 0;
-        for (const file of fs.readdirSync(builtDir)) {
-            fs.copySync(path.join(builtDir, file), path.join(destDir, file), { overwrite: true });
-            copied++;
-        }
-        success(`${copied} built sidebar plugin files synchronized`);
-        return { overwriteAll: true, skipAll: false, copied };
-    }
-
-    // Dev fallback
     const srcDir = path.join(SRC_DIR, 'plugins');
-    if (!fs.existsSync(srcDir)) { log('No sidebar plugin source — skipping'); return { overwriteAll: true, skipAll: false, copied: 0 }; }
+    const destDir = path.join(DEST_DIR, 'plugins', 'buchbinder-sidebar');
+    if (!fs.existsSync(srcDir)) {
+        log('No sidebar plugin source — skipping');
+        return { overwriteAll: true, skipAll: false, copied: 0, skipped: 0, source: 'none' };
+    }
     fs.ensureDirSync(destDir);
     let copied = 0;
-    const entries = fs.readdirSync(srcDir, { withFileTypes: true });
-    for (const entry of entries) {
+    for (const entry of fs.readdirSync(srcDir, { withFileTypes: true })) {
         const src = path.join(srcDir, entry.name);
         const dest = path.join(destDir, entry.name);
         if (entry.isDirectory()) {
@@ -292,9 +283,8 @@ async function copySidebarPlugin(overwriteAll, skipAll) {
             copied++;
         }
     }
-    warn('No pre-built plugin found — copied raw .tsx source.');
     success(`${copied} sidebar plugin source files synchronized`);
-    return { overwriteAll: true, skipAll: false, copied };
+    return { overwriteAll: true, skipAll: false, copied, skipped: 0, source: 'source' };
 }
 
 // ─── Hooks Plugin ────────────────────────────────────────────────────────────

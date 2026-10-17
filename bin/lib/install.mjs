@@ -221,50 +221,58 @@ async function main() {
         process.exit(0)
     }
 
-    // ── Redirect to refresh if a prior install exists ──
+    // ── Prior install? Ask what to do. No flags required. ──
     const existingManifest = loadManifest(DEST_DIR)
-    if (existingManifest && !args.reset && !args.forceReset) {
+    let reinstall = args.reset || args.forceReset
+
+    if (existingManifest && !reinstall) {
         if (args.nonInteractive || args.postinstall) {
-            // postinstall on an already-installed project → just exit (refresh will be run separately)
             console.log(chalk.yellow('⚠ A prior buchbinder install is recorded in this project.'))
-            console.log(chalk.yellow(`  Manifest: ${path.join(DEST_DIR, '.buchbinder-install-manifest.json')}`))
-            console.log(chalk.yellow('  Nothing to do. Use `npx buchbinder-refresh` to sync updates.'))
+            console.log(chalk.yellow('  Nothing to do. Run `npx buchbinder-refresh` to sync updates.'))
             process.exit(0)
         }
-        console.log(chalk.yellow('\n⚠ A prior buchbinder install is recorded in this project'))
-        console.log(chalk.yellow(`  (commit ${existingManifest.packageCommit || 'unknown'}, last installed ${existingManifest.installedAt}).`))
-        console.log(chalk.yellow(''))
-        console.log(chalk.white('  For an idempotent refresh that preserves your work:'))
-        console.log(chalk.cyan('      npx buchbinder-refresh'))
-        console.log(chalk.yellow(''))
-        console.log(chalk.white('  To start over from scratch (DESTRUCTIVE — overwrites every'))
-        console.log(chalk.white('  plugin-owned file; you will lose any local edits to phase'))
-        console.log(chalk.white('  specs and slash commands):'))
-        console.log(chalk.cyan('      npx buchbinder --reset'))
-        console.log(chalk.cyan('      npx buchbinder --force-reset   # skips the modified-locally check'))
-        console.log(chalk.yellow(''))
-        console.log(chalk.yellow('  Refresh recommended. Exiting.'))
-        process.exit(0)
-    }
-
-    // ── --reset / --force-reset: confirm before destructive overwrite ──
-    if (existingManifest && (args.reset || args.forceReset)) {
-        // Check for locally-modified files
-        const newManifest = buildManifest(DEST_DIR, { packageVersion: 'unknown', packageCommit: 'unknown', packageRoot: PKG_ROOT, pluginOwnedSubtrees: [] })
-        const { diffManifest } = await import('./manifest.mjs')
-        const diff = diffManifest(existingManifest, DEST_DIR)
-        const locallyModified = diff.modified
-        if (locallyModified.length > 0 && !args.forceReset) {
-            if (args.nonInteractive) {
-                console.log(chalk.red(`✗ Refusing to reset: ${locallyModified.length} files are modified locally.`))
-                console.log(chalk.red('  Use --force-reset to override (destructive).'))
+        const action = await select({
+            message: `Buchbinder is already installed here (commit ${existingManifest.packageCommit || 'unknown'}, ${existingManifest.installedAt}).`,
+            choices: [
+                { name: 'Refresh — sync updates, keep my local edits', value: 'refresh' },
+                { name: 'Reinstall — overwrite every Buchbinder file (my edits to plugin files are lost)', value: 'reinstall' },
+                { name: 'Cancel', value: 'cancel' },
+            ],
+        })
+        if (action === 'cancel') process.exit(0)
+        if (action === 'refresh') {
+            let detectedTrack = 'fiction'
+            try {
+                detectedTrack = fs.readJsonSync(path.join(process.cwd(), 'book', 'track.json')).track || 'fiction'
+            } catch {}
+            try {
+                execSync(`node "${path.join(PKG_ROOT, 'bin', 'refresh.mjs')}" --track ${detectedTrack}`, { stdio: 'inherit', cwd: process.cwd() })
+            } catch {
+                error('Refresh failed.')
                 process.exit(2)
             }
-            console.log(chalk.yellow(`⚠ ${locallyModified.length} files are modified locally.`))
-            const ok = await confirm({ message: 'Proceed with --reset and lose your local edits?', default: false })
+            process.exit(0)
+        }
+        reinstall = true
+    }
+
+    // ── Reinstall overwrites plugin-owned files: confirm before losing local edits. ──
+    if (existingManifest && reinstall) {
+        const { diffManifest } = await import('./manifest.mjs')
+        const locallyModified = diffManifest(existingManifest, DEST_DIR).modified
+        if (locallyModified.length > 0 && !args.forceReset) {
+            if (args.nonInteractive) {
+                console.log(chalk.red(`✗ Refusing to overwrite: ${locallyModified.length} files are modified locally.`))
+                console.log(chalk.red('  Pass --force-reset to override (destructive).'))
+                process.exit(2)
+            }
+            const ok = await confirm({
+                message: chalk.yellow(`${locallyModified.length} Buchbinder files have local edits. Overwrite them?`),
+                default: false,
+            })
             if (!ok) { console.log(chalk.yellow('Aborted.')); process.exit(0) }
         }
-        console.log(chalk.yellow('Resetting plugin assets to current source state...'))
+        console.log(chalk.yellow('Overwriting Buchbinder files with the current versions...'))
     }
 
     console.log(chalk.white('\nBuchbinder — Professional Book Writing Workflow'));

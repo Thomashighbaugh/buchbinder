@@ -20,6 +20,7 @@
  */
 
 import { fileURLToPath } from 'url'
+import { ensureDeps } from './lib/bootstrap.mjs'
 import { resolveModelCacheDir, isOnnxOffline, sharedModelCacheDir } from '../src/lib/onnx-runtime.mjs'
 
 const args = process.argv.slice(2)

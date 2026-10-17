@@ -792,7 +792,7 @@ node bin/install.mjs           # Install into the current directory
 
 `bin/install.mjs` and `bin/refresh.mjs` are three-line launchers: they call
 `ensureDeps()` (`bin/lib/bootstrap.mjs`) and then dynamically import the real
-CLI body (`bin/lib/install-cli.mjs`, `bin/lib/refresh-cli.mjs`). That
+CLI body (`bin/lib/install.mjs`, `bin/lib/refresh.mjs`). That
 indirection is what lets the bin run from a bare clone — the third-party
 imports (`chalk`, `fs-extra`, `@inquirer/prompts`) are only resolved *after*
 the dependencies they need have been installed.
@@ -805,7 +805,7 @@ Source structure:
 - `src/templates/` — Track templates (fiction, non-fiction, series)
 - `bin/install.mjs`, `bin/refresh.mjs` — self-bootstrapping launchers (call `ensureDeps()`, then load the CLI body)
 - `bin/lib/bootstrap.mjs` — resolves/installs the package's own runtime deps so the bins run from a bare clone
-- `bin/lib/install-cli.mjs`, `bin/lib/refresh-cli.mjs` — the installer / refresher bodies
+- `bin/lib/install.mjs`, `bin/lib/refresh.mjs` — the installer / refresher bodies
 
 ---
 

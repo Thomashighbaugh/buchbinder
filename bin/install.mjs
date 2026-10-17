@@ -5,7 +5,7 @@
  * Deliberately tiny: it makes sure the package's own runtime dependencies are
  * present (so the installer runs from a bare git clone, an npx cache, or any
  * tree without `node_modules`), then hands off to the real CLI body in
- * ./lib/install-cli.mjs. See ./lib/bootstrap.mjs for why this indirection
+ * ./lib/install.mjs. See ./lib/bootstrap.mjs for why this indirection
  * exists.
  *
  * Usage:

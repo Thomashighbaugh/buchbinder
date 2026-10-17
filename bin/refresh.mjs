@@ -3,7 +3,7 @@
  * buchbinder-refresh — idempotent plugin sync (entrypoint)
  *
  * Tiny launcher: bootstraps the package's own runtime dependencies, then
- * loads the real CLI body in ./lib/refresh-cli.mjs. See ./lib/bootstrap.mjs.
+ * loads the real CLI body in ./lib/refresh.mjs. See ./lib/bootstrap.mjs.
  *
  * Usage:
  *   npx buchbinder-refresh

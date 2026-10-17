@@ -34,6 +34,10 @@ for (let i = 0; i < args.length; i++) {
 const log = (...a) => { if (!quiet) console.log(...a) }
 
 async function main() {
+  // The embedder/reranker/classifier modules load @huggingface/transformers
+  // lazily; make sure the package deps exist before touching them so this
+  // works from a bare clone (no node_modules) too.
+  await ensureDeps()
   const { getOnnxEmbedder, ONNX_EMBED_MODEL } = await import('../src/lib/embedder.mjs')
   const { getReranker, RERANK_MODEL } = await import('../src/lib/reranker.mjs')
   const { getNliModel, CLASSIFIER_MODEL } = await import('../src/lib/classifier.mjs')

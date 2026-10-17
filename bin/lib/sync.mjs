@@ -328,6 +328,15 @@ function copyDirDereferenced(srcDir, destDir, mode, manifestFiles) {
 const PLUGIN_ENTRY = './plugins/buchbinder-sidebar/index.js'
 const HOOKS_ENTRY = './plugins/hooks/index.js'
 
+// Transitive pins for the installed project. solid-js declares seroval
+// ~1.5.0, and 1.5.x carries a critical advisory (GHSA-p6vx-979v-rg4c) plus a
+// high one (GHSA-jp82-f5mq-hwhp); 1.6.3+ is patched. Forcing the override
+// keeps every installed project off the vulnerable range.
+const REQUIRED_OVERRIDES = {
+    seroval: '^1.6.3',
+    'seroval-plugins': '^1.6.3',
+}
+
 const REQUIRED_DEPS = {
     '@opencode-ai/plugin': '1.17.9',
     '@opentui/core': '>=0.1.97',
@@ -388,10 +397,17 @@ export function ensureProjectConfig(destDir) {
     }
     pkg.type = pkg.type || 'module'
     pkg.dependencies = pkg.dependencies || {}
+    pkg.overrides = pkg.overrides || {}
     let depsAdded = false
     for (const [name, version] of Object.entries(REQUIRED_DEPS)) {
         if (!pkg.dependencies[name]) {
             pkg.dependencies[name] = version
+            depsAdded = true
+        }
+    }
+    for (const [name, version] of Object.entries(REQUIRED_OVERRIDES)) {
+        if (!pkg.overrides[name]) {
+            pkg.overrides[name] = version
             depsAdded = true
         }
     }
@@ -546,4 +562,4 @@ export function smartCopyDir(srcDir, destDir, mode, manifestFiles = null) {
     throw new Error(`Unknown copy mode: ${mode}`)
 }
 
-export { PACKAGE_ROOT, SRC_DIR, PLUGIN_ENTRY, REQUIRED_DEPS }
+export { PACKAGE_ROOT, SRC_DIR, PLUGIN_ENTRY, REQUIRED_DEPS, REQUIRED_OVERRIDES }

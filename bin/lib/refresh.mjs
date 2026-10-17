@@ -81,7 +81,7 @@ function header(msg) {
 
 function parseArgs(argv) {
     const args = {
-        track: 'fiction',
+        track: null,
         prune: false,
         force: false,
         postinstall: false,
@@ -109,7 +109,7 @@ function printHelp() {
     log(`  node bin/refresh.mjs [options]`)
     log('')
     log(`Options:`)
-    log(`  --track <fiction|non-fiction|mixed>  Track to use for skills/templates (default: fiction)`)
+    log(`  --track <fiction|non-fiction|mixed>  Track for skills/templates (default: the project's book/track.json)`)
     log(`  --prune                             Remove files that vanished from source`)
     log(`  --force                             Overwrite locally-modified files (destructive)`)
     log(`  --postinstall                       Skip prompts (used by npm postinstall)`)
@@ -131,6 +131,15 @@ async function main() {
 
     const projectRoot = process.cwd()
     const destDir = path.join(projectRoot, '.opencode')
+
+    // Default the track from the project itself, so nobody has to remember --track.
+    if (!args.track) {
+        try {
+            args.track = fs.readJsonSync(path.join(projectRoot, 'book', 'track.json')).track || 'fiction'
+        } catch {
+            args.track = 'fiction'
+        }
+    }
 
     // ── First-time install detection ──
     // If no manifest, fall through to a non-interactive install.

@@ -2,60 +2,56 @@ import { HubSubcommandSpec } from "../../hub-data.js"
 
 const spec: HubSubcommandSpec = {
   label: "refresh",
-  description: "Idempotent plugin sync — refresh skills, tools, commands, templates, the sidebar bundle, and the lore index from the current buchbinder source. Preserves your locally-modified files (HTML-comment override workflow).",
-  reminder: "Utility: Sync the buchbinder plugin in this project",
+  description: "Idempotent plugin sync — refresh skills, tools, commands, templates, and the lore index from the current Buchbinder package. Preserves your locally-modified files (HTML-comment override workflow).",
+  reminder: "Utility: Sync the Buchbinder plugin in this project",
   phases: "utility",
   // Shell-delegated: the router runs this command in a shell instead of
   // interpreting detailedDescription as a subagent workflow.
-  command: "node bin/refresh.mjs",
+  command: "node .opencode/lib/scripts/refresh.mjs",
   detailedDescription: `# /buchbinder refresh — Plugin Sync
 
 This is a **plugin maintenance** command, not a writing phase. The router
-detects the \`command\` field and shells out to it. You do not need to
-interpret this \`detailedDescription\` as instructions for you to follow.
+detects the \`command\` field and shells out to it — you do not need to
+interpret this \`detailedDescription\` as instructions to follow.
 
 ## What It Does
 
-Runs \`node bin/refresh.mjs\` in the project root. That command:
+Runs \`node .opencode/lib/scripts/refresh.mjs\` in the project root. The
+installer does not keep the Buchbinder package in the project, so that script
+re-fetches it (a temp download, removed afterwards — the same mechanism as
+installation) and runs refresh from it. Refresh then:
 
-1. Reads the prior install manifest at \`./opencode/.buchbinder-install-manifest.json\`
-2. Diffs the current \`buchbinder\` source against what was last installed
-3. Copies changed/new plugin-owned files (skills, tools, commands, templates, sidebar)
-4. **Always** rebuilds the TypeScript-derived sidebar bundle (\`npm run build:sidebar\`)
-5. **Always** rebuilds the lore index (incrementally — only re-embeds chunks whose source files have changed)
-6. Re-registers the sidebar plugin in \`tui.json\`, \`opencode.jsonc\`, and \`package.json\` (additive only)
-7. Re-writes the manifest with new commit SHA, timestamp, and per-file SHA256
+1. Reads the prior install manifest at \`.opencode/.buchbinder-install-manifest.json\`
+2. Diffs the package source against what was last installed
+3. Copies changed/new plugin-owned files (skills, tools, commands, templates, sidebar + hooks plugins)
+4. Rebuilds the lore index (incrementally — only re-embeds chunks whose source files changed)
+5. Re-registers the plugins in \`tui.json\` and \`opencode.jsonc\` (additive only)
+6. Re-writes the manifest with the new commit SHA, timestamp, and per-file SHA256
+
+The sidebar plugin is installed as TSX source and loaded natively by OpenCode —
+there is no build step.
 
 ## What It Preserves
 
 - Your locally-modified plugin files (HTML-comment overrides) — detected by per-file SHA256 diff against the manifest
 - All project-owned paths: \`book/\`, \`memory/\`, \`output/\`, \`series/\`, \`.opencode/state/\`, \`.opencode/cache/\` (except \`cache/lore-index/\`)
-- Your index: \`./opencode/cache/lore-index/index.json\` is rebuilt, not deleted
 
-## Flags
+## Arguments
 
-The \`node bin/refresh.mjs\` command accepts flags. Pass them after \`refresh\`:
+Anything after \`refresh\` is passed straight through to refresh. All optional:
 
-| Flag | Effect |
-|------|--------|
-| (none) | Default: sync changed files, preserve local edits, rebuild sidebar + index |
-| \`--prune\` | Also remove files that vanished from source |
+| Argument | Effect |
+|----------|--------|
+| (none) | Sync changed files, preserve local edits, rebuild the index |
+| \`--prune\` | Also remove files that vanished from the source |
 | \`--force\` | Overwrite locally-modified files (destructive) |
-| \`--skip-build\` | Skip the sidebar TypeScript build (faster iteration) |
 | \`--skip-index\` | Skip the lore index rebuild |
-| \`--track <fiction\|non-fiction\|mixed>\` | Track to use for skills/templates (default: fiction) |
-
-## When to Use
-
-- After \`git pull\` (or any update) on the \`buchbinder\` source
-- When you see "buchbinder" warnings or missing features in the TUI
-- After adding or substantially editing lorebook/knowledge/outline/draft content (the index gets a partial refresh automatically; use \`refresh-index\` for index-only)
-- Before starting a new writing session if it's been a while
+| \`--track <fiction\\|non-fiction\\|mixed>\` | Track for skills/templates (defaults to the project's \`book/track.json\`) |
 
 ## Exit Codes
 
 - \`0\` — success, no drift detected
-- \`1\` — success, but locally-modified files were preserved (drift detected; review the \`locallyModified[]\` list in the output)
+- \`1\` — success, but locally-modified files were preserved (drift detected; see the \`locallyModified[]\` list in the output)
 - \`2\` — refresh failed
 `,
 }

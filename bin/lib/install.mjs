@@ -210,12 +210,8 @@ async function main() {
         })
         if (action === 'cancel') process.exit(0)
         if (action === 'refresh') {
-            let detectedTrack = 'fiction'
             try {
-                detectedTrack = fs.readJsonSync(path.join(process.cwd(), 'book', 'track.json')).track || 'fiction'
-            } catch {}
-            try {
-                execSync(`node "${path.join(PKG_ROOT, 'bin', 'refresh.mjs')}" --track ${detectedTrack}`, { stdio: 'inherit', cwd: process.cwd() })
+                execSync(`node "${path.join(PKG_ROOT, 'bin', 'refresh.mjs')}"`, { stdio: 'inherit', cwd: process.cwd() })
             } catch {
                 error('Refresh failed.')
                 process.exit(2)

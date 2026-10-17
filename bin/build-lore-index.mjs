@@ -19,11 +19,14 @@
  */
 
 import { resolve } from 'path'
+import { ensureDeps } from './lib/bootstrap.mjs'
 
 // Resolve the index-builder module relative to this script
 // (bin/build-lore-index.mjs → ../src/lib/index-builder.mjs)
 const here = new URL(import.meta.url).pathname
 const indexBuilderPath = resolve(here, '../../src/lib/index-builder.mjs')
+// Bootstrap package deps first so this runs from a bare clone (no node_modules).
+await ensureDeps()
 const { buildIndex, printStatus } = await import(indexBuilderPath)
 
 const args = process.argv.slice(2)

@@ -32,6 +32,7 @@ import {
     ensureProjectConfig as syncEnsureProjectConfig,
     initProjectStructure as syncInitProjectStructure,
     PACKAGE_ROOT as PKG_ROOT,
+    REQUIRED_DEPS,
 } from './sync.mjs';
 import {
     loadManifest,

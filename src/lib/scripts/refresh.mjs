@@ -37,9 +37,10 @@ function run(cmd, args, opts = {}) {
     return spawnSync(cmd, args, { stdio: 'inherit', ...opts })
 }
 
-// `--version` exits 0 for curl, wget, and unzip — avoids any shell.
+// Existence check that needs no shell: spawnSync sets `error` only when the
+// binary cannot be started (ENOENT), regardless of the exit code.
 function have(cmd) {
-    return spawnSync(cmd, ['--version'], { stdio: 'ignore' }).status === 0
+    return !spawnSync(cmd, ['--version'], { stdio: 'ignore' }).error
 }
 
 function fetchTo(url, dest) {

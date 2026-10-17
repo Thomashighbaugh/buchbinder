@@ -7,13 +7,12 @@
  * Writes opencode.jsonc to register the plugin so the /buchbinder instant menu loads.
  *
  * Usage:
- *   npx buchbinder                  # interactive (default)
- *   npx buchbinder --non-interactive # for postinstall / CI; uses defaults
- *   npx buchbinder --reset          # if a prior install exists, ask to start over
- *   npx buchbinder --force-reset    # same as --reset but skip the modified-locally check
+ *   npx buchbinder            # just run it — every decision is a prompt
+ *   npx buchbinder --help     # flags are automation-only; you need none
  *
- * For idempotent in-place updates of an existing install, prefer:
- *   npx buchbinder-refresh
+ * Flags (all optional, all skip prompts):
+ *   --reset / --force-reset   overwrite everything without asking
+ *   --non-interactive         accept defaults (npm postinstall / CI)
  */
 import { confirm, select } from '@inquirer/prompts';
 import chalk from 'chalk';
@@ -207,17 +206,16 @@ async function main() {
     if (args.help) {
         console.log(chalk.white('buchbinder — per-project installer'))
         console.log('')
-        console.log('Usage:')
-        console.log('  npx buchbinder [options]')
+        console.log('Usage:  npx buchbinder')
         console.log('')
-        console.log('Options:')
-        console.log('  --non-interactive    Use defaults; skip prompts (for postinstall/CI)')
-        console.log('  --reset              Force a fresh install (overwrite everything)')
-        console.log('  --force-reset        --reset + skip the modified-locally check')
-        console.log('  --postinstall        Alias for --non-interactive (used by npm postinstall)')
-        console.log('  --help, -h           Show this help')
+        console.log('  Just run it. Every decision is a prompt; you need no flags.')
         console.log('')
-        console.log('For idempotent in-place updates, prefer: npx buchbinder-refresh')
+        console.log('Flags exist only for automation (they skip the prompts):')
+        console.log('  --reset              overwrite everything, no questions')
+        console.log('  --force-reset        --reset, and do not stop for local edits')
+        console.log('  --non-interactive    accept defaults (used by npm postinstall)')
+        console.log('  --postinstall        alias for --non-interactive')
+        console.log('  --help, -h           this')
         process.exit(0)
     }
 
@@ -495,7 +493,7 @@ async function main() {
     const CLOBBER_TARGETS = ['skills', 'tools', 'commands', 'plugins', 'templates', 'lib', 'rules'];
     const alreadyInstalled = CLOBBER_TARGETS.some(d => fs.existsSync(path.join(DEST_DIR, d)));
     let overwrite;
-    if (args.reset || args.forceReset) {
+    if (reinstall) {
         overwrite = true;
     } else if (args.nonInteractive) {
         overwrite = true; // postinstall/CI: never prompt

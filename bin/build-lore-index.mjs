@@ -7,8 +7,8 @@
  * lore-query.mjs, and exposed as the `buchbinder-index` bin entry.
  *
  * Usage:
- *   npx buchbinder-index [project-root] [--force] [--quiet]
- *   npx buchbinder-index --status [project-root]
+ *   node bin/build-lore-index.mjs [project-root] [--force] [--quiet]
+ *   node bin/build-lore-index.mjs --status [project-root]
  *
  * If project-root is omitted, defaults to the current working directory.
  *
@@ -41,8 +41,8 @@ for (let i = 0; i < args.length; i++) {
     else if (a === '--force') force = true
     else if (a === '--quiet') quiet = true
     else if (a === '--help' || a === '-h') {
-        console.log('Usage: buchbinder-index [project-root] [--force] [--quiet]')
-        console.log('       buchbinder-index --status [project-root]')
+        console.log('Usage: node bin/build-lore-index.mjs [project-root] [--force] [--quiet]')
+        console.log('       node bin/build-lore-index.mjs --status [project-root]')
         process.exit(0)
     } else if (!a.startsWith('--')) {
         projectRoot = resolve(a)

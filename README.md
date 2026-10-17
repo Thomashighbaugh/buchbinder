@@ -133,13 +133,11 @@ No clone, no `git`, no `npm install`, no published release — just `curl`/`wget
 `unzip`, and `node`. The installer carries its own runtime dependencies and
 bootstraps them on first run (into the extracted tree, never into your project
 or your global config), so there is nothing to set up before you invoke it.
-Once the package is on the public registry, the equivalent one-liner is:
 
-```bash
-npx buchbinder
-```
+Re-run the same one-liner any time: it offers **Refresh** (sync updates, keep
+your edits), **Reinstall** (overwrite everything), or **Cancel** — no flags.
 
-The interactive installer will:
+The installer will:
 1. Ask which track you want (fiction / non-fiction / mixed)
 2. Create the project directory structure under `book/`
 3. Install commands, skills, templates, tools, and lib files into `.opencode/`
@@ -369,10 +367,10 @@ The retrieval pipeline is **two-stage** and fully local. Both stages default to 
 2. **Vector search** — Cosine similarity between the task query and lore chunks
 3. **Reranking** (optional, `--rerank`) — an **in-process ONNX cross-encoder** (`Xenova/bge-reranker-base`) re-scores the top candidates jointly. Because a cross-encoder sees the query and the passage together, it reorders candidates more accurately than distance alone.
 
-**Setup:** nothing to pull by hand — `npx buchbinder` fetches the ONNX models (embedder + reranker + classifier, ≈0.5 GB) into a shared cache (`~/.cache/buchbinder/models`) during install. To fetch or re-fetch them later:
+**Setup:** nothing to pull by hand — the installer fetches the ONNX models (embedder + reranker + classifier, ≈0.5 GB) into a shared cache (`~/.cache/buchbinder/models`) during install. To fetch or re-fetch them later, from a Buchbinder checkout:
 
 ```bash
-npx buchbinder-models
+node bin/fetch-models.mjs
 ```
 
 Everything runs locally — no data leaves your machine, and no provider API requests are made. The query script (`lore-query.mjs`) is installed as `.opencode/lib/scripts/lore-query.mjs` and called automatically by the phase workflows. The ONNX runtime (`@huggingface/transformers`) is added to the project's `.opencode/package.json` by the installer.
@@ -409,8 +407,8 @@ The index is built once and reused on every phase invocation. Without the index,
 
 **Build / refresh the index:**
 ```bash
-# Build or incrementally update the index
-npx buchbinder-index
+# Build or incrementally update the index (from a Buchbinder checkout)
+node bin/build-lore-index.mjs
 
 # Or from the lore-query script itself
 bun .opencode/lib/scripts/lore-query.mjs --build
@@ -419,7 +417,7 @@ bun .opencode/lib/scripts/lore-query.mjs --build
 bun .opencode/lib/scripts/lore-query.mjs --status
 ```
 
-The index build is **incremental**: re-running on an up-to-date index is a no-op. Only source files whose content has changed since the last build are re-chunked and re-embedded. `npx buchbinder-refresh` (see below) rebuilds the index automatically when source files have changed.
+The index build is **incremental**: re-running on an up-to-date index is a no-op. Only source files whose content has changed since the last build are re-chunked and re-embedded. A refresh (see below) rebuilds the index automatically when source files have changed.
 
 **Env overrides.** Retrieval defaults, all overridable:
 
@@ -524,9 +522,9 @@ This doctrine is restated in each phase spec (`outline`, `draft`, `critique`, `r
 
 ### Local Overrides via HTML Comments
 
-Buchbinder ships a set of phase specs (`src/tools/hubs/buchbinder/{outline,draft,critique,revise,review}.ts`) that you may want to customize for your project. Because the `npx buchbinder-refresh` command preserves locally-modified files (see below), a common workflow is:
+Buchbinder ships a set of phase specs (`src/tools/hubs/buchbinder/{outline,draft,critique,revise,review}.ts`) that you may want to customize for your project. Because refresh preserves locally-modified files (see below), a common workflow is:
 
-1. Run `npx buchbinder-refresh` once after install to set up the baseline.
+1. Refresh once after install to set up the baseline.
 2. Edit a phase spec (e.g. `.opencode/tools/hubs/buchbinder/outline.ts`) to add a custom instruction wrapped in HTML comments for clarity.
 3. Subsequent refreshes leave your edit alone — the file appears in the `locallyModified[]` list in the refresh summary.
 
@@ -538,7 +536,7 @@ Example:
 // <!-- /buchbinder:override -->
 ```
 
-The override survives refreshes because `npx buchbinder-refresh` diffs your file against the source and skips the copy when the SHA differs. Use `--force` to override (destructive).
+The override survives refreshes because refresh diffs your file against the source and skips the copy when the SHA differs. Choosing **Reinstall** (or `node bin/refresh.mjs --force`) overrides it, destructively.
 
 ### Per-project Install Model
 
@@ -550,26 +548,30 @@ The first time you install, the installer prints an acknowledgement screen expla
 
 ### Refreshing an Existing Install
 
-Once a project is installed, use `npx buchbinder-refresh` to sync updates:
+Once a project is installed, updating is a prompt, not a flag: re-run the
+install one-liner and choose **Refresh**. It syncs changed/new files, rebuilds
+the index, and preserves your local edits.
+
+From a Buchbinder checkout you can also run it directly (flags optional):
 
 ```bash
 # Default: sync changed/new files, preserve your local edits
-npx buchbinder-refresh
+node bin/refresh.mjs
 
 # Also remove files that disappeared from source
-npx buchbinder-refresh --prune
+node bin/refresh.mjs --prune
 
 # Overwrite locally-modified files (destructive)
-npx buchbinder-refresh --force
+node bin/refresh.mjs --force
 
 # Skip the sidebar TypeScript build (faster, for iteration)
-npx buchbinder-refresh --skip-build
+node bin/refresh.mjs --skip-build
 
 # Skip the lore index rebuild
-npx buchbinder-refresh --skip-index
+node bin/refresh.mjs --skip-index
 
 # For postinstall / CI: skip prompts, defaults track='fiction'
-npx buchbinder-refresh --postinstall
+node bin/refresh.mjs --postinstall
 ```
 
 `buchbinder-refresh`:

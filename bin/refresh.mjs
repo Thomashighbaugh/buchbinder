@@ -6,10 +6,9 @@
  * loads the real CLI body in ./lib/refresh.mjs. See ./lib/bootstrap.mjs.
  *
  * Usage:
- *   npx buchbinder-refresh
- *   npx buchbinder-refresh --track non-fiction
- *   npx buchbinder-refresh --prune | --force | --postinstall
  *   node bin/refresh.mjs
+ *   node bin/refresh.mjs --track non-fiction
+ *   node bin/refresh.mjs --prune | --force | --postinstall
  */
 import { ensureDeps } from './lib/bootstrap.mjs'
 

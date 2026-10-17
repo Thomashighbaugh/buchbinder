@@ -22,7 +22,7 @@ The index is built incrementally: re-running on an up-to-date index is a no-op (
 - After adding new chapters to \`./book/drafts/\` (so the new chapter is available for semantic retrieval)
 - After upgrading the embed model or changing Ollama model names
 - To recover from a corrupted or accidentally-deleted index
-- After running \`npx buchbinder-refresh\` if it reported an index-build failure
+- After running \`node bin/refresh.mjs\` if it reported an index-build failure
 
 You do NOT need to run this on every \`/buchbinder\` invocation — \`lore-query.mjs\` falls back to on-the-fly embedding when no index exists. The index exists to make queries fast (one embedding fetch per query, not per chunk).
 
@@ -33,7 +33,7 @@ You do NOT need to run this on every \`/buchbinder\` invocation — \`lore-query
 The simplest way to refresh the index from inside OpenCode is to call the index CLI:
 
 \`\`\`bash
-npx buchbinder-index
+node bin/build-lore-index.mjs
 \`\`\`
 
 Or, equivalently, the lore-query script's \`--build\` flag:
@@ -93,7 +93,7 @@ Both run locally via Ollama — no network calls, no telemetry.
 ## Related Commands
 
 - \`/buchbinder outline\`, \`/buchbinder draft\`, \`/buchbinder critique\`, \`/buchbinder revise\`, \`/buchbinder review\` — All use the index for semantic lore retrieval
-- \`npx buchbinder-refresh\` — Idempotent plugin sync; rebuilds the index automatically when source files have changed
+- \`node bin/refresh.mjs\` — Idempotent plugin sync; rebuilds the index automatically when source files have changed
 - \`/buchbinder manifest\` — Import a lorebook; should be followed by \`/buchbinder refresh-index\`
 `,
 }

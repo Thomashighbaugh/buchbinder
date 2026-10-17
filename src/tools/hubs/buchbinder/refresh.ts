@@ -7,7 +7,7 @@ const spec: HubSubcommandSpec = {
   phases: "utility",
   // Shell-delegated: the router runs this command in a shell instead of
   // interpreting detailedDescription as a subagent workflow.
-  command: "npx buchbinder-refresh",
+  command: "node bin/refresh.mjs",
   detailedDescription: `# /buchbinder refresh — Plugin Sync
 
 This is a **plugin maintenance** command, not a writing phase. The router
@@ -16,7 +16,7 @@ interpret this \`detailedDescription\` as instructions for you to follow.
 
 ## What It Does
 
-Runs \`npx buchbinder-refresh\` in the project root. That command:
+Runs \`node bin/refresh.mjs\` in the project root. That command:
 
 1. Reads the prior install manifest at \`./opencode/.buchbinder-install-manifest.json\`
 2. Diffs the current \`buchbinder\` source against what was last installed
@@ -34,7 +34,7 @@ Runs \`npx buchbinder-refresh\` in the project root. That command:
 
 ## Flags
 
-The \`npx buchbinder-refresh\` command accepts flags. Pass them after \`refresh\`:
+The \`node bin/refresh.mjs\` command accepts flags. Pass them after \`refresh\`:
 
 | Flag | Effect |
 |------|--------|

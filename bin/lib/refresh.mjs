@@ -16,13 +16,13 @@
  *     whose source files have changed)
  *
  * Usage:
- *   npx buchbinder-refresh                    # interactive + default track='fiction'
- *   npx buchbinder-refresh --track non-fiction
- *   npx buchbinder-refresh --prune            # also remove files that vanished from source
- *   npx buchbinder-refresh --force            # skip the locally-modified check (destructive)
- *   npx buchbinder-refresh --postinstall      # skip prompts (used by npm postinstall)
- *   npx buchbinder-refresh --skip-build       # skip the sidebar build (for debugging)
- *   npx buchbinder-refresh --skip-index       # skip the lore index rebuild
+ *   node bin/refresh.mjs                      # interactive + default track='fiction'
+ *   node bin/refresh.mjs --track non-fiction
+ *   node bin/refresh.mjs --prune              # also remove files that vanished from source
+ *   node bin/refresh.mjs --force              # skip the locally-modified check (destructive)
+ *   node bin/refresh.mjs --postinstall        # skip prompts (used by npm postinstall)
+ *   node bin/refresh.mjs --skip-build         # skip the sidebar build (for debugging)
+ *   node bin/refresh.mjs --skip-index         # skip the lore index rebuild
  *
  * Exit codes:
  *   0  — success, no locally-modified files were detected
@@ -106,7 +106,7 @@ function printHelp() {
     log(`buchbinder-refresh — idempotent plugin sync for buchbinder`)
     log('')
     log(`Usage:`)
-    log(`  npx buchbinder-refresh [options]`)
+    log(`  node bin/refresh.mjs [options]`)
     log('')
     log(`Options:`)
     log(`  --track <fiction|non-fiction|mixed>  Track to use for skills/templates (default: fiction)`)
@@ -138,13 +138,13 @@ async function main() {
     if (!existingManifest) {
         if (args.postinstall) {
             warn('No prior install recorded; nothing to refresh.')
-            warn('Run `npx buchbinder` to perform the initial install.')
+            warn('Run the buchbinder installer (node bin/install.mjs) to perform the initial install.')
             process.exit(0)
         }
         // Interactive first-time: defer to install.mjs
         warn('No prior install recorded in this project. Delegating to buchbinder for initial install...')
         try {
-            execSync(`node "${path.join(PACKAGE_ROOT, 'bin', 'install.mjs')}" --non-interactive`, {
+            execSync(`node "${path.join(PACKAGE_ROOT, 'bin', 'install.mjs')}"`, {
                 stdio: 'inherit',
                 cwd: projectRoot,
             })
@@ -153,7 +153,7 @@ async function main() {
             process.exit(2)
         }
         // After install, the manifest will be written; exit so the user can re-run refresh.
-        success('Initial install complete. Re-run `npx buchbinder-refresh` to verify the sync.')
+        success('Initial install complete. Re-run node bin/refresh.mjs to verify the sync.')
         process.exit(0)
     }
 
@@ -217,7 +217,7 @@ async function main() {
             log(`  Sources:   ${indexResult.sourcesTotal} (${indexResult.sourcesAdded} added, ${indexResult.sourcesUpdated} updated, ${indexResult.sourcesUnchanged} unchanged)`)
         } catch (err) {
             warn(`Lore index build failed: ${err.message}`)
-            warn('You can rebuild it later with `npx buchbinder-index`.')
+            warn('You can rebuild it later with node bin/build-lore-index.mjs.')
         }
     }
 

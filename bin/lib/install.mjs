@@ -7,12 +7,10 @@
  * Writes opencode.jsonc to register the plugin so the /buchbinder instant menu loads.
  *
  * Usage:
- *   npx buchbinder            # just run it — every decision is a prompt
- *   npx buchbinder --help     # flags are automation-only; you need none
+ *   node bin/install.mjs      # run it; every decision is a prompt
+ *   node bin/install.mjs --help
  *
- * Flags (all optional, all skip prompts):
- *   --reset / --force-reset   overwrite everything without asking
- *   --non-interactive         accept defaults (npm postinstall / CI)
+ * There are no behavioural flags — you are always asked.
  */
 import { confirm, select } from '@inquirer/prompts';
 import chalk from 'chalk';
@@ -149,7 +147,7 @@ async function instantiateTemplates(targetDir, track) {
     }
 }
 
-async function initProjectStructure(track, nonInteractive = false, targetDir = path.join(process.cwd(), 'book')) {
+async function initProjectStructure(track, targetDir = path.join(process.cwd(), 'book')) {
     const projectRoot = process.cwd();
     if (fs.existsSync(targetDir)) {
         // book/ already exists — just ensure track.json is there, no noise
@@ -183,22 +181,9 @@ async function initProjectStructure(track, nonInteractive = false, targetDir = p
 
 // ─── Main ───────────────────────────────────────────────────────────────────
 function parseInstallArgs(argv) {
-    const args = {
-        nonInteractive: false,
-        reset: false,
-        forceReset: false,
-        postinstall: false,
-        help: false,
-    }
-    for (let i = 2; i < argv.length; i++) {
-        const a = argv[i]
-        if (a === '--non-interactive') args.nonInteractive = true
-        else if (a === '--reset') args.reset = true
-        else if (a === '--force-reset') args.forceReset = true
-        else if (a === '--postinstall') { args.nonInteractive = true; args.postinstall = true }
-        else if (a === '--help' || a === '-h') args.help = true
-    }
-    return args
+    // No behavioural flags. Every decision is a prompt when the script runs.
+    // `--help` is the only thing accepted.
+    return { help: argv.slice(2).some(a => a === '--help' || a === '-h') }
 }
 
 async function main() {
@@ -206,29 +191,15 @@ async function main() {
     if (args.help) {
         console.log(chalk.white('buchbinder — per-project installer'))
         console.log('')
-        console.log('Usage:  npx buchbinder')
-        console.log('')
-        console.log('  Just run it. Every decision is a prompt; you need no flags.')
-        console.log('')
-        console.log('Flags exist only for automation (they skip the prompts):')
-        console.log('  --reset              overwrite everything, no questions')
-        console.log('  --force-reset        --reset, and do not stop for local edits')
-        console.log('  --non-interactive    accept defaults (used by npm postinstall)')
-        console.log('  --postinstall        alias for --non-interactive')
-        console.log('  --help, -h           this')
+        console.log('  Run it and answer the prompts. There are no flags to remember.')
         process.exit(0)
     }
 
     // ── Prior install? Ask what to do. No flags required. ──
     const existingManifest = loadManifest(DEST_DIR)
-    let reinstall = args.reset || args.forceReset
+    let reinstall = false
 
-    if (existingManifest && !reinstall) {
-        if (args.nonInteractive || args.postinstall) {
-            console.log(chalk.yellow('⚠ A prior buchbinder install is recorded in this project.'))
-            console.log(chalk.yellow('  Nothing to do. Run `npx buchbinder-refresh` to sync updates.'))
-            process.exit(0)
-        }
+    if (existingManifest) {
         const action = await select({
             message: `Buchbinder is already installed here (commit ${existingManifest.packageCommit || 'unknown'}, ${existingManifest.installedAt}).`,
             choices: [
@@ -258,12 +229,7 @@ async function main() {
     if (existingManifest && reinstall) {
         const { diffManifest } = await import('./manifest.mjs')
         const locallyModified = diffManifest(existingManifest, DEST_DIR).modified
-        if (locallyModified.length > 0 && !args.forceReset) {
-            if (args.nonInteractive) {
-                console.log(chalk.red(`✗ Refusing to overwrite: ${locallyModified.length} files are modified locally.`))
-                console.log(chalk.red('  Pass --force-reset to override (destructive).'))
-                process.exit(2)
-            }
+        if (locallyModified.length > 0) {
             const ok = await confirm({
                 message: chalk.yellow(`${locallyModified.length} Buchbinder files have local edits. Overwrite them?`),
                 default: false,
@@ -276,8 +242,8 @@ async function main() {
     console.log(chalk.white('\nBuchbinder — Professional Book Writing Workflow'));
     console.log(chalk.gray('Installs the /buchbinder writing workflow into .opencode/\n'));
 
-    // ── Per-project acknowledgement (interactive only) ──
-    if (!args.nonInteractive) {
+    // ── Per-project acknowledgement (skipped when we already asked above) ──
+    if (!existingManifest) {
         await printPerProjectAck()
     }
 
@@ -293,11 +259,7 @@ async function main() {
     let bookCount = 1;
     let targetBooks = [];
 
-    if (args.nonInteractive) {
-        // Defaults: track=fiction, no import, no series
-        // (For postinstall / CI, we keep things simple.)
-        targetBooks = [path.join(process.cwd(), 'book')];
-    } else {
+    {
         track = await select({
             message: 'Which track do you want to use for this project?',
             choices: [
@@ -432,7 +394,7 @@ async function main() {
 
     header('Project Structure');
     for (const bookPath of targetBooks) {
-        await initProjectStructure(track, args.nonInteractive, bookPath);
+        await initProjectStructure(track, bookPath);
     }
 
     // Create series infrastructure if requested
@@ -486,17 +448,13 @@ async function main() {
     header('Installing Workflow');
 
     // ── Overwrite or not. That is the only real decision here. ──
-    // There is ONE copy path (sync.mjs). Whether Buchbinder already put files
-    // here changes nothing about *how* they are copied — only whether existing
-    // files are replaced. If there is anything to replace and we were allowed
-    // to ask, ask once, plainly, before touching it.
+    // There is ONE copy path (sync.mjs). Existing files change nothing about
+    // *how* things are copied — only whether what's already there is replaced.
     const CLOBBER_TARGETS = ['skills', 'tools', 'commands', 'plugins', 'templates', 'lib', 'rules'];
     const alreadyInstalled = CLOBBER_TARGETS.some(d => fs.existsSync(path.join(DEST_DIR, d)));
     let overwrite;
     if (reinstall) {
         overwrite = true;
-    } else if (args.nonInteractive) {
-        overwrite = true; // postinstall/CI: never prompt
     } else if (!alreadyInstalled) {
         overwrite = true; // nothing to clobber
     } else {

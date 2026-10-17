@@ -40,4 +40,4 @@ ALL files go to `<project>/.opencode/`:
 
 ## Why
 
-This system must work identically when installed via `npx buchbinder` on any machine, for any user, without requiring any changes to their global OpenCode configuration. The install script (`bin/install.mjs`) is the sole mechanism for provisioning — it copies everything into the project's `.opencode/` and registers plugins in `.opencode/opencode.jsonc` and `.opencode/tui.json` (both project-local).
+This system must work identically when installed via `node bin/install.mjs` on any machine, for any user, without requiring any changes to their global OpenCode configuration. The install script (`bin/install.mjs`) is the sole mechanism for provisioning — it copies everything into the project's `.opencode/` and registers plugins in `.opencode/opencode.jsonc` and `.opencode/tui.json` (both project-local).

@@ -130,8 +130,8 @@ When any document exceeds ~500 lines, split into a folder with `_main.md` as the
 The buchbinder plugin evolves. To sync an installed project with the latest plugin source without overwriting your project work, use:
 
 ```bash
-npx buchbinder-refresh        # idempotent: syncs plugin assets, rebuilds index, preserves local edits
-npx buchbinder-index          # rebuild only the lore semantic index
+node bin/refresh.mjs        # idempotent: syncs plugin assets, rebuilds index, preserves local edits
+node bin/build-lore-index.mjs          # rebuild only the lore semantic index
 ```
 
 `buchbinder-refresh` writes a manifest at `.opencode/.buchbinder-install-manifest.json` that records every file it installed (with per-file SHA256) so subsequent refreshes are diff-based — your HTML-comment overrides in phase specs are preserved across refreshes. Run `--force` to overwrite them (destructive).

@@ -9,12 +9,8 @@
  * exists.
  *
  * Usage:
- *   npx buchbinder                  # just run it — every decision is a prompt
- *   node bin/install.mjs            # from a clone
+ *   node bin/install.mjs            # run it; every decision is a prompt
  *   node bin/install.mjs --help
- *
- * Flags are automation-only (they skip prompts):
- *   --reset / --force-reset, --non-interactive
  */
 import { ensureDeps } from './lib/bootstrap.mjs'
 

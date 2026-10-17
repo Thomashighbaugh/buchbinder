@@ -43,15 +43,15 @@ import {
     copySidebarPlugin,
     ensureProjectConfig,
     PACKAGE_ROOT,
-} from './lib/sync.mjs'
+} from './sync.mjs'
 import {
     loadManifest,
     writeManifest,
     buildManifest,
     diffManifest,
     sha256File,
-} from './lib/manifest.mjs'
-import { isPluginOwned, describeOwnership } from './lib/plugin-tree.mjs'
+} from './manifest.mjs'
+import { isPluginOwned, describeOwnership } from './plugin-tree.mjs'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)

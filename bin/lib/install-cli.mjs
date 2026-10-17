@@ -587,7 +587,7 @@ async function main() {
     if (existingManifest && (args.reset || args.forceReset)) {
         // Check for locally-modified files
         const newManifest = buildManifest(DEST_DIR, { packageVersion: 'unknown', packageCommit: 'unknown', packageRoot: PKG_ROOT, pluginOwnedSubtrees: [] })
-        const { diffManifest } = await import('./lib/manifest.mjs')
+        const { diffManifest } = await import('./manifest.mjs')
         const diff = diffManifest(existingManifest, DEST_DIR)
         const locallyModified = diff.modified
         if (locallyModified.length > 0 && !args.forceReset) {

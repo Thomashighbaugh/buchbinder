@@ -58,20 +58,6 @@ function header(msg) {
     console.log(chalk.cyan('\u2500'.repeat(Math.min(msg.length, 60))));
 }
 
-// ─── Conflict Resolution ───────────────────────────────────────────────────
-async function resolveConflict(destPath) {
-    if (!fs.existsSync(destPath)) return 'copy';
-    return await select({
-        message: `Conflict: ${path.basename(destPath)} already exists. What should I do?`,
-        choices: [
-            { name: 'Overwrite', value: 'overwrite' },
-            { name: 'Skip', value: 'skip' },
-            { name: 'Overwrite all remaining', value: 'overwrite-all' },
-            { name: 'Skip all remaining', value: 'skip-all' },
-        ],
-    });
-}
-
 // ─── Per-project acknowledgement blurb ─────────────────────────────────────
 /**
  * Print the per-project install acknowledgement. The user is asked to confirm
@@ -115,116 +101,6 @@ async function printPerProjectAck() {
     }
 }
 
-// ─── Skills ─────────────────────────────────────────────────────────────────
-async function copySkills(track, overwriteAll, skipAll) {
-    const destDir = path.join(DEST_DIR, 'skills');
-    const baseSkillDirs = ['quality-assurance', 'critique', 'research'];
-    const trackSkillDirs = {
-        fiction: ['fiction/writing-techniques', 'fiction/genre-knowledge'],
-        'non-fiction': ['non-fiction/academic-writing', 'non-fiction/citation-styles', 'non-fiction/argument-structure', 'non-fiction/source-evaluation', 'non-fiction'],
-        mixed: ['fiction/writing-techniques', 'fiction/genre-knowledge', 'non-fiction/citation-styles', 'non-fiction/source-evaluation', 'non-fiction'],
-    };
-    const allDirs = [...baseSkillDirs, ...trackSkillDirs[track]];
-    fs.ensureDirSync(destDir);
-    let copied = 0, skipped = 0, newOverwriteAll = overwriteAll, newSkipAll = skipAll;
-    for (const skillDir of allDirs) {
-        const src = path.join(SRC_DIR, 'skills', skillDir);
-        const dest = path.join(destDir, skillDir);
-        if (!fs.existsSync(src)) { warn(`Skill directory not found: ${skillDir}`); continue; }
-        
-        // Idempotent sync: always overwrite core workflow assets
-        fs.copySync(src, dest, { overwrite: true });
-        copied++;
-    }
-    success(`${copied} skill directories synchronized`);
-    return { overwriteAll: true, skipAll: false, copied, skipped: 0 };
-}
-
-// ─── Tools + Lib ────────────────────────────────────────────────────────────
-async function copyToolsAndLib(overwriteAll, skipAll) {
-    const srcTools = path.join(SRC_DIR, 'tools');
-    const destTools = path.join(DEST_DIR, 'tools');
-    if (!fs.existsSync(srcTools)) return { overwriteAll, skipAll, copied: 0, skipped: 0 };
-    fs.ensureDirSync(destTools);
-    let copied = 0, skipped = 0, newOverwriteAll = overwriteAll, newSkipAll = skipAll;
-    async function walkDir(dir, relativePath = '') {
-        const entries = fs.readdirSync(dir, { withFileTypes: true });
-        for (const entry of entries) {
-            if (entry.name === 'installer.ts' || entry.name === 'install.mjs') { skipped++; continue; }
-            const srcPath = path.join(dir, entry.name);
-            const relPath = relativePath ? path.join(relativePath, entry.name) : entry.name;
-            const destPath = path.join(destTools, relPath);
-            if (entry.isDirectory()) {
-                fs.ensureDirSync(destPath);
-                await walkDir(srcPath, relPath);
-                copied++;
-            } else if (entry.name.endsWith('.ts') || entry.name.endsWith('.mjs')) {
-                if (newSkipAll) { skipped++; continue; }
-                if (fs.existsSync(destPath) && !newOverwriteAll) {
-                    if (relativePath) { skipped++; continue; }
-                    const action = await resolveConflict(destPath);
-                    if (action === 'skip') { skipped++; continue; }
-                    if (action === 'skip-all') { newSkipAll = true; skipped++; continue; }
-                    if (action === 'overwrite-all') newOverwriteAll = true;
-                }
-                fs.copySync(srcPath, destPath, { overwrite: true });
-                copied++;
-            }
-        }
-    }
-    await walkDir(srcTools);
-    // Copy lib/ to .opencode/lib/ AND .opencode/plugins/lib/:
-    //   .opencode/lib/         — canonical: tools import ../lib, lore-query.mjs lives here
-    //   .opencode/plugins/lib/ — the sidebar plugin imports ../../lib
-    const srcLib = path.join(SRC_DIR, 'lib');
-    if (fs.existsSync(srcLib)) {
-        const libDests = [path.join(DEST_DIR, 'lib'), path.join(DEST_DIR, 'plugins', 'lib')];
-        for (const libDest of libDests) {
-            fs.ensureDirSync(libDest);
-            for (const file of fs.readdirSync(srcLib).filter(f => (f.endsWith('.ts') && !f.endsWith('.d.ts')) || f.endsWith('.mjs'))) {
-                const srcFile = path.join(srcLib, file);
-                const destFile = path.join(libDest, file);
-                if (newSkipAll) { skipped++; continue; }
-                if (fs.existsSync(destFile) && !newOverwriteAll) { skipped++; continue; }
-                fs.copySync(srcFile, destFile, { overwrite: true });
-                copied++;
-            }
-            const srcScripts = path.join(srcLib, 'scripts');
-            if (fs.existsSync(srcScripts)) {
-                const destScripts = path.join(libDest, 'scripts');
-                fs.ensureDirSync(destScripts);
-                for (const file of fs.readdirSync(srcScripts)) {
-                    const srcFile = path.join(srcScripts, file);
-                    const destFile = path.join(destScripts, file);
-                    if (newSkipAll) { skipped++; continue; }
-                    if (fs.existsSync(destFile) && !newOverwriteAll) { skipped++; continue; }
-                    fs.copySync(srcFile, destFile, { overwrite: true });
-                    copied++;
-                }
-            }
-        }
-    }
-    success(`${copied} tools/lib files copied`);
-    return { overwriteAll: newOverwriteAll, skipAll: newSkipAll, copied, skipped };
-}
-
-// ─── Slash Commands ─────────────────────────────────────────────────────────
-async function copySlashCommands(overwriteAll, skipAll) {
-    const srcDir = path.join(SRC_DIR, 'commands');
-    const destDir = path.join(DEST_DIR, 'commands');
-    if (!fs.existsSync(srcDir)) return { overwriteAll, skipAll, copied: 0, skipped: 0 };
-    fs.ensureDirSync(destDir);
-    let copied = 0, skipped = 0;
-    for (const file of fs.readdirSync(srcDir).filter(f => f.endsWith('.md'))) {
-        const src = path.join(srcDir, file);
-        const dest = path.join(destDir, file);
-        fs.copySync(src, dest, { overwrite: true });
-        copied++;
-    }
-    success(`${copied} slash commands synchronized`);
-    return { overwriteAll, skipAll, copied, skipped: 0 };
-}
-
 // ─── Rules ──────────────────────────────────────────────────────────────────
 function copyRules() {
     const srcDir = path.join(SRC_DIR, 'rules');
@@ -237,205 +113,6 @@ function copyRules() {
         copied++;
     }
     success(`${copied} rules synchronized`);
-}
-
-// ─── Templates ──────────────────────────────────────────────────────────────
-function copyTemplates(track) {
-    const baseTemplates = path.join(SRC_DIR, 'templates');
-    const destDir = path.join(DEST_DIR, 'templates');
-    if (!fs.existsSync(baseTemplates)) { log('No templates to install'); return; }
-    fs.ensureDirSync(destDir);
-    const baseDir = path.join(baseTemplates, 'base');
-    if (fs.existsSync(baseDir)) fs.copySync(baseDir, destDir, { overwrite: true });
-    const trackDir = path.join(baseTemplates, track);
-    if (fs.existsSync(trackDir)) fs.copySync(trackDir, destDir, { overwrite: true });
-    const seriesDir = path.join(baseTemplates, 'series');
-    if (fs.existsSync(seriesDir)) {
-        const destSeriesDir = path.join(destDir, 'series');
-        fs.copySync(seriesDir, destSeriesDir, { overwrite: true });
-    }
-    success('Templates copied');
-}
-
-// ─── Sidebar Plugin (source-direct) ─────────────────────────────────────────
-// The TUI plugin is installed as TSX/TS source and loaded natively by OpenCode
-// under bun. There is NO pre-built bundle to prefer: src/plugins/tsconfig.json
-// is `noEmit: true`, nothing bundles a dist/, and dist/ is gitignored — so
-// source-direct is the only path, not a fallback. The non-interactive/refresh
-// path (copySidebarPlugin in ./sync.mjs) does exactly the same thing.
-async function copySidebarPlugin(overwriteAll, skipAll) {
-    const srcDir = path.join(SRC_DIR, 'plugins');
-    const destDir = path.join(DEST_DIR, 'plugins', 'buchbinder-sidebar');
-    if (!fs.existsSync(srcDir)) {
-        log('No sidebar plugin source — skipping');
-        return { overwriteAll: true, skipAll: false, copied: 0, skipped: 0, source: 'none' };
-    }
-    fs.ensureDirSync(destDir);
-    let copied = 0;
-    for (const entry of fs.readdirSync(srcDir, { withFileTypes: true })) {
-        const src = path.join(srcDir, entry.name);
-        const dest = path.join(destDir, entry.name);
-        if (entry.isDirectory()) {
-            fs.copySync(src, dest, { overwrite: true });
-            copied += fs.readdirSync(src).length;
-        } else if (entry.name.endsWith('.tsx') || entry.name.endsWith('.ts') || entry.name.endsWith('.js') || entry.name === 'package.json' || entry.name === 'tsconfig.json') {
-            fs.copySync(src, dest, { overwrite: true });
-            copied++;
-        }
-    }
-    success(`${copied} sidebar plugin source files synchronized`);
-    return { overwriteAll: true, skipAll: false, copied, skipped: 0, source: 'source' };
-}
-
-// ─── Hooks Plugin ────────────────────────────────────────────────────────────
-async function copyHooksPlugin(overwriteAll, skipAll) {
-    const srcDir = path.join(SRC_DIR, 'hooks-plugin');
-    const destDir = path.join(DEST_DIR, 'plugins', 'hooks');
-    if (!fs.existsSync(srcDir)) { log('No hooks plugin source — skipping'); return { overwriteAll: true, skipAll: false, copied: 0 }; }
-    fs.ensureDirSync(destDir);
-    let copied = 0;
-    for (const file of fs.readdirSync(srcDir)) {
-        const src = path.join(srcDir, file);
-        const dest = path.join(destDir, file);
-        if (file.endsWith('.ts') || file.endsWith('.js')) {
-            fs.copySync(src, dest, { overwrite: true });
-            copied++;
-        }
-    }
-    success(`${copied} hooks plugin files synchronized`);
-    return { overwriteAll: true, skipAll: false, copied };
-}
-
-// ─── Project .opencode/opencode.jsonc + .opencode/tui.json + package.json (plugin registration) ─
-// OpenCode reads .opencode/opencode.jsonc at the project root for plugin loading.
-// The TUI plugin also needs to be in .opencode/tui.json for sidebar + slash commands.
-//
-// The plugin's built bundle externalizes solid-js and @opentui/solid (they
-// are baked into the OpenCode bun runtime but need to be resolvable from
-// .opencode/node_modules/). OpenCode runs `bun install` on .opencode/package.json
-// at startup, so we ensure the runtime deps are declared there.
-async function ensureProjectConfig() {
-    const projectRoot = process.cwd();
-    const tuiJsonPath = path.join(DEST_DIR, 'tui.json');
-    const opencodeJsoncPath = path.join(DEST_DIR, 'opencode.jsonc');
-    const pkgJsonPath = path.join(DEST_DIR, 'package.json');
-    const PLUGIN_ENTRY = './plugins/buchbinder-sidebar/index.js';
-    const HOOKS_ENTRY = './plugins/hooks/index.js';
-
-    // ── .opencode/opencode.jsonc: register the plugins so OpenCode loads them ──
-    if (!fs.existsSync(opencodeJsoncPath)) {
-        const config = {
-            $schema: 'https://opencode.ai/config.json',
-            plugin: [PLUGIN_ENTRY, HOOKS_ENTRY],
-        };
-        fs.writeFileSync(opencodeJsoncPath, JSON.stringify(config, null, 2) + '\n', 'utf-8');
-        success('Created .opencode/opencode.jsonc with buchbinder-sidebar + hooks plugins registered');
-    } else {
-        const raw = fs.readFileSync(opencodeJsoncPath, 'utf-8');
-        let config;
-        try {
-            const stripped = raw.replace(/\/\/[^\n]*/g, '').replace(/\/\*[\s\S]*?\*\//g, '');
-            config = JSON.parse(stripped);
-        } catch {
-            warn('Could not parse existing .opencode/opencode.jsonc — skipping plugin registration.');
-            config = null;
-        }
-        if (config) {
-            const plugins = Array.isArray(config.plugin) ? config.plugin : [];
-            const hasSidebar = plugins.some(p => typeof p === 'string' && p.endsWith('buchbinder-sidebar/index.js'));
-            const hasHooks = plugins.some(p => typeof p === 'string' && p.endsWith('hooks/index.js'));
-            if (!hasSidebar) plugins.push(PLUGIN_ENTRY);
-            if (!hasHooks) plugins.push(HOOKS_ENTRY);
-            if (!hasSidebar || !hasHooks) {
-                config.plugin = plugins;
-                fs.writeFileSync(opencodeJsoncPath, JSON.stringify(config, null, 2) + '\n', 'utf-8');
-                success(`Updated .opencode/opencode.jsonc plugin array`);
-            } else {
-                log('.opencode/opencode.jsonc already registers all plugins — skipping');
-            }
-        }
-    }
-
-    // ── .opencode/tui.json: register the TUI plugin for sidebar + slash commands ──
-    if (!fs.existsSync(tuiJsonPath)) {
-        const config = {
-            $schema: 'https://opencode.ai/tui.json',
-            plugin: [PLUGIN_ENTRY],
-        };
-        fs.writeJsonSync(tuiJsonPath, config, { spaces: 2 });
-        let content = fs.readFileSync(tuiJsonPath, 'utf-8');
-        if (!content.endsWith('\n')) { fs.writeFileSync(tuiJsonPath, content + '\n'); }
-        success('Created .opencode/tui.json with buchbinder-sidebar plugin registered');
-    } else {
-        const raw = fs.readFileSync(tuiJsonPath, 'utf-8');
-        let config;
-        try {
-            config = JSON.parse(raw);
-        } catch {
-            const stripped = raw.replace(/\/\/[^\n]*/g, '').replace(/\/\*[\s\S]*?\*\//g, '');
-            try {
-                config = JSON.parse(stripped);
-            } catch {
-                warn('Could not parse existing .opencode/tui.json — skipping plugin registration.');
-                config = null;
-            }
-        }
-        if (config) {
-            const plugins = Array.isArray(config.plugin) ? config.plugin : [];
-            const hasEntry = plugins.some(p => typeof p === 'string' && p.endsWith('buchbinder-sidebar/index.js'));
-            if (hasEntry) {
-                log('.opencode/tui.json already registers buchbinder-sidebar — skipping');
-            } else {
-                config.plugin = [...plugins, PLUGIN_ENTRY];
-                fs.writeFileSync(tuiJsonPath, JSON.stringify(config, null, 2) + '\n', 'utf-8');
-                success(`Added buchbinder-sidebar to .opencode/tui.json plugin array`);
-            }
-        }
-    }
-
-    // ── package.json: ensure runtime deps for the plugin ──
-    // REQUIRED_DEPS is the single source of truth in ./sync.mjs — the previous
-    // local copy had drifted (it was missing fast-xml-parser, which
-    // src/lib/xml-draft-chunker.mjs imports), so interactive installs shipped a
-    // .opencode/package.json that was missing a dependency the tools load.
-
-    let pkg = {};
-    if (fs.existsSync(pkgJsonPath)) {
-        try { pkg = JSON.parse(fs.readFileSync(pkgJsonPath, 'utf-8')); } catch { pkg = {}; }
-    }
-    pkg.type = pkg.type || 'module';
-    pkg.dependencies = pkg.dependencies || {};
-    let depsAdded = false;
-    for (const [name, version] of Object.entries(REQUIRED_DEPS)) {
-        if (!pkg.dependencies[name]) {
-            pkg.dependencies[name] = version;
-            depsAdded = true;
-        }
-    }
-    if (depsAdded) {
-        fs.writeFileSync(pkgJsonPath, JSON.stringify(pkg, null, 2) + '\n', 'utf-8');
-        success('Updated .opencode/package.json with plugin runtime deps');
-        
-        // --- ADDED: Install dependencies immediately ---
-        const pkgManager = 'bun';
-        log(`  Installing dependencies with ${pkgManager}...`);
-        try {
-            execSync(`${pkgManager} install`, { cwd: DEST_DIR, stdio: 'pipe' });
-            success('Dependencies installed successfully.');
-        } catch (err) {
-            error(`Failed to install dependencies with ${pkgManager}: ${err.message}`);
-            // Fallback to npm if bun fails
-            log(`  Falling back to npm...`);
-            try {
-                execSync(`npm install --ignore-scripts --prefer-offline`, { cwd: DEST_DIR, stdio: 'pipe' });
-                success('Dependencies installed via npm fallback.');
-            } catch (npmErr) {
-                error(`npm fallback also failed: ${npmErr.message}`);
-            }
-        }
-    } else {
-        log('.opencode/package.json already has all required deps — skipping dependency install');
-    }
 }
 
 // ─── Project Init ───────────────────────────────────────────────────────────
@@ -802,51 +479,56 @@ async function main() {
 
     header('Installing Workflow');
 
-    if (args.nonInteractive || args.reset || args.forceReset) {
-        // Non-interactive path: use sync.mjs with 'overwrite' mode. No prompts.
-        const syncMode = (args.reset || args.forceReset) ? 'overwrite' : 'install'
-        const skillsR = syncCopySkills(DEST_DIR, track, syncMode)
-        const toolsR = syncCopyToolsAndLib(DEST_DIR, syncMode)
-        const cmdsR = syncCopySlashCommands(DEST_DIR, syncMode)
-        syncCopyTemplates(DEST_DIR, track)
-        copyRules()
-        const pluginR = syncCopySidebarPlugin(DEST_DIR, syncMode)
-        const hooksR = syncCopyHooksPlugin(DEST_DIR, syncMode)
-        syncEnsureProjectConfig(DEST_DIR)
-        // Run bun install to ensure all deps are available
-        try {
-            execSync('bun install', { cwd: DEST_DIR, stdio: 'pipe' });
-            success('Dependencies installed');
-        } catch (err) {
-            try {
-                execSync('npm install --ignore-scripts --prefer-offline', { cwd: DEST_DIR, stdio: 'pipe' });
-                success('Dependencies installed via npm fallback');
-            } catch (npmErr) {
-                warn('Dependency install failed — run "bun install" in .opencode/ manually');
-            }
-        }
-        log(`  Skills:    ${skillsR.copied} copied, ${skillsR.skipped} skipped`)
-        log(`  Tools:     ${toolsR.copied} copied, ${toolsR.skipped} skipped`)
-        log(`  Commands:  ${cmdsR.copied} copied, ${cmdsR.skipped} skipped`)
-        log(`  Plugin:    ${pluginR.copied} copied (${pluginR.source})`)
-        log(`  Hooks:     ${hooksR.copied} copied`)
+    // ── Overwrite or not. That is the only real decision here. ──
+    // There is ONE copy path (sync.mjs). Whether Buchbinder already put files
+    // here changes nothing about *how* they are copied — only whether existing
+    // files are replaced. If there is anything to replace and we were allowed
+    // to ask, ask once, plainly, before touching it.
+    const CLOBBER_TARGETS = ['skills', 'tools', 'commands', 'plugins', 'templates', 'lib', 'rules'];
+    const alreadyInstalled = CLOBBER_TARGETS.some(d => fs.existsSync(path.join(DEST_DIR, d)));
+    let overwrite;
+    if (args.reset || args.forceReset) {
+        overwrite = true;
+    } else if (args.nonInteractive) {
+        overwrite = true; // postinstall/CI: never prompt
+    } else if (!alreadyInstalled) {
+        overwrite = true; // nothing to clobber
     } else {
-        // Interactive path: use the local copy functions with conflict prompts.
-        let overwriteAll = false, skipAll = false;
-        const skillResult = await copySkills(track, overwriteAll, skipAll);
-        overwriteAll = skillResult.overwriteAll; skipAll = skillResult.skipAll;
-        const toolResult = await copyToolsAndLib(overwriteAll, skipAll);
-        overwriteAll = toolResult.overwriteAll; skipAll = toolResult.skipAll;
-        const cmdResult = await copySlashCommands(overwriteAll, skipAll);
-        overwriteAll = cmdResult.overwriteAll; skipAll = cmdResult.skipAll;
-        copyTemplates(track);
-        copyRules();
-        const pluginResult = await copySidebarPlugin(overwriteAll, skipAll);
-        overwriteAll = pluginResult.overwriteAll; skipAll = pluginResult.skipAll;
-        const hooksResult = await copyHooksPlugin(overwriteAll, skipAll);
-        overwriteAll = hooksResult.overwriteAll; skipAll = hooksResult.skipAll;
-        await ensureProjectConfig();
+        overwrite = await confirm({
+            message: chalk.yellow('Buchbinder files already exist in .opencode/. Overwrite them with the current versions?'),
+            default: true,
+        });
     }
+    const syncMode = overwrite ? 'overwrite' : 'preserve';
+
+    const skillsR = syncCopySkills(DEST_DIR, track, syncMode);
+    const toolsR = syncCopyToolsAndLib(DEST_DIR, syncMode);
+    const cmdsR = syncCopySlashCommands(DEST_DIR, syncMode);
+    syncCopyTemplates(DEST_DIR, track);
+    copyRules();
+    const pluginR = syncCopySidebarPlugin(DEST_DIR, syncMode);
+    const hooksR = syncCopyHooksPlugin(DEST_DIR, syncMode);
+    syncEnsureProjectConfig(DEST_DIR);
+
+    // Install the project's .opencode/ dependencies so the plugin and tools
+    // resolve (bun preferred, npm fallback).
+    try {
+        execSync('bun install', { cwd: DEST_DIR, stdio: 'pipe' });
+        success('Dependencies installed');
+    } catch {
+        try {
+            execSync('npm install --ignore-scripts --prefer-offline', { cwd: DEST_DIR, stdio: 'pipe' });
+            success('Dependencies installed via npm fallback');
+        } catch {
+            warn('Dependency install failed — run "bun install" in .opencode/ manually');
+        }
+    }
+
+    log(`  Skills:    ${skillsR.copied} copied, ${skillsR.skipped} skipped`)
+    log(`  Tools:     ${toolsR.copied} copied, ${toolsR.skipped} skipped`)
+    log(`  Commands:  ${cmdsR.copied} copied, ${cmdsR.skipped} skipped`)
+    log(`  Plugin:    ${pluginR.copied} copied (${pluginR.source})`)
+    log(`  Hooks:     ${hooksR.copied} copied`)
 
     // ── Prefetch the local ONNX models (embedder, reranker, classifier) ──
     // Downloads into the shared model cache so first query is offline + instant.

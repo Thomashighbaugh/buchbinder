@@ -14,4 +14,4 @@
 import { ensureDeps } from './lib/bootstrap.mjs'
 
 await ensureDeps()
-await import('./lib/refresh-cli.mjs')
+await import('./lib/refresh.mjs')

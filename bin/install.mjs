@@ -22,4 +22,4 @@
 import { ensureDeps } from './lib/bootstrap.mjs'
 
 await ensureDeps()
-await import('./lib/install-cli.mjs')
+await import('./lib/install.mjs')

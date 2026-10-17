@@ -32,13 +32,13 @@ import {
     ensureProjectConfig as syncEnsureProjectConfig,
     initProjectStructure as syncInitProjectStructure,
     PACKAGE_ROOT as PKG_ROOT,
-} from './lib/sync.mjs';
+} from './sync.mjs';
 import {
     loadManifest,
     writeManifest,
     buildManifest,
-} from './lib/manifest.mjs';
-import { isPluginOwned } from './lib/plugin-tree.mjs';
+} from './manifest.mjs';
+import { isPluginOwned } from './plugin-tree.mjs';
 
 // ─── Paths ──────────────────────────────────────────────────────────────────
 const __filename = fileURLToPath(import.meta.url);

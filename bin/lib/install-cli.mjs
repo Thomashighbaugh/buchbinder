@@ -43,7 +43,7 @@ import { isPluginOwned } from './plugin-tree.mjs';
 // ─── Paths ──────────────────────────────────────────────────────────────────
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const PACKAGE_ROOT = path.resolve(__dirname, '..');
+const PACKAGE_ROOT = path.resolve(__dirname, '..', '..');
 const SRC_DIR = path.join(PACKAGE_ROOT, 'src');
 const DEST_DIR = path.join(process.cwd(), '.opencode');
 

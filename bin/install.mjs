@@ -9,15 +9,12 @@
  * exists.
  *
  * Usage:
- *   npx buchbinder                    # one-liner — nothing to clone or pre-install
- *   npx github:Thomashighbaugh/buchbinder
- *   node bin/install.mjs              # from a clone
+ *   npx buchbinder                  # just run it — every decision is a prompt
+ *   node bin/install.mjs            # from a clone
  *   node bin/install.mjs --help
- *   node bin/install.mjs --non-interactive
- *   node bin/install.mjs --reset | --force-reset
  *
- * For idempotent in-place updates of an existing install, prefer:
- *   npx buchbinder-refresh
+ * Flags are automation-only (they skip prompts):
+ *   --reset / --force-reset, --non-interactive
  */
 import { ensureDeps } from './lib/bootstrap.mjs'
 

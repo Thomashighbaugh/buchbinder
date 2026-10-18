@@ -90,6 +90,22 @@ Use divergent-then-convergent refinement:
 - Check for consistency with other dimensions already developed
 - Ask: "Does this feel right? Should we iterate further or move to another dimension?"
 
+### 3a. Premise dimension — run the workshop
+
+When the focus dimension is **Premise** (or the user is starting from a spark), run the \`premise-workshop\` method (\`skills/fiction/writing-techniques/premise-workshop/SKILL.md\`) instead of generic divergent/convergent iteration. Fiction only.
+
+1. **Capture the spark** — in the user's own words, unimproved. Sort it (image / what-if / character / setting / feeling). Keep the original wording in the notes; it is the check that later drift was chosen.
+2. **Generate 8–12 what-ifs** across angles (\`references/what-if-generation.md\`); the user picks one to three or combines.
+3. **Workshop the logline** — protagonist + want + obstacle + stakes — and run every stress test (\`references/premise-tests.md\`). Report pass / weak / fail with one sentence of why and one revision per weak or fail.
+4. **Draft the premise and counter-premise** — the controlling idea (value + cause) and the antagonist's opposing argument. Test whether a reasonable person could believe the counter-premise.
+5. **Name the stakes on three levels** — external / relational / internal; at least two concrete and personal, and able to worsen by the midpoint.
+6. **Choose the form and target word count** (\`references/form-choice.md\`).
+7. **Brainstorm titles** across families, cut to five (\`references/title-and-comps.md\`), and check names via \`namecraft\`.
+8. **Sanity-check against two or three comparable books** — never invent a title, author, year, or sales claim; mark unverified comps as unverified.
+9. **Cache the workshop output** to \`./book/ideation/premise.md\` and carry the brief into \`/buchbinder specify\`.
+
+The author owns the idea: offer options and tests, never decide for them.
+
 ### 4. Cache the Output
 
 Save the refined dimension to \`./book/ideation/[dimension].md\`:
@@ -193,11 +209,13 @@ The \`_index.json\` file tracks:
 
 | Skill | Purpose |
 |-------|---------|
+| \`premise-workshop\` | Spark-to-premise method for the Premise dimension — what-ifs, logline stress tests, premise/counter-premise, stakes, form, titles, comps (fiction) |
 | \`idea-refine\` | Divergent/convergent iteration methodology |
 | \`graph-thinking\` | Map relationships between dimensions |
 | \`deep-thinker\` | Break down complex creative problems |
+| \`namecraft\` | Character, place, and title naming (premise-workshop title checks) |
 
-Load these skills on demand when the user's input suggests they'd help.
+Load these skills on demand when the user's input suggests they'd help. For the Premise dimension on fiction, load \`premise-workshop\` by default.
 
 ## Warnings
 
@@ -207,7 +225,7 @@ Load these skills on demand when the user's input suggests they'd help.
 - The user can return to this phase at any time via \`/buchbinder ideation\` — it is NOT a one-time gate
 `,
   tools: ["loadSkill", "question", "bash", "write", "read"],
-  relatedSkills: ["idea-refine", "graph-thinking"],
+  relatedSkills: ["premise-workshop", "idea-refine", "graph-thinking", "namecraft"],
   examples: [
     { input: "/buchbinder ideation", approach: "Loads existing ideation cache, presents dimension menu for refinement" },
     { input: "/buchbinder ideation premise", approach: "Focuses on premise dimension — generates alternatives, helps user select, caches to ./book/ideation/premise.md" },

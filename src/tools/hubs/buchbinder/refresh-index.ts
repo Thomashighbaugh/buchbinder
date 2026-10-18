@@ -56,15 +56,14 @@ Expected output: a list of source files and chunk counts, the embed model versio
 
 ### 3. If the build fails
 
-The default embedder is a local ONNX model fetched during install; if the build fails the model cache is usually missing — re-run the installer to re-fetch it. If you set EMBED_BACKEND=ollama, check that Ollama is running and the model is pulled.
+The embedder is a local ONNX model fetched during install; if the build fails the model cache is usually missing — re-run the installer to re-fetch it.
 
 \`\`\`bash
-# Is Ollama running?
-curl http://127.0.0.1:11434/api/tags
+# Is the ONNX model cache present?
+ls ~/.cache/buchbinder/models
 
-# Are the required models pulled?
-ollama pull pedrohml/mxbai-embed-large:latest
-ollama pull hans-tech/bge-reranker-v2-m3:260522
+# Re-fetch the models if not
+node bin/fetch-models.mjs
 \`\`\`
 
 If the embed model is unavailable, \`lore-query.mjs\` will still work — it falls back to re-embedding on the fly (slower) and to reading the full lore files (slowest). The index is an optimization, not a requirement.

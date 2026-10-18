@@ -294,7 +294,7 @@ export async function buildIndex(projectRoot, opts = {}) {
             const id = `chunk-${String(chunkIdCounter).padStart(5, '0')}`
             let embedding = null
             try {
-                const [vec] = await embed([c.text], { backend: embedBackend, model: embedModel })
+                const [vec] = await embed([c.text], { model: embedModel })
                 embedding = vec
                 chunksEmbedded++
             } catch (err) {

@@ -149,6 +149,8 @@ Run the following cross-chapter structural analyses:
 
 7. **Knowledge state matrix** — per-chapter tracking of what each character knows vs. what the reader knows. Detects dramatic irony opportunities and knowledge violations. Uses \`src/lib/knowledge-state.ts\`.
 
+8. **AI-writing tell density** — project-wide scan using the AI-writing catalog (\`skills/quality-assurance/ai-writing-audit/SKILL.md\` + \`references/patterns.md\`; rule \`rules/ai-writing-patterns.md\`). Count Tier 1A markers, Tier 2 clusters, Tier 3 density violations, structural tells, and signature slop per chapter. **Any P0 (credibility killer) pattern blocks.** A chapter exceeding >3 tell instances is flagged. Report the pattern, location, and tier — **signals, not proof**; do not assert machine authorship. Fiction carve-outs apply.
+
 **If any structural analysis produces a hard block (missing beats, broken promises, knowledge violations): STOP. Report specific failures.**
 
 ### 3c. Structural Visualization Outputs

@@ -42,6 +42,13 @@ Before committing to a full specification, stress-test the premise. A weak premi
 | Sustain capacity | Can the premise generate enough material for the target word count? | Premise runs out of steam after 20,000 words |
 | Theme alignment | Does the premise embody the constitution's thematic statement? | Premise and theme are disconnected |
 
+**Fiction — run the workshop logline tests too.** Load \`skills/fiction/writing-techniques/premise-workshop/SKILL.md\` and run its full test set (\`references/premise-tests.md\`) against the logline: active protagonist, concrete want, opposition that can win, built-in conflict, a choice at the end, irony or hook, sustains the length, distinct. Also require:
+
+- **Counter-premise** — the antagonist's or world's opposing argument (value + cause). Test: could a reasonable person believe it? If not, the antagonist is a straw man.
+- **Stakes on three levels** — external, relational, internal. At least two must be concrete and personal, and each must be able to worsen by the midpoint.
+
+If the workshop has not run (no \`./book/ideation/premise.md\`), offer to run \`/buchbinder ideation premise\` first — the stress-test is where a weak premise is caught.
+
 **If the premise fails any criterion: STOP. Report the specific failure and ask the user to revise the premise before proceeding.** Do not build a specification on a weak premise.
 
 **Premise stress-test output:**
@@ -59,6 +66,11 @@ Before committing to a full specification, stress-test the premise. A weak premi
 | Theme alignment | ✓ / ✗ | [Assessment] |
 
 **Logline:** [Generated logline if pass]
+
+**Premise (value + cause):** [controlling idea]
+**Counter-premise:** [opposing argument — could a reasonable person believe it?]
+
+**Stakes:** External — [ ]; Relational — [ ]; Internal — [ ]
 
 **Result:** [PASS — proceed to specification / FAIL — revise premise]
 \`\`\`

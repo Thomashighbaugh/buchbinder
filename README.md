@@ -54,6 +54,41 @@ After installation, type `/buchbinder` in OpenCode to open the workflow menu, or
 
 ---
 
+## What It Is
+
+Buchbinder is not a prompt pack and not one chat loop. It drives a deterministic,
+twelve-phase writing workflow on top of OpenCode — constitute → specify → clarify
+→ research → outline → draft → critique → revise → edit → review → publish —
+where each phase has its own agents, context budget, and exit criteria, and every
+transition is checked against evidence-based, hard-block gates. Four tracks
+(fiction, non-fiction, mixed, series) recombine the same core for the project at
+hand.
+
+It is engineered for output **quality, not volume**: a manuscript that is
+internally consistent, voice-stable, and structurally sound — and, for
+non-fiction, correctly cited. Exactly one artifact is left to a human, the book
+cover; everything else (outline, draft, critique, revision, three-pass edit,
+continuity audit, bibliography, multi-format export) is produced end to end.
+
+Highlights:
+
+- Fine-grained outline with scene beats, setup/payoff chains, and continuity anchors — gated before drafting
+- XML-structured drafting with awareness maps; each chapter loads only its outline slice, pinned neighbours, and style sheets
+- 26 hard-block quality gates across 8 categories
+- 8 critique modes, including an adversarial two-agent dialectic and 3–5 persona readers
+- Three-pass editing (line-edit → copy-edit → proofread) and multi-pass revision (`--depth full`)
+- Per-character and per-narration voice fingerprinting; 5 modular style sheets
+- Fully local semantic retrieval (ONNX embedder + reranker + NLI classifier) over each project's canon
+- JSON checkpoints with content hashing for reproducible resume
+- Series lorebook with cross-book inheritance; external lorebook import (SillyTavern, JanitorAI, CharacterAI)
+- 8 human-in-the-loop features: phase preview, authorial-intent capture, diff-based approval, severity tiers, veto key, feedback memory, non-negotiables, provenance tracking
+- Pandoc export with fallback generators
+
+For the design rationale — origin, per-project vs MCP, the agentic stack, and
+packaging — see [Design Notes](#design-notes).
+
+---
+
 ## The 25-Subcommand Workflow
 
 All functionality is accessed through the `/buchbinder` hub command. `/buchbinder` with no arguments opens an interactive menu via state detection. `/buchbinder <subcommand>` routes directly to the specified phase.

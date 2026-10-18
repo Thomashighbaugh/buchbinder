@@ -65,8 +65,6 @@ function cosineSimilarity(a, b) {
  * Backends (selected by RERANK_BACKEND / --rerank-backend):
  *   • onnx   (default) — in-process ONNX cross-encoder (@huggingface/transformers,
  *                        Xenova/bge-reranker-base). No server, no provider calls.
- *   • ollama           — POST ${OLLAMA_URL}/api/rerank (only useful on Ollama
- *                        builds that expose that endpoint).
  *   • none             — skip reranking.
  *
  * Returns a new, score-sorted array of the input documents. Throws on failure;

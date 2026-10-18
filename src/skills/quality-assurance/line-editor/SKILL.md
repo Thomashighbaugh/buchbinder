@@ -12,12 +12,22 @@ This is a final-pass audit focused strictly on the sentence level. Do not critiq
 ## Evaluation Categories
 
 ### 1. The AI-Slop Eradication Sweep (CRITICAL)
-Aggressively flag and eradicate residual AI stylistic markers that survived earlier revisions:
+
+This pass runs the project's AI-writing catalog. Load `skills/quality-assurance/ai-writing-audit/SKILL.md` and its catalog `references/patterns.md`; the standing rule is `rules/ai-writing-patterns.md`. The catalog is tiered (word tiers 1A/1B/2/3, pattern groups) and carries never-inject guardrails — a fix that adds a manufactured stake, a fragment run, or an invented specific is a failure even when it clears the flag.
+
+**Signals, not proof.** Fiction is exempt where the device is the point: manufactured punchlines, staccato drama, fragments, anaphora, and deliberate repetition pass when they carry voice, comedy, or tension. Judge the function, not the shape.
+
+Flag and eradicate residual AI stylistic markers that survived earlier revisions:
+
+*   **Word-tier violations** — Tier 1A markers (`delve`, `leverage`, `tapestry`, `testament to`, `robust`, `seamless`, `pivotal`, …), Tier 2 clusters (2+ in a paragraph: `harness`, `navigate`, `crucial`, `nuanced`, `ecosystem`, …), Tier 3 by density (`significant`, `innovative`, `effective`, …). Full lists in the catalog.
 *   **Sensory Overload**: "The scent of ozone and tang of copper," "crackling energy."
 *   **Binary Escalation**: "It wasn't just X. It was Y."
 *   **The Hollow Closer**: "They didn't have to." / "And that made all the difference."
 *   **Micro-expression fixation**: "Something shifted in their eyes," "A shadow crossed their face."
 *   **Over-reliance on adverbs**: "She said angrily," "he looked dangerously."
+*   **Structural tells**: negation chains, same-opener sentence runs, stranded auxiliary contrasts, aphorism formulas, colon-into-a-triple, generic conclusions, hedge-stacked predictions.
+
+Flag P0 and P1 on every pass; P2 when time allows. Map to Buchbinder severity: P0 → Critical, P1 → Major, P2 → Minor.
 
 ### 2. Sentence Architecture & Rhythm
 *   **Cadence Variation**: Ensure a mix of long, flowing sentences and short, punchy ones. Flag paragraphs where 3+ consecutive sentences share the exact same length or structure.

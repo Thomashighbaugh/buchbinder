@@ -263,6 +263,7 @@ For Mixed track, offer both options in the question.
 |-------|------|---------|
 | \`author-voice-key\` | \`skills/fiction/writing-techniques/author-voice-key/SKILL.md\` | Writing style key — author blend, prose conformity, scene previews (fiction) |
 | \`theme-craft\` | \`skills/fiction/writing-techniques/theme-craft/SKILL.md\` | Controlling idea (value + cause), counter-premise, lie/truth, arc types, antagonist design, motifs (fiction) |
+| \`worldbuilding\` | \`skills/fiction/writing-techniques/worldbuilding/SKILL.md\` | Locations, systems, factions, artifacts, calendars, routes, naming — the world the Content Principles bind (fiction) |
 | \`pacing-rhythm\` | \`skills/fiction/writing-techniques/pacing-rhythm/SKILL.md\` | Pacing archetype selection (fiction) |
 | \`character-depth\` | \`skills/fiction/writing-techniques/character-depth/SKILL.md\` | Character depth approach (fiction) |
 | \`academic-writing\` | \`skills/non-fiction/academic-writing/SKILL.md\` | Thesis and argument structure (non-fiction) |

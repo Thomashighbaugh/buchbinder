@@ -118,10 +118,14 @@ Create or update files in \`./book/knowledge/\`:
 |------|---------|
 | \`character-profiles.md\` | Profile per character: name, role, goal, flaw, arc, background, psychology |
 | \`character-voices.md\` | Speech patterns, verbal tics, register per character |
-| \`locations.md\` | Key settings: sensory details, spatial relationships, mood |
-| \`world-setting.md\` | World rules, magic/technology systems, cultural norms |
+| \`locations.md\` | Key settings: sensory details, spatial relationships, mood, routes and travel |
+| \`world-setting.md\` | World rules, magic/technology systems, cultural norms, calendar |
+| \`factions.md\` | Factions: purpose, power base, members, conflicts |
+| \`artifacts.md\` | Artifacts: description, function, history, current state |
 | \`glossary.md\` | Terms, titles, faction names, item descriptions |
 | \`strategic-reversals.md\` | Contest systems, strategy profiles, reversal ledger |
+
+**Fiction — use the \`worldbuilding\` skill** (\`skills/fiction/writing-techniques/worldbuilding/SKILL.md\`) to build the world files with consistent structure: location, system, faction, and artifact section templates; routes and travel times; calendars; and naming (checked with \`namecraft\`). A setting detail nothing in the story can use is decoration — build the world the premise and theme need, not a gazetteer.
 
 Use the templates from \`templates/fiction/knowledge/\` for structure. Keep each knowledge file focused and under ~500 lines.
 
@@ -149,12 +153,13 @@ If the user selects a phase, call \`hubMenu\` with \`action: "route"\`, \`hub: "
 | \`character-depth\` | \`skills/fiction/writing-techniques/character-depth/SKILL.md\` | Character profiling guidance |
 | \`namecraft\` | \`skills/fiction/writing-techniques/namecraft/SKILL.md\` | Character and location naming |
 | \`premise-workshop\` | \`skills/fiction/writing-techniques/premise-workshop/SKILL.md\` | Logline stress tests, three-level stakes, premise/counter-premise, form and title checks (fiction) |
-| \`theme-craft\` | \`skills/fiction/writing-techniques/theme-craft/SKILL.md\` | Controlling idea (value + cause), counter-premise, lie/truth, motifs (fiction) |`,
+| \`theme-craft\` | \`skills/fiction/writing-techniques/theme-craft/SKILL.md\` | Controlling idea (value + cause), counter-premise, lie/truth, motifs (fiction) |
+| \`worldbuilding\` | \`skills/fiction/writing-techniques/worldbuilding/SKILL.md\` | Locations, systems, factions, artifacts, calendars, routes, naming (fiction) |`,
   rules: [
     "Whenever the user makes a decision that alters narrative context, metanarrative, formatting, or tracking states, you MUST proactively update the relevant files in ./book/metadata/ and ./book/tracking/ before completing the turn."
   ],
   tools: ["loadSkill", "bash", "question"],
-  relatedSkills: ["premise-workshop", "theme-craft", "scene-structure", "character-depth", "namecraft"],
+  relatedSkills: ["premise-workshop", "theme-craft", "worldbuilding", "scene-structure", "character-depth", "namecraft"],
   examples: [
     { input: "/buchbinder specify I want to write about a detective who solves crimes using memory palaces", approach: "Starts Phase 2. Reads constitution, then builds logline → premise → story promise → knowledge map through structured interview." },
     { input: "/buchbinder specify", approach: "Checks for existing specification and knowledge files. Offers update if found, otherwise starts fresh build." }

@@ -311,7 +311,11 @@ The revise phase integrates these HITL features:
 
 ## Supplement Skills
 
-None specific to this phase.
+| Skill | File | Purpose |
+|-------|------|---------|
+| \`ai-writing-audit\` | \`skills/quality-assurance/ai-writing-audit/SKILL.md\` | AI-writing pattern catalog — eliminate flagged slop, avoid introducing new tells, never-inject guardrails |
+| \`continuity-auditor\` | \`skills/quality-assurance/continuity-auditor/SKILL.md\` | Cross-chapter consistency after revision |
+| \`style-enforcer\` | \`skills/quality-assurance/style-enforcer/SKILL.md\` | Style consistency after revision |
 
 ### HITL Libraries
 
@@ -323,10 +327,11 @@ None specific to this phase.
 | \`creative-constraints\` | \`src/lib/creative-constraints.ts\` | Non-negotiables gate |
 | \`provenance\` | \`src/lib/provenance.ts\` | Change provenance tracking |`,
   rules: [
-    "Whenever the user makes a decision that alters narrative context, metanarrative, formatting, or tracking states, you MUST proactively update the relevant files in ./book/metadata/ and ./book/tracking/ before completing the turn."
+    "Whenever the user makes a decision that alters narrative context, metanarrative, formatting, or tracking states, you MUST proactively update the relevant files in ./book/metadata/ and ./book/tracking/ before completing the turn.",
+    "Apply the AI-writing pattern catalog (rules/ai-writing-patterns.md; skills/quality-assurance/ai-writing-audit/) during revision: eliminate flagged slop and do not introduce new tells. Never-inject guardrails bind — subtract and sharpen, never add a manufactured stake, fragment run, or invented specific."
   ],
   tools: ["bash", "question"],
-  relatedSkills: ["continuity-auditor", "forgotten-elements", "style-enforcer", "phase-preview", "authorial-intent", "diff-approval", "creative-constraints", "provenance"],
+  relatedSkills: ["ai-writing-audit", "continuity-auditor", "forgotten-elements", "style-enforcer", "phase-preview", "authorial-intent", "diff-approval", "creative-constraints", "provenance"],
   examples: [
     { input: "/buchbinder revise", approach: "Loads latest critique round, revises all affected chapters (up to 6), runs revision-verify gate" },
     { input: "/buchbinder revise 1", approach: "Loads critique round 1, revises all chapters with items from round 1" },
@@ -339,6 +344,7 @@ None specific to this phase.
     "Every revision log entry must cross-reference the critique item ID",
     "Declined items must have documented rationale",
     "Critique round is loaded ONCE for the entire batch",
+    "Anti-AI-Slop mandate is a HARD BLOCK — Critical AI-slop residuals must be removed; never-inject guardrails prevent introducing new tells while rewriting",
     "Batch score MUST be ≥ 95 before the cycle is reported complete. The revise phase must run a closed loop with critique until this is achieved (up to 3 cycles silently).",
     "After batch_score ≥ 95, run continuity check and prose-polishing check. Both must pass before reporting to the user.",
     "The user sees the final summary only when the cycle is genuinely complete. Do NOT prompt the user between critique and revise cycles."

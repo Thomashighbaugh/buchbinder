@@ -215,7 +215,7 @@ export function writeIndex(projectRoot, index) {
  *   {
  *     sourcesTotal, sourcesAdded, sourcesUpdated, sourcesUnchanged,
  *     chunksTotal, chunksAdded, chunksEmbedded, chunksReused,
- *     durationMs, indexPath, embedBackend, embedModel, embedDim
+ *     durationMs, indexPath, embedModel, embedDim
  *   }
  *
  * Strategy:

@@ -422,11 +422,9 @@ The index build is **incremental**: re-running on an up-to-date index is a no-op
 
 | Var | Default | Purpose |
 |-----|---------|---------|
-| `EMBED_BACKEND` | `onnx` | `onnx` (default) \| `ollama` |
 | `ONNX_EMBED_MODEL` | `Xenova/bge-base-en-v1.5` | ONNX embedding model (768-d) |
-| `OLLAMA_EMBED_MODEL` | `pedrohml/mxbai-embed-large:latest` | Ollama embedding model (`EMBED_MODEL` is an alias) |
 | `RERANK_MODEL` | `Xenova/bge-reranker-base` | ONNX cross-encoder |
-| `RERANK_BACKEND` | `onnx` | `onnx` \| `ollama` \| `none` |
+| `RERANK_BACKEND` | `onnx` | `onnx` \| `none` |
 | `CLASSIFIER_MODEL` | `Xenova/nli-deberta-v3-xsmall` | zero-shot / NLI classifier |
 | `ONNX_DTYPE` | `q8` | ONNX weight dtype |
 | `ONNX_CACHE_DIR` | `~/.cache/buchbinder/models` | shared ONNX model cache |

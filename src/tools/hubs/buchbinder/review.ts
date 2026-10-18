@@ -189,7 +189,7 @@ Checklist:
 12. **Voice profiles up to date** (drift checked across all chapters)
 13. **Style sheet enforced** (no violations in any chapter)
 14. **AI-writing tell scan passed** (no P0 patterns; per-chapter tell density within threshold)
-15. **Theme audit passed** (fiction — verdict `theme-holds`; no `theme-broken` findings; motifs paid off)
+15. **Theme audit passed** (fiction — verdict \`theme-holds\`; no \`theme-broken\` findings; motifs paid off)
 
 ### 6. Review Report
 

@@ -309,6 +309,20 @@ Run echo detection on the drafted text:
 
 **If blocking echoes detected: STOP. Report the specific words/patterns and their locations. Do not save until corrected.**
 
+#### g2) AI-Writing Tell Scan (HARD BLOCK)
+
+Run the AI-writing catalog (\`skills/quality-assurance/ai-writing-audit/SKILL.md\` + \`references/patterns.md\`; rule \`rules/ai-writing-patterns.md\`) over the drafted prose:
+
+- **Word-tier violations** — Tier 1A markers (delve, leverage, tapestry, testament to, robust, seamless, pivotal, …); Tier 2 clusters (2+ in one paragraph); Tier 3 by density. Tier 1B (utilize, in order to, serves as) is a clarity flag, not AI evidence.
+- **Structural tells** — negation chains, same-opener sentence runs, stranded auxiliary contrasts, aphorism formulas, colon-into-a-triple, generic conclusions, hedge-stacked predictions, uniform sentence/paragraph length.
+- **Signature slop** — ozone/copper sensory defaults, "it wasn't just X, it was Y," micro-expression fixation, adverbial dialogue tags, hollow closers.
+
+**Never-inject guardrail (prevention).** The draft must not contain fabricated speaker perspective, manufactured stakes, forced contrarianism, performed candor, em-dash theatrics, staccato conversion, or invented specifics. A fabricated specific is worse than the vague phrasing it replaced. Fiction carve-outs apply — fragments, anaphora, and deliberate repetition pass when they carry voice.
+
+**Threshold:** >3 tell instances per chapter, or any P0 (credibility killer) pattern = BLOCK. Report the pattern, location, and tier. **Signals, not proof** — report the reason, not a machine-authorship verdict.
+
+**If blocking tells detected: STOP. Report the specific patterns and locations. Do not save until corrected.**
+
 #### h) Emotional Beat Arc Check (HARD BLOCK)
 
 Parse the \`<beatchange>\` tags from the XML to construct the emotional trajectory:
@@ -392,6 +406,7 @@ The draft phase integrates these HITL features:
 | \`author-voice-key\` | \`skills/fiction/writing-techniques/author-voice-key/SKILL.md\` | The writing style key the prose must be written in (fiction) |
 | \`dialogue-techniques\` | \`skills/fiction/writing-techniques/dialogue-techniques/SKILL.md\` | Dialogue quality (fiction) |
 | \`psychological-interiority\` | \`skills/fiction/writing-techniques/psychological-interiority/SKILL.md\` | Internal reactions (fiction) |
+| \`ai-writing-audit\` | \`skills/quality-assurance/ai-writing-audit/SKILL.md\` | AI-writing tell prevention — word tiers, structural tells, never-inject guardrails |
 | \`argument-structure\` | \`skills/non-fiction/argument-structure/SKILL.md\` | Evidence presentation (non-fiction) |
 | \`academic-writing\` | \`skills/non-fiction/academic-writing/SKILL.md\` | Academic register (non-fiction) |
 | \`phase-preview\` | \`src/lib/phase-preview.ts\` | Pre-execution confirmation showing scope/time/changes |
@@ -399,10 +414,11 @@ The draft phase integrates these HITL features:
 | \`creative-constraints\` | \`src/lib/creative-constraints.ts\` | Non-negotiables gate check |
 | \`provenance\` | \`src/lib/provenance.ts\` | Change provenance tracking |`,
   rules: [
-    "Whenever the user makes a decision that alters narrative context, metanarrative, formatting, or tracking states, you MUST proactively update the relevant files in ./book/metadata/ and ./book/tracking/ before completing the turn."
+    "Whenever the user makes a decision that alters narrative context, metanarrative, formatting, or tracking states, you MUST proactively update the relevant files in ./book/metadata/ and ./book/tracking/ before completing the turn.",
+    "Apply the AI-writing pattern catalog (rules/ai-writing-patterns.md; skills/quality-assurance/ai-writing-audit/) as a prevention constraint while drafting and as a post-draft gate. Never-inject guardrails bind: do not add a manufactured stake, fragment run, forced contrarian foil, performed candor, or invented specific. Fiction carve-outs apply."
   ],
   tools: ["loadSkill", "bash", "question"],
-  relatedSkills: ["author-voice-key", "pre-draft-checklist", "scene-architecture", "dialogue-techniques", "psychological-interiority", "argument-structure", "academic-writing", "phase-preview", "authorial-intent", "creative-constraints", "provenance"],
+  relatedSkills: ["author-voice-key", "pre-draft-checklist", "scene-architecture", "dialogue-techniques", "psychological-interiority", "ai-writing-audit", "argument-structure", "academic-writing", "phase-preview", "authorial-intent", "creative-constraints", "provenance"],
   examples: [
     { input: "/buchbinder draft", approach: "Drafts all pending chapters (up to 6) in one batch with shared context loaded once" },
     { input: "/buchbinder draft 3-8", approach: "Drafts chapters 3 through 8 in one batch" },

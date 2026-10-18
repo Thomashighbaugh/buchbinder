@@ -27,7 +27,7 @@
  *
  * Usage:
  *   bun lore-query.mjs [project-root] --query "..." [--top 5] [--rerank]
- *                      [--rerank-backend onnx|ollama|none]
+ *                      [--rerank-backend onnx|none]
  *                      [--pin-chapter N] [--pin-side previous|next|both]
  *   bun lore-query.mjs [project-root] --build [--force]
  *   bun lore-query.mjs [project-root] --status

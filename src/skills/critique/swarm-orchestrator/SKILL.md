@@ -20,7 +20,7 @@ You must dispatch these four agents **concurrently** (in a single tool-call batc
 
 2.  **The Prose Reviewer (`@code-reviewer`)**
     *   **Focus**: Line-level craft — grammar, punctuation, repetitive sentence architecture, weak verbs, filter words (he felt, she saw, they knew), and AI-slop eradication.
-    *   **Required Skill**: \`line-editor\`
+    *   **Required Skills**: \`line-editor\` **and** \`ai-writing-audit\` (load the audit skill's catalog at \`references/patterns.md\`; apply the word tiers, structural tells, and never-inject guardrails).
     *   *Note*: We use the code-reviewer agent because its attention to syntax, style-linting, and line-by-line syntax is perfectly suited for line editing prose.
 
 3.  **The Continuity Auditor (`@refactoring`)**

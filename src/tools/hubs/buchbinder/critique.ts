@@ -104,6 +104,16 @@ For each chapter in the batch, produce structured feedback. **Every critique ite
 
 Every critique, regardless of mode, must check for common AI-generated writing slop. These are recurring patterns that signal lazy or formulaic prose — the LLM defaulting to stock sensory clichés, repetitive sentence architecture, and hollow emotional beats. The critic flags every instance found.
 
+Load \`skills/quality-assurance/ai-writing-audit/SKILL.md\` and its catalog \`references/patterns.md\`; the standing rule is \`rules/ai-writing-patterns.md\`. Three sweeps run in every mode:
+
+**Word-tier sweep (catalog).** Tier 1A markers (delve, leverage, tapestry, testament to, robust, seamless, pivotal, …) reviewed on every match; Tier 2 clusters (2+ in one paragraph: harness, navigate, crucial, nuanced, ecosystem, …); Tier 3 by density (significant, innovative, effective, … at \`max(3, floor(wordCount × 0.03))\`); Tier 3 phrases (boilerplate repeated 2+ times, or 3+ distinct in one piece). **Tier 1B (utilize, in order to, serves as) is a clarity fix, not authorship evidence — report it separately.**
+
+**Structural tells.** Negation chains, same-opener sentence runs, stranded auxiliary contrasts, aphorism formulas, colon-into-a-triple, generic conclusions, hedge-stacked predictions, uniform sentence/paragraph length.
+
+**Never-inject guardrail.** A recommended fix must subtract or sharpen. A recommendation that adds a manufactured stake, a fragment run, a forced contrarian foil, performed candor, or an invented specific is itself a defect — flag it as such. Never invent a fact to make a suggested replacement concrete.
+
+**Signals, not proof.** AI-ism patterns are statistically more common in machine text but humans on autopilot produce the same shapes. Report the pattern, its tier, and the reason; do not assert machine authorship. **Fiction carve-outs apply** — manufactured punchlines, staccato drama, fragments, anaphora, and deliberate repetition pass when they carry voice, comedy, or tension. Judge the function, not the shape.
+
 **Tier 1: Sensory clichés (HARD BLOCK — must-fix)**
 
 The most emblematic indicator of AI slop is the **smell or taste of ozone**. This single trope — describing ozone when no electrical event justifies it — is the signature tell of AI-generated prose. Flag it every time. The same applies to:

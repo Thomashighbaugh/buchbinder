@@ -71,7 +71,7 @@ Load the shared context ONCE for the entire batch:
   \`\`\`bash
   bun .opencode/lib/scripts/lore-query.mjs --query "Critique context: characters, world rules, and terminology for chapters [range] of [book title]" --top 5 --rerank
   \`\`\`
-  The script uses a local Ollama embedding model (pedrohml/mxbai-embed-large) plus an in-process ONNX cross-encoder reranker (Xenova/bge-reranker-base) to find the most relevant lore. If unavailable, read \`./series/lorebook/\` and \`./book/knowledge/\* manually.
+  The script uses the local in-process ONNX embedder (Xenova/bge-base-en-v1.5) plus an ONNX cross-encoder reranker (Xenova/bge-reranker-base) to find the most relevant lore. If unavailable, read \`./series/lorebook/\` and \`./book/knowledge/\* manually.
 
 ### 3. Generate Critique (with Specificity Gate)
 

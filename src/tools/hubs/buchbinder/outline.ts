@@ -41,7 +41,7 @@ bun .opencode/lib/scripts/lore-query.mjs \
   --top 5 --rerank
 \`\`\`
 
-This uses local Ollama models (pedrohml/mxbai-embed-large for embedding, hans-tech/bge-reranker-v2-m3 for reranking) to find the lore entries most relevant to this outlining task. Only the top 5 most relevant chunks are returned — this keeps the prompt lean while ensuring critical lore is present.
+This uses local in-process ONNX models (Xenova/bge-base-en-v1.5 for embedding, Xenova/bge-reranker-base for reranking) to find the lore entries most relevant to this outlining task. Only the top 5 most relevant chunks are returned — this keeps the prompt lean while ensuring critical lore is present.
 
 **What the script checks:**
 - \`./series/lorebook/characters.md\` — Character profiles spanning all books

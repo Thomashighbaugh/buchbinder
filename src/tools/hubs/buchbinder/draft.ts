@@ -31,7 +31,7 @@ bun .opencode/lib/scripts/lore-query.mjs \
   --top 5 --rerank
 \`\`\`
 
-This uses local Ollama models (pedrohml/mxbai-embed-large + hans-tech/bge-reranker-v2-m3) to find the lore entries most relevant to the chapters being drafted. The output is a formatted markdown block with only the top 5 most relevant lore chunks.
+This uses local in-process ONNX models (Xenova/bge-base-en-v1.5 for embedding + Xenova/bge-reranker-base for reranking) to find the lore entries most relevant to the chapters being drafted. The output is a formatted markdown block with only the top 5 most relevant lore chunks.
 
 **What it checks:**
 - Series lorebook: characters, world, glossary, timeline, threads
@@ -39,7 +39,7 @@ This uses local Ollama models (pedrohml/mxbai-embed-large + hans-tech/bge-rerank
 
 **Why this matters:** The draft's XML tags include \`<characters-present>\`, voice-aware dialogue, world-consistent setting details, and terminology. The lore context directly informs all of these. Without it, the AI drafts in a vacuum.
 
-**Fallback:** If the script produces no output (no lore files or Ollama unavailable), read \`./series/lorebook/\` and \`./book/knowledge/\* manually. The lorebook takes precedence over any conflicting specification or outline details.
+**Fallback:** If the script produces no output (no lore files or the embedder unavailable), read \`./series/lorebook/\` and \`./book/knowledge/\* manually. The lorebook takes precedence over any conflicting specification or outline details.
 
 ## Prerequisites
 

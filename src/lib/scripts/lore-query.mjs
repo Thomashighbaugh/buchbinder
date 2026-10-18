@@ -128,10 +128,10 @@ async function queryWithoutIndex(projectRoot, query, topK, doRerank, backend, em
 
     let queryVec
     try {
-        const [v] = await embed([query], { backend: embedBackend, model: embedModel })
+        const [v] = await embed([query], { model: embedModel })
         queryVec = v
     } catch (err) {
-        console.error(`[lore-query] Embedding failed (${embedBackend}): ${err.message}`)
+        console.error(`[lore-query] Embedding failed: ${err.message}`)
         return []
     }
 

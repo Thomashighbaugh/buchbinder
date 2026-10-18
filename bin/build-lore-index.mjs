@@ -15,7 +15,7 @@
  * Exits:
  *   0  — success
  *   1  — status mode, no index found
- *   2  — build failed (e.g. Ollama unreachable)
+ *   2  — build failed (e.g. the ONNX model could not be loaded)
  */
 
 import { resolve } from 'path'

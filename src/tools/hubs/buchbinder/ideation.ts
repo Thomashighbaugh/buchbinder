@@ -117,6 +117,18 @@ When the focus dimension is **Theme**, run the \`theme-craft\` method (\`skills/
 
 The thematic statement is testable — every scene can be checked against whether the protagonist moves toward or away from the cause. Cache theme output to \`./book/ideation/theme.md\`; the final statement lands in \`./book/manifest.md\` at constitution. Theme is dramatized through choices and consequences, never stated in commentary.
 
+### 3c. Setting dimension — run worldbuilding
+
+When the focus dimension is **Setting**, run the \`worldbuilding\` method (\`skills/fiction/writing-techniques/worldbuilding/SKILL.md\`). Fiction only.
+
+1. **Build locations** (\`references/location-template.md\`) into \`./book/knowledge/locations.md\`: description, history, culture, notable features, current state, and routes with travel time and mode.
+2. **Build systems** (\`references/system-template.md\` → \`./book/knowledge/world-setting.md\`) for each relevant type — magic, political, technology, religion, economic, military, social, education — using the prompts in \`references/world-element-types.md\`. Every power gets a cost / limit / recovery triad (\`references/economy-logistics.md\`).
+3. **Build factions** (\`references/faction-template.md\` → \`./book/knowledge/factions.md\`) and **artifacts** (\`references/artifact-template.md\` → \`./book/knowledge/artifacts.md\`).
+4. **Calendars, seasons, moons** → \`./book/metadata/timeline.md\` + a \`## [Calendar]\` section in \`world-setting.md\` (\`references/calendars.md\`).
+5. **Naming** — a phonology sketch per culture (\`references/naming-languages.md\`), and check every invented name with \`namecraft\`.
+
+The world exists to pressure the characters and embody the counter-premise: a setting detail that nothing in the story can use is decoration. Cache setting output to \`./book/ideation/setting.md\`.
+
 ### 4. Cache the Output
 
 Save the refined dimension to \`./book/ideation/[dimension].md\`:
@@ -222,12 +234,13 @@ The \`_index.json\` file tracks:
 |-------|---------|
 | \`premise-workshop\` | Spark-to-premise method for the Premise dimension — what-ifs, logline stress tests, premise/counter-premise, stakes, form, titles, comps (fiction) |
 | \`theme-craft\` | Controlling idea (value + cause), counter-premise, lie/truth/arc types, antagonist design, motifs for the Theme dimension (fiction) |
+| \`worldbuilding\` | Locations, systems, factions, artifacts, calendars, routes, naming for the Setting dimension (fiction) |
 | \`idea-refine\` | Divergent/convergent iteration methodology |
 | \`graph-thinking\` | Map relationships between dimensions |
 | \`deep-thinker\` | Break down complex creative problems |
-| \`namecraft\` | Character, place, and title naming (premise-workshop title checks) |
+| \`namecraft\` | Character, place, and title naming (premise-workshop title checks, worldbuilding name collisions) |
 
-Load these skills on demand when the user's input suggests they'd help. For the Premise dimension on fiction, load \`premise-workshop\` by default; for the Theme dimension, load \`theme-craft\`.
+Load these skills on demand when the user's input suggests they'd help. For the Premise dimension on fiction, load \`premise-workshop\` by default; for the Theme dimension, load \`theme-craft\`; for the Setting dimension, load \`worldbuilding\`.
 
 ## Warnings
 
@@ -237,7 +250,7 @@ Load these skills on demand when the user's input suggests they'd help. For the 
 - The user can return to this phase at any time via \`/buchbinder ideation\` — it is NOT a one-time gate
 `,
   tools: ["loadSkill", "question", "bash", "write", "read"],
-  relatedSkills: ["premise-workshop", "theme-craft", "idea-refine", "graph-thinking", "namecraft"],
+  relatedSkills: ["premise-workshop", "theme-craft", "worldbuilding", "idea-refine", "graph-thinking", "namecraft"],
   examples: [
     { input: "/buchbinder ideation", approach: "Loads existing ideation cache, presents dimension menu for refinement" },
     { input: "/buchbinder ideation premise", approach: "Focuses on premise dimension — generates alternatives, helps user select, caches to ./book/ideation/premise.md" },

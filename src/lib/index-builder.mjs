@@ -16,7 +16,7 @@
  *
  * Indexing is incremental: re-running on an up-to-date index is a no-op
  * because per-source file hashes are checked before re-embedding. Changing the
- * embedding backend or model invalidates the index and triggers a full rebuild
+ * embedding model invalidates the index and triggers a full rebuild
  * (vectors from different models are not comparable).
  *
  * Usage:

@@ -702,6 +702,34 @@ Shared context (constitution, specification, knowledge, tracking, style sheet) i
 
 ---
 
+## Design Notes
+
+### Origin
+
+Buchbinder is a substantial expansion and re-architecture of [novel-writer-english](https://github.com/JeroTan/novel-writer-english), itself a translation and platform-agnostic adaptation of [novel-writer-skills](https://github.com/wordflowlab/novel-writer-skills). The author's earlier non-agentic [Fiction Fabricator](https://github.com/Thomashighbaugh/fiction-fabricator) contributed concepts refined here for the agentic context; the move from Python scripts to an agentic workflow was inspired by Claude Code and made possible by OpenCode. See [ATTRIBUTION.md](./ATTRIBUTION.md) for the full chain.
+
+### Why per-project, not an MCP server
+
+Buchbinder is not a server a project connects to; it is a workflow a project *contains*, installed only into that project's own `.opencode/`. That buys granular per-project configuration, no global install or lingering registration, many private projects side by side, and a guided workflow rather than a bare tool surface. Deleting `.opencode/` removes it completely.
+
+### A compound, agentic system
+
+Buchbinder orchestrates LLM inference across a deterministic phase state machine, calls its own typed tools, retrieves from a local embedding index with reranking, evaluates every transition against hard-block gates, and returns control to the author at deliberate checkpoints.
+
+### Built on OpenCode's SDK and plugin surface
+
+Buchbinder registers a project-local TUI plugin (SolidJS + OpenTUI) that renders a custom sidebar, defines keybinds, opens select dialogs, raises toasts, and injects prompts back into the agent. Because the plugin model is native and project-local, the interface ships with the project and cannot rot when a third party stops shipping updates.
+
+### Nix-flake-inspired packaging
+
+Declarative per-project definition, dependency isolation with pinned versions, diff-based non-destructive sync, and override granularity down to individual phase specs.
+
+### On dependencies
+
+Reimplementation is a rational trade when the functionality is small and self-contained, a correct implementation costs minutes to hours, and an LLM can produce it cheaply under review. Buchbinder still uses dependencies where they are genuinely better (`fs-extra`, `fast-xml-parser`, `solid-js`, `@opentui/*`).
+
+---
+
 ## Development
 
 ```bash

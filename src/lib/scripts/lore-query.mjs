@@ -42,12 +42,8 @@ import { chunkWholeChapter, resolveDraftFilePath } from '../xml-draft-chunker.mj
 import { embed, activeEmbedModel } from '../embedder.mjs'
 import { rerankDocuments as onnxRerank, RERANK_MODEL as ONNX_RERANK_MODEL, isRerankDisabled } from '../reranker.mjs'
 
-const OLLAMA_URL = process.env.OLLAMA_URL || 'http://127.0.0.1:11434'
-
-// Rerank backend: 'onnx' (default, in-process cross-encoder) | 'ollama' | 'none'
-const RERANK_BACKEND = process.env.RERANK_BACKEND || 'onnx'
-// Only used by the 'ollama' backend — the ONNX model id lives in reranker.mjs.
-const OLLAMA_RERANK_MODEL = process.env.OLLAMA_RERANK_MODEL || 'hans-tech/bge-reranker-v2-m3:260522'
+// Rerank backend: 'onnx' (default, in-process cross-encoder) | 'none'
+const RERANK_BACKEND = process.env.RERANK_BACKEND === 'none' ? 'none' : 'onnx'
 
 // ─── Cosine Similarity ─────────────────────────────────────────────────────
 

@@ -431,7 +431,6 @@ The index build is **incremental**: re-running on an up-to-date index is a no-op
 | `ONNX_OFFLINE` | unset | `1` — never download; use cache or fall back |
 | `RERANK_MAX_LENGTH` | `512` | reranker tokenizer truncation length |
 | `RERANK_DISABLED` | unset | `1` — force distance-only retrieval |
-| `OLLAMA_URL` | `http://127.0.0.1:11434` | Ollama endpoint (only for the `ollama` backends) |
 
 #### Local ONNX model stack
 

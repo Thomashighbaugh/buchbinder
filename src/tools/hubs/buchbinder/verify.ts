@@ -140,7 +140,7 @@ Run a specific quality gate on demand:
 | \`subtext\` | On-the-nose dialogue detection |
 | \`purple-prose\` | Overwriting, excessive modifiers, metaphor overload |
 | \`cliche\` | Clichéd phrases and genre-trope overuse |
-| \`ai-slop\` | AI writing patterns — ozone smell, stock sensory clichés, structural tells, hollow emotional beats |
+| \`ai-slop\` | AI-writing catalog — word tiers (1A/1B/2/3), structural tells, signature slop (ozone, stock sensory clichés), never-inject guardrails |
 | \`rhythm\` | Sentence length variety, monotony detection |
 | \`immersion\` | Anachronisms, authorial intrusion, meta-references, logic breaks |
 | \`trust\` | Coincidences, deus ex machina, plot armor, stupid-for-plot |
@@ -165,7 +165,7 @@ Run a specific quality gate on demand:
 - \`/buchbinder verify gates revision-verify 1\` — run revision-verify gate on critique round 1
 - \`/buchbinder verify gates thread-matrix\` — generate thread tracking matrix
 - \`/buchbinder verify gates dependency-graph\` — generate chapter dependency graph
-- \`/buchbinder verify gates ai-slop Chapter 3\` — scan for AI writing slop patterns (ozone, stock clichés, structural tells)
+- \`/buchbinder verify gates ai-slop Chapter 3\` — run the AI-writing catalog over chapter 3 (word tiers, structural tells, signature slop; reports pattern, location, tier — signals, not proof)
 
 ### NLI evidence step (runs inside \`post-draft\` · \`revision-verify\`)
 

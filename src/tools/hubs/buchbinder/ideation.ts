@@ -106,6 +106,17 @@ When the focus dimension is **Premise** (or the user is starting from a spark), 
 
 The author owns the idea: offer options and tests, never decide for them.
 
+### 3b. Theme dimension — run theme-craft
+
+When the focus dimension is **Theme**, run the \`theme-craft\` method (\`skills/fiction/writing-techniques/theme-craft/SKILL.md\`). Fiction only.
+
+1. **Draft the working premise** as a controlling idea — **{Value} {triumphs|fails} because {cause}** — and the **counter-premise** (the antagonist's opposing claim). Test: could a reasonable person believe the counter-premise? If not, the antagonist is a straw man. If the author prefers to discover theme in the draft, record \`theme: tbd-discovery\`.
+2. **Build the lie/truth machinery** for the protagonist and antagonist (and any supporting character whose arc touches the theme): \`arc-type\` (\`change-positive\` / \`change-negative\` / \`flat\`), \`lie\`, \`truth\`, \`ghost-wound\` (\`references/lie-truth.md\`). Check turning points against the arc type.
+3. **Design the antagonist as the counter-argument** (\`references/antagonist-design.md\`): an edge, a defensible belief, a want/wound/plan, scenes they win.
+4. **Plant two or three motifs** (\`references/motif-symbolism.md\`); track them in \`./book/tracking/motifs.md\`.
+
+The thematic statement is testable — every scene can be checked against whether the protagonist moves toward or away from the cause. Cache theme output to \`./book/ideation/theme.md\`; the final statement lands in \`./book/manifest.md\` at constitution. Theme is dramatized through choices and consequences, never stated in commentary.
+
 ### 4. Cache the Output
 
 Save the refined dimension to \`./book/ideation/[dimension].md\`:
@@ -210,12 +221,13 @@ The \`_index.json\` file tracks:
 | Skill | Purpose |
 |-------|---------|
 | \`premise-workshop\` | Spark-to-premise method for the Premise dimension — what-ifs, logline stress tests, premise/counter-premise, stakes, form, titles, comps (fiction) |
+| \`theme-craft\` | Controlling idea (value + cause), counter-premise, lie/truth/arc types, antagonist design, motifs for the Theme dimension (fiction) |
 | \`idea-refine\` | Divergent/convergent iteration methodology |
 | \`graph-thinking\` | Map relationships between dimensions |
 | \`deep-thinker\` | Break down complex creative problems |
 | \`namecraft\` | Character, place, and title naming (premise-workshop title checks) |
 
-Load these skills on demand when the user's input suggests they'd help. For the Premise dimension on fiction, load \`premise-workshop\` by default.
+Load these skills on demand when the user's input suggests they'd help. For the Premise dimension on fiction, load \`premise-workshop\` by default; for the Theme dimension, load \`theme-craft\`.
 
 ## Warnings
 
@@ -225,7 +237,7 @@ Load these skills on demand when the user's input suggests they'd help. For the 
 - The user can return to this phase at any time via \`/buchbinder ideation\` — it is NOT a one-time gate
 `,
   tools: ["loadSkill", "question", "bash", "write", "read"],
-  relatedSkills: ["premise-workshop", "idea-refine", "graph-thinking", "namecraft"],
+  relatedSkills: ["premise-workshop", "theme-craft", "idea-refine", "graph-thinking", "namecraft"],
   examples: [
     { input: "/buchbinder ideation", approach: "Loads existing ideation cache, presents dimension menu for refinement" },
     { input: "/buchbinder ideation premise", approach: "Focuses on premise dimension — generates alternatives, helps user select, caches to ./book/ideation/premise.md" },

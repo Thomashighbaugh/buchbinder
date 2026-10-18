@@ -84,10 +84,7 @@ async function printPerProjectAck() {
     console.log(chalk.white('(embedder + reranker + classifier) — no network calls at query'));
     console.log(chalk.white('time, no telemetry. The models are fetched once, during install,'));
     console.log(chalk.white('into a shared cache (~/.cache/buchbinder/models).'));
-    console.log('');
-    console.log(chalk.white('Ollama is optional — set EMBED_BACKEND=ollama to use local Ollama'));
-    console.log(chalk.white('embeddings instead (ollama pull pedrohml/mxbai-embed-large:latest).'));
-    console.log('');
+    console.log(chalk.white(''));
     console.log(chalk.white('After install, use buchbinder-refresh to sync updates without'));
     console.log(chalk.white('overwriting your project work.'));
     console.log('');

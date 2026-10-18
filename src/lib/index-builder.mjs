@@ -220,7 +220,7 @@ export function writeIndex(projectRoot, index) {
  *
  * Strategy:
  *   1. Scan sources.
- *   2. If the embedding backend/model changed, discard the prior index
+ *   2. If the embedding model changed, discard the prior index
  *      (vectors from different models are not comparable).
  *   3. For each source: hash the file. If the prior index has a source
  *      entry with the same hash, keep its chunks (and embeddings) as-is.

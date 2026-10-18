@@ -14,6 +14,17 @@ Every compelling character carries a psychic wound — a past event that shaped 
 - **The Truth**: What the character must learn by story's end. The arc is the journey from Lie to Truth.
 - Apply the wound backward: From a character's most irrational behavior, deduce the wound that produced it.
 
+## Lie, Truth, and Arc Types
+
+For the full planning machinery — the lie's flaw/fear/want, the truth's need, and the ghost wound recorded concretely — see the `theme-craft` skill (`skills/fiction/writing-techniques/theme-craft/references/lie-truth.md`). Record four fields per significant character in `./book/knowledge/character-profiles.md`:
+
+- `arc-type` — one of `change-positive` (lie → truth; default), `change-negative` (clings to the lie; it destroys them; the truth must stay visible), or `flat` (already holds the truth; the *world* changes; turning points are escalating **tests of steadfastness**, not growth beats).
+- `lie` — the false belief.
+- `truth` — the belief that resolves it.
+- `ghost-wound` — the specific backstory event that planted the lie.
+
+The arc type dictates what the turning points must contain: `change-positive` needs the lie to cost more each beat; `change-negative` needs the truth visibly refused; `flat` needs tests that escalate and a world that changes because the character held firm. The protagonist gets all four fields; supporting characters get them when their arc touches the theme.
+
 ## Internal Contradictions
 
 Flat characters are consistent. Real people are contradictory.

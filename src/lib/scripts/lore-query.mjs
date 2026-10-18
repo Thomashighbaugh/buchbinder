@@ -39,7 +39,7 @@ import { existsSync, readFileSync } from 'fs'
 import { resolve } from 'path'
 import { loadIndex, buildIndex, printStatus, scanSources, chunkSource } from '../index-builder.mjs'
 import { chunkWholeChapter, resolveDraftFilePath } from '../xml-draft-chunker.mjs'
-import { embed, activeEmbedBackend, activeEmbedModel } from '../embedder.mjs'
+import { embed, activeEmbedModel } from '../embedder.mjs'
 import { rerankDocuments as onnxRerank, RERANK_MODEL as ONNX_RERANK_MODEL, isRerankDisabled } from '../reranker.mjs'
 
 const OLLAMA_URL = process.env.OLLAMA_URL || 'http://127.0.0.1:11434'

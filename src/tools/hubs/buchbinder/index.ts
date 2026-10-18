@@ -10,6 +10,7 @@ import { HubSubcommand, HubSubcommandSpec } from "../../hub-data.js"
 
 // Import all spec files
 import guided from "./guided.js"
+import importPhase from "./import.js"
 import ideation from "./ideation.js"
 import manifest from "./manifest.js"
 import specify from "./specify.js"
@@ -41,6 +42,7 @@ import refresh from "./refresh.js"
 // All specs — full detail available via hubMenu 'route'
 export const specs: HubSubcommandSpec[] = [
   guided,
+  importPhase,
   ideation,
   manifest,
   specify,

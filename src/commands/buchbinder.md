@@ -6,7 +6,7 @@ You are the Buchbinder Router. The user invoked `/buchbinder $ARGUMENTS`.
 
 ## Valid Subcommands (do NOT call any tool to discover these — they are listed here)
 
-guided, ideation, manifest, specify, clarify, research, outline, task-manager, draft, critique, revise, edit, review, cite, publish, track, timeline, meta, drafter, verify, resume, cycle, pacing-audit, hook-review, read-through, series
+guided, import, ideation, manifest, specify, clarify, research, outline, task-manager, draft, critique, revise, edit, review, cite, publish, track, timeline, meta, drafter, verify, resume, cycle, pacing-audit, hook-review, read-through, series, refresh, refresh-index
 
 ## Routing Logic
 
@@ -18,6 +18,7 @@ question: "Which phase do you want to run?"
 header: "Buchbinder"
 options:
   - label: "guided", description: "Assess project state and recommend next phase (Recommended)"
+  - label: "import", description: "Import an existing manuscript, draft, outline, research corpus, or project at any stage"
   - label: "ideation", description: "Iteratively refine premise, theme, setting, characters, conflict"
   - label: "manifest", description: "Establish creative or intellectual principles"
   - label: "specify", description: "Build story specification with premise stress-test"
@@ -43,6 +44,8 @@ options:
   - label: "hook-review", description: "Check each chapter opening and closing hooks"
   - label: "read-through", description: "Full read-through — immersion audit, trust accounting"
   - label: "series", description: "Series infrastructure — init, sync, audit, register, status"
+  - label: "refresh", description: "Idempotent plugin sync — refresh skills, tools, commands, and the lore index"
+  - label: "refresh-index", description: "Rebuild the semantic lore index only"
 ```
 
 When the user selects an option, proceed to Case 2 with that subcommand.

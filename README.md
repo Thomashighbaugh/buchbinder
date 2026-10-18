@@ -89,7 +89,7 @@ packaging — see [Design Notes](#design-notes).
 
 ---
 
-## The 25-Subcommand Workflow
+## The Subcommand Workflow
 
 All functionality is accessed through the `/buchbinder` hub command. `/buchbinder` with no arguments opens an interactive menu via state detection. `/buchbinder <subcommand>` routes directly to the specified phase.
 
@@ -115,6 +115,7 @@ All functionality is accessed through the `/buchbinder` hub command. `/buchbinde
 | Subcommand | Purpose |
 |------------|---------|
 | `guided` | Automatic state detection — recommends next phase |
+| `import` | Import existing work (manuscript, draft, outline, spec, research, or whole project) at the stage it belongs to, then hand off |
 | `track` | Unified tracking: character state, plot progress, timeline, sources |
 | `timeline` | Chronological consistency verification |
 | `meta` | Bibliographic metadata management |
@@ -663,7 +664,7 @@ project/
 │   │   ├── fiction/genre-knowledge/
 │   │   └── non-fiction/
 │   ├── tools/
-│   │   ├── hubs/buchbinder/    # 26 subcommand spec files
+│   │   ├── hubs/buchbinder/    # 29 subcommand spec files
 │   │   └── lib/             # 32 library files
 │   └── templates/           # Track + series templates
 ├── book/                    # All book content
@@ -750,7 +751,7 @@ the dependencies they need have been installed.
 
 Source structure:
 - `src/commands/buchbinder-router.md` — Hub phase router (direct `/buchbinder-router <phase>`)
-- `src/tools/hubs/buchbinder/` — 26 subcommand spec files
+- `src/tools/hubs/buchbinder/` — 29 subcommand spec files
 - `src/lib/` — 32 library files (gates, voice, checkpoints, analyses, etc.)
 - `src/skills/` — 34 SKILL.md files across 5 categories
 - `src/templates/` — Track templates (fiction, non-fiction, series)

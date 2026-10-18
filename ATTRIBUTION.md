@@ -33,7 +33,7 @@
 
 | Concept | Fiction Fabricator | Buchbinder |
 |---------|-------------------|------------------|
-| **Multi-phase generation** | Outline → draft → refine pipeline | 25-subcommand workflow with quality gates between phases |
+| **Multi-phase generation** | Outline → draft → refine pipeline | 29-subcommand workflow with quality gates between phases |
 | **XML state persistence** | XML files for project state and patch logs | XML-structured drafting with internal verification tags, JSON checkpoints for resume |
 | **Lorebook system** | Auto-generated world-building entries with SillyTavern compatibility | Series lorebook infrastructure with cross-book inheritance + external import (SillyTavern/JanitorAI/CharacterAI) |
 | **Export options** | EPUB, HTML, Markdown, PDF, TXT | Pandoc-integrated export with post-export verification |

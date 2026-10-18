@@ -49,6 +49,7 @@ Buchbinder exposes a single hub command `/buchbinder` with a TUI menu system for
 | `cite` | `citation` | 3 | Non-fiction | Citation ingestion, formatting, bibliography generation, validation |
 | `publish` | `pub` | 11/12 | All | Format export, submission preparation, metadata packaging |
 | `track` | — | Utility | All | Unified tracking: characters, plots, timelines, sources, themes |
+| `import` | — | Utility | All | Import existing work (manuscript, draft, outline, spec, research, project) at its pipeline stage |
 | `timeline` | — | Utility | All | Chronological consistency verification |
 | `meta` | — | Utility | All | Bibliographic metadata management |
 | `drafter` | — | Utility | All | Loose draft jumpstart from raw ideas |

@@ -71,7 +71,7 @@ project-root/
 │   ├── commands/buchbinder-router.md  # Hub phase router (installed by buchbinder)
 │   ├── skills/            # QA, critique, research, fiction, non-fiction skills
 │   ├── tools/             # TypeScript tools (hubMenu, hub-data, project-state, etc.)
-│   │   ├── hubs/buchbinder/ # 26 subcommand spec files
+│   │   ├── hubs/buchbinder/ # 29 subcommand spec files
 │   │   └── lib/           # 32 library files (gates, voice, checkpoints, etc.)
 │   └── templates/        # Track templates (fiction/non-fiction/series)
 ├── book/                  # All book content

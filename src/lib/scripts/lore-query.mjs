@@ -116,7 +116,7 @@ async function queryWithIndex(index, queryVec, query, topK, doRerank, backend = 
 
 // ─── Fallback: re-embed on the fly (no index) ──────────────────────────────
 
-async function queryWithoutIndex(projectRoot, query, topK, doRerank, backend, embedBackend, embedModel) {
+async function queryWithoutIndex(projectRoot, query, topK, doRerank, backend, embedModel) {
     // Re-embed everything by walking sources again
     const sources = scanSources(projectRoot)
     const allChunks = []

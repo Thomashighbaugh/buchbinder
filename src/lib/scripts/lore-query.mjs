@@ -4,8 +4,8 @@
  *
  * Reads lorebook/knowledge/outline/draft files and retrieves the most relevant
  * chunks for a given query using a two-stage retrieval pipeline:
- *   1. Embedding — the configured embedding backend (ONNX by default; Ollama
- *      opt-in via EMBED_BACKEND=ollama) ranks candidates by cosine similarity.
+ *   1. Embedding — the in-process ONNX embedder ranks candidates by cosine
+ *      similarity.
  *   2. Reranking — an optional in-process ONNX cross-encoder
  *      (@huggingface/transformers, default Xenova/bge-reranker-base) re-scores
  *      the top candidates jointly. See ../reranker.mjs.

@@ -276,7 +276,7 @@ If skill files are not found, continue without them.`,
     "Whenever the user makes a decision that alters narrative context, metanarrative, formatting, or tracking states, you MUST proactively update the relevant files in ./book/metadata/ and ./book/tracking/ before completing the turn."
   ],
   tools: ["loadSkill", "bash", "question"],
-  relatedSkills: ["theme-craft", "author-voice-key", "pacing-rhythm", "character-depth", "academic-writing", "citation-styles", "creative-constraints", "lorebook-import"],
+  relatedSkills: ["theme-craft", "worldbuilding", "author-voice-key", "pacing-rhythm", "character-depth", "academic-writing", "citation-styles", "creative-constraints", "lorebook-import"],
   examples: [
     { input: "/buchbinder manifest I want to write a literary fantasy novel with deep character work", approach: "Asks about premise/lorebook import, then interviews the user via question tool to fill each manifest section, saves to ./book/manifest.md." },
     { input: "/buchbinder manifest", approach: "Asks about premise/lorebook import, checks for existing manifest (offers diff-based update if found), otherwise starts fresh interview." }

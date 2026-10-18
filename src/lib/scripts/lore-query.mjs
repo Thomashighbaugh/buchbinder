@@ -305,10 +305,10 @@ async function main() {
     // Get query embedding
     let queryVec
     try {
-        const [v] = await embed([query], { backend: embedBackend, model: embedModel })
+        const [v] = await embed([query], { model: embedModel })
         queryVec = v
     } catch (err) {
-        console.error(`[lore-query] Embedding failed (${embedBackend}: ${embedModel}): ${err.message}`)
+        console.error(`[lore-query] Embedding failed (${embedModel}): ${err.message}`)
         console.error('[lore-query] Falling back to lore-context.ts full-file read.')
         console.log('')
         return

@@ -334,7 +334,7 @@ The revise phase integrates these HITL features:
     "Apply the AI-writing pattern catalog (rules/ai-writing-patterns.md; skills/quality-assurance/ai-writing-audit/) during revision: eliminate flagged slop and do not introduce new tells. Never-inject guardrails bind — subtract and sharpen, never add a manufactured stake, fragment run, or invented specific."
   ],
   tools: ["bash", "question"],
-  relatedSkills: ["ai-writing-audit", "continuity-auditor", "forgotten-elements", "style-enforcer", "phase-preview", "authorial-intent", "diff-approval", "creative-constraints", "provenance"],
+  relatedSkills: ["ai-writing-audit", "theme-craft", "continuity-auditor", "forgotten-elements", "style-enforcer", "phase-preview", "authorial-intent", "diff-approval", "creative-constraints", "provenance"],
   examples: [
     { input: "/buchbinder revise", approach: "Loads latest critique round, revises all affected chapters (up to 6), runs revision-verify gate" },
     { input: "/buchbinder revise 1", approach: "Loads critique round 1, revises all chapters with items from round 1" },

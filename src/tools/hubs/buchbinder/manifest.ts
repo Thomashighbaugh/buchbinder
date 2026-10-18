@@ -282,6 +282,7 @@ If skill files are not found, continue without them.`,
   ],
   warnings: [
     "Fiction: the writing style key (./book/metadata/style-key.md) is generated here and offered for edit — never write it without showing the author the sample paragraph first",
+    "Fiction: the Thematic Statement is shaped as a controlling idea (value + cause) with a counter-premise — a topic is not a statement",
     "Non-fiction and mixed: skip the style key entirely — there is no author key for those tracks"
   ]
 }

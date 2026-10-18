@@ -37,7 +37,7 @@ This retrieves only the lore most relevant to the revision decisions. The lorebo
 - **Character items** — does the critique contradict a character's established profile?
 - **World items** — does the critique flag something that's canonically correct?
 
-If the script produces no output (no lore files or Ollama unavailable), read \`./series/lorebook/\` and \`./book/knowledge/\* manually as a fallback.
+If the script produces no output (no lore files or the embedder unavailable), read \`./series/lorebook/\` and \`./book/knowledge/\* manually as a fallback.
 
 ## Prerequisites
 

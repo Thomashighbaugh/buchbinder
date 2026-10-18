@@ -145,12 +145,13 @@ If the user selects a phase, call \`hubMenu\` with \`action: "route"\`, \`hub: "
 |-------|------|---------|
 | \`scene-structure\` | \`skills/fiction/writing-techniques/scene-structure/SKILL.md\` | Scene framework reference |
 | \`character-depth\` | \`skills/fiction/writing-techniques/character-depth/SKILL.md\` | Character profiling guidance |
-| \`namecraft\` | \`skills/fiction/writing-techniques/namecraft/SKILL.md\` | Character and location naming |`,
+| \`namecraft\` | \`skills/fiction/writing-techniques/namecraft/SKILL.md\` | Character and location naming |
+| \`premise-workshop\` | \`skills/fiction/writing-techniques/premise-workshop/SKILL.md\` | Logline stress tests, three-level stakes, premise/counter-premise, form and title checks (fiction) |`,
   rules: [
     "Whenever the user makes a decision that alters narrative context, metanarrative, formatting, or tracking states, you MUST proactively update the relevant files in ./book/metadata/ and ./book/tracking/ before completing the turn."
   ],
   tools: ["loadSkill", "bash", "question"],
-  relatedSkills: ["scene-structure", "character-depth", "namecraft"],
+  relatedSkills: ["premise-workshop", "scene-structure", "character-depth", "namecraft"],
   examples: [
     { input: "/buchbinder specify I want to write about a detective who solves crimes using memory palaces", approach: "Starts Phase 2. Reads constitution, then builds logline → premise → story promise → knowledge map through structured interview." },
     { input: "/buchbinder specify", approach: "Checks for existing specification and knowledge files. Offers update if found, otherwise starts fresh build." }

@@ -3,8 +3,8 @@
  * Index Builder — builds the lore/knowledge/outline/draft retrieval index
  *
  * Scans a project's lore, knowledge, outline, and draft files; chunks them
- * using the right chunker per source kind; embeds each chunk via the configured
- * embedding backend (ONNX by default, Ollama opt-in — see embedder.mjs); writes
+ * using the right chunker per source kind; embeds each chunk via the in-process
+ * ONNX embedder (see embedder.mjs); writes
  * the on-disk JSON index at:
  *
  *     <projectRoot>/.opencode/cache/lore-index/index.json

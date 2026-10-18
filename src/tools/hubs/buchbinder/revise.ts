@@ -109,16 +109,19 @@ Apply pacing and enhancement revisions to the pass-2 output. Save final.
 
 **Default (single pass):** Apply all revisions in one pass, organized by category priority.
 
-**Anti-AI-Slop Mandate:** During revision, actively eliminate AI writing slop identified in the critique (AI-SLOP prefixed items). Additionally, the reviser must not introduce new slop patterns when rewriting. Common slop to eliminate and avoid:
+**Anti-AI-Slop Mandate:** During revision, actively eliminate AI writing slop identified in the critique (AI-SLOP prefixed items). Additionally, the reviser must not introduce new slop patterns when rewriting. Load the AI-writing catalog (\`skills/quality-assurance/ai-writing-audit/SKILL.md\` + \`references/patterns.md\`; rule \`rules/ai-writing-patterns.md\`). Common slop to eliminate and avoid:
 
 - **Ozone smell/taste** without an electrical event (the signature AI slop tell — always remove, always avoid)
+- **Word-tier violations**: Tier 1A markers (delve, leverage, tapestry, testament to, robust, seamless, pivotal, …), Tier 2 clusters (2+ in one paragraph), Tier 3 by density (significant, innovative, effective, …)
 - Stock sensory clichés: "copper taste of blood," "air crackled with tension," "shiver ran down spine"
 - "Eyes like [gemstone]" and "lips curled into a [animal] smile" formulas
-- Structural tells: "Not [X]. Not [X] the way [Y] expected," repetitive anaphora, "It wasn't just [X]. It was [Y]" binary-escalation
+- Structural tells: "Not [X]. Not [X] the way [Y] expected," repetitive anaphora, "It wasn't just [X]. It was [Y]" binary-escalation, negation chains, stranded auxiliary contrasts, aphorism formulas
 - Adverbial dialogue tags ("said angrily") — replace with action beats
 - Hollow emotional beats: "Something shifted in [their] expression," "The weight of [abstract noun] hung in the air," "They didn't say anything. They didn't have to."
 
-**When rewriting any passage, ask: Does this sentence sound like AI default prose?** If yes, rewrite it with a specific, earned detail instead. The reviser should leave the prose more human, not less.
+**Never-inject guardrail.** A revision must subtract or sharpen. Do not introduce a manufactured stake, a fragment run, a forced contrarian foil, performed candor, em-dash theatrics, or an invented specific while "fixing" a pattern. Source fidelity binds: never invent a fact to make prose more concrete. **Fiction carve-outs** — fragments, anaphora, and deliberate repetition pass when they carry voice.
+
+**When rewriting any passage, ask: Does this sentence sound like AI default prose?** If yes, rewrite it with a specific, earned detail instead. The reviser should leave the prose more human, not less — but "more human" never means "more manufactured personality."
 
 For each chapter in the batch:
 1. Load the target chapter (and XML version from \`./book/drafts/\` if available)

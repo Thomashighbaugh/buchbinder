@@ -123,6 +123,8 @@ Apply pacing and enhancement revisions to the pass-2 output. Save final.
 
 **When rewriting any passage, ask: Does this sentence sound like AI default prose?** If yes, rewrite it with a specific, earned detail instead. The reviser should leave the prose more human, not less — but "more human" never means "more manufactured personality."
 
+**Theme audit (fiction).** When a critique round flags thematic issues — a payoff that doesn't land, an antagonist who loses too easily, a motif that never pays off, an arc that doesn't change — run the `theme-craft` audit (`skills/fiction/writing-techniques/theme-craft/references/theme-audit.md`). Answer the five audit questions (does the ending engage the opening's value-question; is theme dramatized through consequence not commentary; is the motif paid off; does the climax stage premise vs. counter-premise; would the story collapse without the theme), record a `theme-holds` / `theme-broken` verdict in `./book/revisions/theme-audit.md`, and treat `theme-broken` as a structural revision. **Theme is repaired by reworking choices and consequences — never by adding a speech, a narration summary, or a mentor lecture that explains the theme.**
+
 For each chapter in the batch:
 1. Load the target chapter (and XML version from \`./book/drafts/\` if available)
 2. Apply all accepted revisions for that chapter

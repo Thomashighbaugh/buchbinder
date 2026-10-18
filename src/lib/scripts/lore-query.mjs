@@ -319,7 +319,7 @@ async function main() {
     if (index) {
         semantic = await queryWithIndex(index, queryVec, query, topK, doRerank, rerankBackend)
     } else {
-        semantic = await queryWithoutIndex(projectRoot, query, topK, doRerank, rerankBackend, embedBackend, embedModel)
+        semantic = await queryWithoutIndex(projectRoot, query, topK, doRerank, rerankBackend, embedModel)
     }
 
     const rerankInfo = doRerank && rerankBackend !== 'none' ? rerankLabel(rerankBackend) : null

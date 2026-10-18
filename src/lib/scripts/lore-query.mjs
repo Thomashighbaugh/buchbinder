@@ -75,42 +75,15 @@ async function rerankOnnx(query, documents) {
     return ranked.map(r => ({ ...documents[r.index], score: r.score }))
 }
 
-async function rerankOllama(query, documents) {
-    const res = await fetch(`${OLLAMA_URL}/api/rerank`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            model: OLLAMA_RERANK_MODEL,
-            query,
-            documents: documents.map(d => d.text),
-        }),
-    })
-    if (!res.ok) throw new Error(`Ollama rerank error: ${res.status} ${res.statusText}`)
-    const data = await res.json()
-    const results = data.results || data.scores || data.rankings
-    if (!Array.isArray(results)) throw new Error('Ollama /api/rerank returned no results array')
-    return results
-        .map(r => {
-            const idx = typeof r === 'number' ? null : (r.index ?? r.corpus_id)
-            const score = typeof r === 'number' ? r : (r.relevance_score ?? r.score)
-            const doc = idx != null && documents[idx] ? documents[idx] : null
-            return doc ? { ...doc, score } : null
-        })
-        .filter(Boolean)
-        .sort((a, b) => b.score - a.score)
-}
-
 async function rerank(query, documents, backend = RERANK_BACKEND) {
     if (backend === 'none' || isRerankDisabled()) {
         throw new Error('reranking disabled')
     }
-    if (backend === 'ollama') return rerankOllama(query, documents)
     return rerankOnnx(query, documents)
 }
 
 /** Human-readable label for the active reranker (for transparency in output). */
-function rerankLabel(backend) {
-    if (backend === 'ollama') return `ollama (${OLLAMA_RERANK_MODEL})`
+function rerankLabel() {
     return `onnx (${ONNX_RERANK_MODEL})`
 }
 

@@ -47,6 +47,8 @@ Before committing to a full specification, stress-test the premise. A weak premi
 - **Counter-premise** — the antagonist's or world's opposing argument (value + cause). Test: could a reasonable person believe it? If not, the antagonist is a straw man.
 - **Stakes on three levels** — external, relational, internal. At least two must be concrete and personal, and each must be able to worsen by the midpoint.
 
+**Fiction — align the theme with the manifest.** Load the \`theme-craft\` skill (\`skills/fiction/writing-techniques/theme-craft/SKILL.md\`) and confirm the specification's thematic material matches the manifest's controlling idea (value + cause) and counter-premise. The Level 3 Story Promise's themes must be the same argument the premise embodies — if they diverge, fix one before building the specification.
+
 If the workshop has not run (no \`./book/ideation/premise.md\`), offer to run \`/buchbinder ideation premise\` first — the stress-test is where a weak premise is caught.
 
 **If the premise fails any criterion: STOP. Report the specific failure and ask the user to revise the premise before proceeding.** Do not build a specification on a weak premise.
@@ -146,12 +148,13 @@ If the user selects a phase, call \`hubMenu\` with \`action: "route"\`, \`hub: "
 | \`scene-structure\` | \`skills/fiction/writing-techniques/scene-structure/SKILL.md\` | Scene framework reference |
 | \`character-depth\` | \`skills/fiction/writing-techniques/character-depth/SKILL.md\` | Character profiling guidance |
 | \`namecraft\` | \`skills/fiction/writing-techniques/namecraft/SKILL.md\` | Character and location naming |
-| \`premise-workshop\` | \`skills/fiction/writing-techniques/premise-workshop/SKILL.md\` | Logline stress tests, three-level stakes, premise/counter-premise, form and title checks (fiction) |`,
+| \`premise-workshop\` | \`skills/fiction/writing-techniques/premise-workshop/SKILL.md\` | Logline stress tests, three-level stakes, premise/counter-premise, form and title checks (fiction) |
+| \`theme-craft\` | \`skills/fiction/writing-techniques/theme-craft/SKILL.md\` | Controlling idea (value + cause), counter-premise, lie/truth, motifs (fiction) |`,
   rules: [
     "Whenever the user makes a decision that alters narrative context, metanarrative, formatting, or tracking states, you MUST proactively update the relevant files in ./book/metadata/ and ./book/tracking/ before completing the turn."
   ],
   tools: ["loadSkill", "bash", "question"],
-  relatedSkills: ["premise-workshop", "scene-structure", "character-depth", "namecraft"],
+  relatedSkills: ["premise-workshop", "theme-craft", "scene-structure", "character-depth", "namecraft"],
   examples: [
     { input: "/buchbinder specify I want to write about a detective who solves crimes using memory palaces", approach: "Starts Phase 2. Reads constitution, then builds logline → premise → story promise → knowledge map through structured interview." },
     { input: "/buchbinder specify", approach: "Checks for existing specification and knowledge files. Offers update if found, otherwise starts fresh build." }

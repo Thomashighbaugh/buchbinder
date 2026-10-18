@@ -21,6 +21,14 @@ where stakes are asserted but not felt. **Clarity**: Is the prose,
 structure, and intent transparent on a single reading? Flag passages
 that required re-reading.
 
+**Machine-prose friction**: Note where the prose reads as machine-produced
+rather than authored — uniform cadence, abstract nouns doing no work,
+hedge-stacked sentences, generic closers, a paragraph that could be swapped
+with any other. Run the AI-writing catalog (`skills/quality-assurance/ai-writing-audit/SKILL.md`)
+to name the specific tells. Report it as reader experience ("the rhythm went
+flat here; I stopped hearing a voice"), not as a text property. Fiction
+carve-outs apply — a deliberate fragment or repetition is craft, not a tell.
+
 ## Methodology
 
 Read the manuscript in as few sittings as possible to simulate natural

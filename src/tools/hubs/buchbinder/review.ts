@@ -188,6 +188,7 @@ Checklist:
 11. **Continuity scan passed** (no contradictions)
 12. **Voice profiles up to date** (drift checked across all chapters)
 13. **Style sheet enforced** (no violations in any chapter)
+14. **AI-writing tell scan passed** (no P0 patterns; per-chapter tell density within threshold)
 
 ### 6. Review Report
 

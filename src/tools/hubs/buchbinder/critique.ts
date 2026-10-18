@@ -299,18 +299,19 @@ The critique phase integrates these HITL features:
 | \`beta-reader\` | \`skills/critique/beta-reader/SKILL.md\` | Experience critique methodology |
 | \`peer-review\` | \`skills/critique/peer-review/SKILL.md\` | Peer review methodology (non-fiction) |
 | \`sensitivity-reader\` | \`skills/critique/sensitivity-reader/SKILL.md\` | Sensitivity assessment methodology |
+| \`ai-writing-audit\` | \`skills/quality-assurance/ai-writing-audit/SKILL.md\` | AI-writing pattern catalog — word tiers, structural tells, never-inject guardrails (Anti-AI-Slop mandate) |
 | \`phase-preview\` | \`src/lib/phase-preview.ts\` | Pre-execution confirmation |
 | \`severity-tiers\` | \`src/lib/severity-tiers.ts\` | Suggestion severity tiers |
 | \`veto-system\` | \`src/lib/veto-system.ts\` | Veto with \`|\` key |
 | \`feedback-memory\` | \`src/lib/feedback-memory.ts\` | Rejection reason memory |`,
   tools: ["loadSkill", "bash", "task", "question"],
-  relatedSkills: ["alpha-reader", "beta-reader", "peer-review", "sensitivity-reader", "phase-preview", "severity-tiers", "veto-system", "feedback-memory"],
+  relatedSkills: ["alpha-reader", "beta-reader", "peer-review", "sensitivity-reader", "ai-writing-audit", "phase-preview", "severity-tiers", "veto-system", "feedback-memory"],
   examples: [
     { input: "/buchbinder critique", approach: "Critiques all [FR] chapters (up to 6) with auto-selected mode" },
     { input: "/buchbinder critique alpha 3-8", approach: "Critiques chapters 3-8 with alpha mode" },
     { input: "/buchbinder critique Chapter 3", approach: "Single-chapter override — critiques only chapter 3" }
   ],
-  warnings: ["Batch mode is the DEFAULT — single-chapter requires explicit chapter number", "Specificity gate is a HARD BLOCK — vague critique items are rejected", "Every item must include an ID for cross-referencing during revision verification", "Context is loaded ONCE for the entire batch — shared context is not re-loaded per chapter"]
+  warnings: ["Batch mode is the DEFAULT — single-chapter requires explicit chapter number", "Specificity gate is a HARD BLOCK — vague critique items are rejected", "Anti-AI-Slop mandate runs in every mode — word tiers, structural tells, and signature slop patterns; never-inject guardrails bind every recommendation", "Every item must include an ID for cross-referencing during revision verification", "Context is loaded ONCE for the entire batch — shared context is not re-loaded per chapter"]
 }
 
 export default spec

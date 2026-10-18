@@ -236,12 +236,11 @@ export async function buildIndex(projectRoot, opts = {}) {
     const t0 = Date.now()
     const sources = scanSources(projectRoot)
 
-    const embedBackend = activeEmbedBackend()
-    const embedModel = activeEmbedModel(embedBackend)
+    const embedModel = activeEmbedModel()
 
     let prev = opts.force ? null : loadIndex(projectRoot)
-    if (prev && (prev.embedBackend !== embedBackend || prev.embedModel !== embedModel)) {
-        // Vectors are incompatible across models/backends — rebuild everything.
+    if (prev && prev.embedModel !== embedModel) {
+        // Vectors are incompatible across models — rebuild everything.
         prev = null
     }
 

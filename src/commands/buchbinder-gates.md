@@ -34,6 +34,8 @@ for (const id of gates) {
 
 Or via the **Run All Gates** button in the sidebar.
 
+The AI-writing tell scan (word tiers, structural tells, signature slop) is part of the post-draft and review gates — see `rules/ai-writing-patterns.md` and `skills/quality-assurance/ai-writing-audit/`. Any P0 (credibility killer) pattern blocks.
+
 There is no global keybind. Single-letter bindings would block typing, modifier+letter pairs collide with OpenCode's built-ins, and leader-based bindings require expansion that wasn't worth the complexity. Use the button or the slash command.
 
 ## Output format

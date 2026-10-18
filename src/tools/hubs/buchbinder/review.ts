@@ -259,9 +259,9 @@ If the user selects, call \`hubMenu\` with \`action: "route"\`, \`hub: "buchbind
 | \`thread-matrix\` | \`src/lib/thread-matrix.ts\` | Thread tracking matrix |
 | \`dependency-graph\` | \`src/lib/dependency-graph.ts\` | Chapter dependency graph |`,
   tools: ["loadSkill", "bash", "question"],
-  relatedSkills: ["continuity-auditor", "forgotten-elements", "fact-checker", "citation-validator", "style-enforcer"],
+  relatedSkills: ["continuity-auditor", "forgotten-elements", "fact-checker", "citation-validator", "style-enforcer", "ai-writing-audit"],
   examples: [{ input: "/buchbinder review final", approach: "Runs final readiness assessment with continuity scan before publication" }],
-  warnings: ["Continuity scan is a HARD BLOCK — contradictions between chapters (character state, timeline, plot threads, location, relationships, objects, knowledge, voice) must be resolved before publication", "Forgotten threads (dormant for 5+ chapters) and voice drift are warnings, not blocks"]
+  warnings: ["Continuity scan is a HARD BLOCK — contradictions between chapters (character state, timeline, plot threads, location, relationships, objects, knowledge, voice) must be resolved before publication", "AI-writing tell density scan runs project-wide — any P0 pattern blocks; report pattern, location, and tier (signals, not proof)", "Forgotten threads (dormant for 5+ chapters) and voice drift are warnings, not blocks"]
 }
 
 export default spec

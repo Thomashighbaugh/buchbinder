@@ -55,6 +55,7 @@ Run analysis per chapter section (500–1000 word windows). Flag when:
 - A window deviates on 2+ dimensions simultaneously
 - A single dimension deviates across 3+ consecutive windows
 - A window would fit a different project's key better than this one
+- A window trips the AI-writing tells (word tiers, uniformity, structural tells) — see the AI-Writing Tells dimension
 
 **Pastiche check (fiction).** A chapter can also fail by matching the key *too well* — reading as imitation of the lead author rather than as this book. Flag it. The remedy is to pull the key's weights back toward the book, not to keep writing.
 

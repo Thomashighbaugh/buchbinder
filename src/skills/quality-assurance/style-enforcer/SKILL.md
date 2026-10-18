@@ -43,6 +43,9 @@ The declared sensory priorities (e.g. "emphasise tactile and auditory over visua
 ### Good-Prose Qualities
 The reference list, checked as direction rather than a 30-point rubric. Practically, score against a small relevant subset per chapter — typically: control of voice, varied cadence, precision of word choice, concreteness over abstraction, subtext, restrained emotion, compression. **Drift signal**: mechanically clean prose that is nonetheless abstract, over-explained, or tonally flat.
 
+### AI-Writing Tells
+A style can be violated not only by drifting toward a *different writer* but by drifting toward *no writer* — the metronomic register of machine prose. Run the AI-writing catalog (`skills/quality-assurance/ai-writing-audit/SKILL.md` + `references/patterns.md`) alongside the key check: word-tier violations (Tier 1A markers, Tier 2 clusters, Tier 3 density), uniform sentence and paragraph length, hedge stacks, generic closers, and the structural tells. **Drift signal**: a chapter that clears the key but reads as machine-produced — uniform cadence, abstract nouns, no earned emphasis. This is the same failure the key's own failure mode names when the imitation runs flat. Fiction carve-outs apply: fragments, anaphora, and deliberate repetition pass when they carry voice. Never-inject guardrails bound any correction — do not add a fragment run or an invented specific to "fix" uniformity.
+
 ### Metadata Style Sheet (all tracks)
 The modular style sheet also applies: terminology (e.g. "grey" not "gray"), formatting (em-dash vs en-dash, numerals), character-voice decisions, timeline decisions, emotional register. These are decisions of record, not preferences.
 

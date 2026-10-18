@@ -412,7 +412,7 @@ async function main() {
 
     if (!quiet) {
         console.log(`[index-builder] Done in ${(summary.durationMs / 1000).toFixed(1)}s`)
-        console.log(`  Embedder:  ${summary.embedModel} (${summary.embedBackend}${summary.embedDim ? `, ${summary.embedDim}-d` : ''})`)
+        console.log(`  Embedder:  ${summary.embedModel}${summary.embedDim ? ` (${summary.embedDim}-d)` : ''}`)
         console.log(`  Sources:   ${summary.sourcesTotal} (${summary.sourcesAdded} added, ${summary.sourcesUpdated} updated, ${summary.sourcesUnchanged} unchanged)`)
         console.log(`  Chunks:    ${summary.chunksTotal} (${summary.chunksAdded} new, ${summary.chunksEmbedded} embedded, ${summary.chunksReused} reused)`)
         console.log(`  Index:     ${summary.indexPath}`)

@@ -104,10 +104,13 @@ Interview the user to fill each manifest section. Use the \`question\` tool for 
 
 **Thematic Statement (REQUIRED — HARD BLOCK):**
 - Fiction: A single sentence expressing the book's thematic argument (not just a topic). E.g., "Justice requires mercy, but mercy enables injustice." This is testable — every scene can be evaluated against it.
+- **Fiction — shape it as a controlling idea (value + cause).** Load the \`theme-craft\` skill (\`skills/fiction/writing-techniques/theme-craft/SKILL.md\`, \`references/controlling-idea.md\`). The statement takes the form **{Value} {triumphs|fails} because {cause}** — a named moral value (as a continuum: justice/injustice, love/hate), the ending's verdict, and the protagonist's action that *produces* the verdict. "Justice requires mercy" is a topic; "Mercy triumphs because the protagonist refuses the killing blow" is usable — every scene can be checked against whether the protagonist moves toward or away from the cause.
+- **Fiction — draft the counter-premise.** The antagonist's or world's opposing claim, in the same form ("Vengeance triumphs because the world punishes mercy"). Test: could a reasonable person believe it? If not, the antagonist is a straw man and the ending proves nothing. The climax stages the two and delivers the verdict.
 - Non-fiction: The thesis stated as a debatable proposition. E.g., "Decentralised systems outperform centralised ones at scale, but only when trust costs are low."
 - The thematic statement is NOT "this book is about X" — it's "this book argues X."
 - If the user gives a topic ("redemption") rather than a statement, ask: "What does the book SAY about redemption? Is redemption always possible? Always desirable? At what cost?"
 - **If no thematic statement can be crystallized, block with: "A thematic statement is required — the outline and critique phases reference it. What does the book ARGUE?"**
+- If the author prefers to discover theme in the draft, record \`theme: tbd-discovery\` and let the revision theme audit build it from what the draft actually argues.
 
 **Quality Baseline:**
 - Fiction: "What are your non-negotiables for prose quality? Pacing preference? (Relentless Action / Balanced / Literary Slow-Burn / Rollercoaster / Custom)"
@@ -179,6 +182,7 @@ options:
 ### 3. Load Supplement Skills
 
 If available, load the following skills for guided questions:
+- \`theme-craft\` — the controlling idea (value + cause), counter-premise, lie/truth, arc types, antagonist design, motifs (fiction)
 - \`pacing-rhythm\` — pacing archetype selection
 - \`character-depth\` — character psychology depth
 - \`academic-writing\` — thesis and argument structure (non-fiction)
@@ -217,6 +221,9 @@ Populate the manifest template with the user's answers. Save to \`./book/manifes
 
 ## Thematic Statement
 [Single sentence expressing the book's thematic argument — testable, debatable, not just a topic]
+
+## Counter-Premise (fiction)
+[The antagonist's or world's opposing argument, in the same value+cause form — the position the climax disproves]
 
 ## Quality Baseline
 [Non-negotiable standards, pacing preference, evidence requirements]

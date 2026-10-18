@@ -322,7 +322,7 @@ async function main() {
         semantic = await queryWithoutIndex(projectRoot, query, topK, doRerank, rerankBackend, embedModel)
     }
 
-    const rerankInfo = doRerank && rerankBackend !== 'none' ? rerankLabel(rerankBackend) : null
+    const rerankInfo = doRerank && rerankBackend !== 'none' ? rerankLabel() : null
     console.log(formatOutput(query, pinned, semantic, topK, rerankInfo))
 }
 

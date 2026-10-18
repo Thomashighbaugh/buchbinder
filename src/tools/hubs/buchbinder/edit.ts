@@ -212,6 +212,7 @@ The edit phase integrates these HITL features:
 | Skill | File | Purpose |
 |-------|------|---------|
 | \`punctuation-emotional-effect\` | \`skills/fiction/writing-techniques/punctuation-emotional-effect/SKILL.md\` | Punctuation for rhythm and emphasis |
+| \`ai-writing-audit\` | \`skills/quality-assurance/ai-writing-audit/SKILL.md\` | AI-writing pattern audit — word tiers, structural tells, never-inject guardrails |
 | \`style-enforcer\` | \`skills/quality-assurance/style-enforcer/SKILL.md\` | Style consistency checking |
 | \`continuity-auditor\` | \`skills/quality-assurance/continuity-auditor/SKILL.md\` | Cross-reference consistency |
 | \`academic-writing\` | \`skills/non-fiction/academic-writing/SKILL.md\` | Academic register (non-fiction) |
@@ -228,16 +229,17 @@ The edit phase integrates these HITL features:
 | \`creative-constraints\` | \`src/lib/creative-constraints.ts\` | Non-negotiables gate |
 | \`provenance\` | \`src/lib/provenance.ts\` | Change provenance tracking |`,
   rules: [
-    "Whenever the user makes a decision that alters narrative context, metanarrative, formatting, or tracking states, you MUST proactively update the relevant files in ./book/metadata/ and ./book/tracking/ before completing the turn."
+    "Whenever the user makes a decision that alters narrative context, metanarrative, formatting, or tracking states, you MUST proactively update the relevant files in ./book/metadata/ and ./book/tracking/ before completing the turn.",
+    "Apply the AI-writing pattern catalog (rules/ai-writing-patterns.md; skills/quality-assurance/ai-writing-audit/) to every line-edit suggestion. Never-inject guardrails bind: subtract and sharpen, never add a manufactured stake, fragment run, or invented specific. Word-tier 1B (utilize, in order to, serves as) is a clarity fix, not AI evidence."
   ],
   tools: ["loadSkill", "bash", "question"],
-  relatedSkills: ["punctuation-emotional-effect", "style-enforcer", "continuity-auditor", "academic-writing", "phase-preview", "authorial-intent", "diff-approval", "severity-tiers", "veto-system", "feedback-memory", "creative-constraints", "provenance"],
+  relatedSkills: ["punctuation-emotional-effect", "ai-writing-audit", "style-enforcer", "continuity-auditor", "academic-writing", "phase-preview", "authorial-intent", "diff-approval", "severity-tiers", "veto-system", "feedback-memory", "creative-constraints", "provenance"],
   examples: [
     { input: "/buchbinder edit", approach: "Edits all [R] chapters (up to 6) with style sheet enforcement" },
     { input: "/buchbinder edit 3-8", approach: "Edits chapters 3 through 8" },
     { input: "/buchbinder edit Chapter 3", approach: "Single-chapter override — edits only chapter 3" }
   ],
-  warnings: ["Batch mode is the DEFAULT — single-chapter requires explicit chapter number", "Three-pass editing: line-edit (craft) → copy-edit (mechanics) → proofread (typos)", "Style sheet enforcement is a HARD BLOCK — violations must be corrected before editing proceeds", "Linguistic analyses (subtext, purple prose, cliché, rhythm) run as hard-block gates before line-edit suggestions", "Style sheet and shared context are loaded ONCE for the entire batch"]
+  warnings: ["Batch mode is the DEFAULT — single-chapter requires explicit chapter number", "Three-pass editing: line-edit (craft) → copy-edit (mechanics) → proofread (typos)", "Style sheet enforcement is a HARD BLOCK — violations must be corrected before editing proceeds", "Linguistic analyses (subtext, purple prose, cliché, rhythm) run as hard-block gates before line-edit suggestions", "AI-writing audit is a HARD BLOCK — word-tier violations, structural tells, and signature slop patterns; never-inject guardrails bind every suggestion", "Style sheet and shared context are loaded ONCE for the entire batch"]
 }
 
 export default spec

@@ -327,7 +327,6 @@ export async function buildIndex(projectRoot, opts = {}) {
         schemaVersion: INDEX_SCHEMA_VERSION,
         builtAt: new Date().toISOString(),
         projectRoot,
-        embedBackend,
         embedModel,
         embedDim,
         chunkCount: newChunks.length,
@@ -348,7 +347,6 @@ export async function buildIndex(projectRoot, opts = {}) {
         chunksReused,
         durationMs,
         indexPath: getIndexPath(projectRoot),
-        embedBackend,
         embedModel,
         embedDim,
     }
@@ -373,7 +371,7 @@ export function printStatus(projectRoot) {
     const ageHours = (ageMs / 3600000).toFixed(1)
     console.log(`Index: ${getIndexPath(projectRoot)}`)
     console.log(`  Built:     ${index.builtAt} (${ageHours}h ago)`)
-    console.log(`  Embedder:  ${index.embedModel} (${index.embedBackend || 'ollama'}${index.embedDim ? `, ${index.embedDim}-d` : ''})`)
+    console.log(`  Embedder:  ${index.embedModel}${index.embedDim ? ` (${index.embedDim}-d)` : ''}`)
     console.log(`  Sources:   ${index.sources.length} (${Object.entries(byKind).map(([k, v]) => `${k}:${v}`).join(', ')})`)
     console.log(`  Chunks:    ${index.chunks.length} (${index.chunks.filter(c => c.embedding).length} embedded)`)
 }
@@ -408,7 +406,7 @@ async function main() {
         summary = await buildIndex(projectRoot, { quiet, force })
     } catch (err) {
         console.error(`[index-builder] Build failed: ${err.message}`)
-        console.error(`[index-builder] Embedding backend: ${activeEmbedBackend()} (${activeEmbedModel()}). For the ollama backend, ensure Ollama is running.`)
+        console.error(`[index-builder] Embedding model: ${activeEmbedModel()}. Is @huggingface/transformers installed and the model cached?`)
         process.exit(2)
     }
 

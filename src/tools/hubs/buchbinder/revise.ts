@@ -316,6 +316,7 @@ The revise phase integrates these HITL features:
 | Skill | File | Purpose |
 |-------|------|---------|
 | \`ai-writing-audit\` | \`skills/quality-assurance/ai-writing-audit/SKILL.md\` | AI-writing pattern catalog — eliminate flagged slop, avoid introducing new tells, never-inject guardrails |
+| \`theme-craft\` | \`skills/fiction/writing-techniques/theme-craft/SKILL.md\` | Theme audit — value-question, consequence vs. commentary, motif payoff, premise vs. counter-premise (fiction) |
 | \`continuity-auditor\` | \`skills/quality-assurance/continuity-auditor/SKILL.md\` | Cross-chapter consistency after revision |
 | \`style-enforcer\` | \`skills/quality-assurance/style-enforcer/SKILL.md\` | Style consistency after revision |
 

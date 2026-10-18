@@ -391,7 +391,7 @@ Lore retrieval is fast because Buchbinder maintains an on-disk embedding index a
 .opencode/cache/lore-index/index.json
 ```
 
-The index is built once and reused on every phase invocation. Without the index, `lore-query.mjs` re-embeds every chunk on every call (slow for multi-book series). With the index, query time is O(chunks) cosine comparisons in memory + one Ollama call for the query embedding.
+The index is built once and reused on every phase invocation. Without the index, `lore-query.mjs` re-embeds every chunk on every call (slow for multi-book series). With the index, query time is O(chunks) cosine comparisons in memory + one local embedding of the query.
 
 **Index coverage** — these source files are scanned:
 

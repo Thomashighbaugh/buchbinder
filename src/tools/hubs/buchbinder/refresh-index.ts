@@ -84,10 +84,10 @@ Each \`book/drafts/chapter_*.xml\` file is chunked by the XML chunker, which und
 
 ## Models Used
 
-- **Embedding:** \`pedrohml/mxbai-embed-large:latest\` (set \`EMBED_MODEL\` env var to override)
-- **Reranking (optional):** \`hans-tech/bge-reranker-v2-m3:260522\` (set \`RERANK_MODEL\` env var to override)
+- **Embedding:** \`Xenova/bge-base-en-v1.5\` (set \`ONNX_EMBED_MODEL\` env var to override)
+- **Reranking (optional):** \`Xenova/bge-reranker-base\` (set \`RERANK_MODEL\` env var to override)
 
-Both run locally via Ollama — no network calls, no telemetry.
+Both run locally in-process — no network calls, no telemetry.
 
 ## Related Commands
 

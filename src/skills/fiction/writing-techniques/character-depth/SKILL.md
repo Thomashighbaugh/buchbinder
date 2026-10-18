@@ -1,6 +1,6 @@
 ---
 name: character-depth
-description: "Ensures deep psychological backstory, Wound/Ghost, internal contradictions, defense mechanisms, and vulnerability triggers. Use when developing characters, writing POV, or reviewing character consistency."
+description: "Ensures deep psychological backstory, Wound/Ghost, internal contradictions, defense mechanisms, and vulnerability triggers. Use when developing characters, writing POV, or reviewing character consistency. Pairs with theme-craft, which adds arc types (change-positive / change-negative / flat) and the lie/truth/ghost-wound fields."
 ---
 
 # Character Depth

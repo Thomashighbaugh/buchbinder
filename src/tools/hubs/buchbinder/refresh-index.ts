@@ -2,7 +2,7 @@ import { HubSubcommandSpec } from "../../hub-data.js"
 
 const spec: HubSubcommandSpec = {
   label: "refresh-index",
-  description: "Rebuild the semantic lore index from current lorebook/knowledge/outline/draft files. Use after adding or substantially changing lore content, or to recover from an Ollama/model issue.",
+  description: "Rebuild the semantic lore index from current lorebook/knowledge/outline/draft files. Use after adding or substantially changing lore content, or to recover from a model issue.",
   reminder: "Utility: Rebuild the on-disk semantic lore index",
   phases: "utility",
   detailedDescription: `# User Input: {userInput}
@@ -20,7 +20,7 @@ The index is built incrementally: re-running on an up-to-date index is a no-op (
 - After importing a new lorebook (SillyTavern/JanitorAI/CharacterAI JSON via \`/buchbinder manifest\`)
 - After substantial edits to \`./series/lorebook/*\` or \`./book/knowledge/*\`
 - After adding new chapters to \`./book/drafts/\` (so the new chapter is available for semantic retrieval)
-- After upgrading the embed model or changing Ollama model names
+- After upgrading or changing the embed model
 - To recover from a corrupted or accidentally-deleted index
 - After running \`/buchbinder refresh\` if it reported an index-build failure
 

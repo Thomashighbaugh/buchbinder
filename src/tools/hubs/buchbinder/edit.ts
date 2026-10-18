@@ -65,7 +65,19 @@ Run the following analyses before generating line-edit suggestions:
 2. **Purple prose detection** — flag excessive modifiers (>15%), metaphor density (>3 per 500 words), elevated vocabulary. Warning level.
 3. **Cliché detection** — scan for known clichéd phrases (>5 per chapter = block) and genre-trope overuse (>3 same trope = warn).
 4. **Sentence rhythm analysis** — track sentence length distribution. >60% in same range = warning. 5+ consecutive similar-length sentences = warning.
-5. **AI-slop detection (HARD BLOCK)** — scan for signature AI writing patterns. Any instance of "smell/taste of ozone" without an electrical event = immediate block. Also flag: "copper taste of blood," "air crackled with tension," "shiver ran down spine," "eyes like [gemstone]," "[animal] smile," "Not [X]. Not the way [Y] expected," "It wasn't just [X]. It was [Y]," "Something shifted in [their] expression," "The weight of [abstract] hung in the air," "They didn't say anything. They didn't have to," adverbial dialogue tags ("said angrily"). >3 slop patterns per chapter = block.
+5. **AI-writing audit (HARD BLOCK)** — load \`skills/quality-assurance/ai-writing-audit/SKILL.md\` and run its catalog (\`references/patterns.md\`) over the chapter. Three sweeps:
+
+   **a) Signature slop patterns.** Any instance of "smell/taste of ozone" without an electrical event = immediate block. Also flag: "copper taste of blood," "air crackled with tension," "shiver ran down spine," "eyes like [gemstone]," "[animal] smile," "Not [X]. Not the way [Y] expected," "It wasn't just [X]. It was [Y]," "Something shifted in [their] expression," "The weight of [abstract] hung in the air," "They didn't say anything. They didn't have to," adverbial dialogue tags ("said angrily"). >3 slop patterns per chapter = block.
+
+   **b) Word-tier violations.** Tier 1A markers (delve, leverage, tapestry, testament to, robust, seamless, pivotal, …) reviewed on every match; Tier 2 clusters (2+ in one paragraph: harness, navigate, crucial, nuanced, ecosystem, …); Tier 3 by density (significant, innovative, effective, … at \`max(3, floor(wordCount × 0.03))\`). Tier 1B clarity edits (utilize, in order to, serves as) are wordiness fixes, not AI evidence — flag them as clarity, never as slop.
+
+   **c) Structural tells.** Negation chains, same-opener sentence runs, stranded auxiliary contrasts, aphorism formulas, colon-into-a-triple, generic conclusions, hedge-stacked predictions, uniform sentence/paragraph length.
+
+   **Never-inject guardrail.** Every suggested fix must subtract or sharpen. A suggestion that adds a manufactured stake, a fragment run, a forced contrarian foil, performed candor, or an invented specific is a failure even if it clears the flag — reject it before presenting. Source fidelity binds: never invent a fact to make prose more concrete.
+
+   **Fiction carve-outs.** Manufactured punchlines, staccato drama, fragments, anaphora, and deliberate repetition pass when they carry voice, comedy, or tension. Judge the function, not the shape. **Signals, not proof** — report the pattern and the reason; the author decides.
+
+   >3 slop patterns per chapter = block.
 
 **If any blocking analysis fails: STOP.** Report the specific issue. Do not proceed to suggestions until corrected.
 

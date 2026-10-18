@@ -282,7 +282,7 @@ async function main() {
 
     // ── query mode ──
     if (!query) {
-        console.error('Usage: bun lore-query.mjs [project-root] --query "..." [--top N] [--rerank] [--rerank-backend onnx|ollama|none]')
+        console.error('Usage: bun lore-query.mjs [project-root] --query "..." [--top N] [--rerank] [--rerank-backend onnx|none]')
         console.error('       bun lore-query.mjs [project-root] --build [--force]')
         console.error('       bun lore-query.mjs [project-root] --status')
         process.exit(1)

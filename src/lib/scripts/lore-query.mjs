@@ -138,7 +138,7 @@ async function queryWithoutIndex(projectRoot, query, topK, doRerank, backend, em
     const scored = []
     for (const chunk of allChunks) {
         try {
-            const [vec] = await embed([chunk.text], { backend: embedBackend, model: embedModel })
+            const [vec] = await embed([chunk.text], { model: embedModel })
             scored.push({ ...chunk, score: cosineSimilarity(queryVec, vec) })
         } catch {
             // skip

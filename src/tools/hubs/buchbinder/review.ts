@@ -250,6 +250,7 @@ If the user selects, call \`hubMenu\` with \`action: "route"\`, \`hub: "buchbind
 | \`citation-validator\` | \`skills/quality-assurance/citation-validator/SKILL.md\` | Citation correctness (non-fiction) |
 | \`style-enforcer\` | \`skills/quality-assurance/style-enforcer/SKILL.md\` | Style consistency |
 | \`ai-writing-audit\` | \`skills/quality-assurance/ai-writing-audit/SKILL.md\` | Project-wide AI-writing tell density scan |
+| \`theme-craft\` | \`skills/fiction/writing-techniques/theme-craft/SKILL.md\` | Theme audit — value-question, consequence vs. commentary, motif payoff, premise vs. counter-premise (fiction) |
 | \`reverse-outline\` | \`src/lib/reverse-outline.ts\` | Draft vs planned outline comparison |
 | \`character-arc\` | \`src/lib/character-arc.ts\` | Character arc completeness verification |
 | \`qa-accounting\` | \`src/lib/qa-accounting.ts\` | Question/answer tracking |

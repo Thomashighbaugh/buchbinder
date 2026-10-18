@@ -30,7 +30,7 @@ import { join, resolve, dirname } from 'path'
 
 import { chunkMarkdownFile, classifySourceKind } from './md-chunker.mjs'
 import { chunkXmlDraftFile, resolveDraftFilePath } from './xml-draft-chunker.mjs'
-import { embed, activeEmbedBackend, activeEmbedModel } from './embedder.mjs'
+import { embed, activeEmbedModel } from './embedder.mjs'
 
 const INDEX_FILENAME = 'index.json'
 const INDEX_SCHEMA_VERSION = 2

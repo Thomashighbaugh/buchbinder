@@ -361,9 +361,9 @@ book/series/lorebook/
 
 When generating content (outline, draft, critique, revise, review), Buchbinder uses **semantic lore retrieval** to inject only the most relevant lore into the prompt — not the entire lorebook. This keeps the context window focused and reduces token usage.
 
-The retrieval pipeline is **two-stage** and fully local. Both stages default to **ONNX** (in-process, via `@huggingface/transformers`) — Ollama is an opt-in extra backend, not a requirement:
+The retrieval pipeline is **two-stage** and fully local, running **ONNX** models in-process via `@huggingface/transformers`:
 
-1. **Embedding** — `Xenova/bge-base-en-v1.5` (ONNX, 768-d; `EMBED_BACKEND=onnx`, the default) or `pedrohml/mxbai-embed-large:latest` (Ollama, 1024-d; `EMBED_BACKEND=ollama`) — Chunks lore files by section (## headings) and embeds each chunk
+1. **Embedding** — `Xenova/bge-base-en-v1.5` (ONNX, 768-d) — Chunks lore files by section (## headings) and embeds each chunk
 2. **Vector search** — Cosine similarity between the task query and lore chunks
 3. **Reranking** (optional, `--rerank`) — an **in-process ONNX cross-encoder** (`Xenova/bge-reranker-base`) re-scores the top candidates jointly. Because a cross-encoder sees the query and the passage together, it reorders candidates more accurately than distance alone.
 

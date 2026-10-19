@@ -9,7 +9,7 @@
  * Uses api.command.register() (same API as the working hubs-tui plugin).
  */
 
-import type { TuiPlugin, TuiPluginApi, TuiPluginMeta, TuiDialogSelectOption } from '@opencode-ai/plugin/tui'
+import type { TuiPlugin, TuiPluginApi, TuiPluginMeta, TuiDialogSelectOption, TuiDialogSelectProps } from '@opencode-ai/plugin/tui'
 import { onMount } from 'solid-js'
 import { SidebarTitle } from './components/sidebar-title.js'
 import { SidebarContent } from './components/sidebar-content.js'
@@ -20,11 +20,21 @@ import { useProjectState, setInjector } from './hooks/use-project-state.js'
 type PhaseEntry = { label: string; description: string }
 
 /**
- * A grouped menu category. The TUI's DialogSelect renders at most
- * `floor(terminalHeight / 2) - 6` rows with a hidden scrollbar and no
- * overflow indicator, so a flat 29-phase menu silently cuts off around
- * item 19 on a typical terminal. Keeping every level well under that
- * cap means no phase is ever hidden off-screen.
+ * Local extension of the plugin's DialogSelect props. The shipped
+ * `@opencode-ai/plugin` type surface (1.17.x) exposes per-option `category`
+ * but omits the dialog-level `sectionNavigation` flag that the runtime
+ * DialogSelect supports: when true, it binds alt+↑ / alt+↓ to jump between
+ * category sections. Passing it on an older runtime is a harmless no-op.
+ */
+type BuchbinderDialogSelectProps = TuiDialogSelectProps<string> & { sectionNavigation?: boolean }
+
+/**
+ * A grouped menu category. DialogSelect renders a single scrolling list with
+ * a `floor(terminalHeight / 2) - 6`-row visible window, a `…` overflow
+ * indicator, and full keyboard scroll (arrows, page-up/down, home/end), so a
+ * flat 29-phase menu scrolls rather than truncating. Grouping every phase
+ * under its `category` renders bold section headers and — with
+ * `sectionNavigation` — lets alt+↑/↓ jump between sections like tabs.
  *
  * Must stay in sync with tools/hubs/buchbinder/index.ts.
  */
@@ -142,8 +152,8 @@ const tui: TuiPlugin = async (api: TuiPluginApi, _o, _meta: TuiPluginMeta) => {
     api.command.register(() => {
       const DS = api.ui.DialogSelect
 
-      // Level 3 — dispatch a chosen phase into the prompt. The user presses
-      // Enter to run it through the buchbinder.md router, which calls hubMenu.
+      // Dispatch a chosen phase into the prompt. The user presses Enter to run
+      // it through the buchbinder.md router, which calls hubMenu.
       const choosePhase = (phase: PhaseEntry) => {
         api.ui.dialog.clear()
         const cmd = `/buchbinder ${phase.label}`
@@ -151,53 +161,31 @@ const tui: TuiPlugin = async (api: TuiPluginApi, _o, _meta: TuiPluginMeta) => {
         api.client.tui.appendPrompt({ text: cmd }).catch(() => {})
       }
 
-      // Level 2 — the phases within a category (or every phase, for the
-      // "All phases" entry). Always small enough to render in full.
-      const openPhases = (title: string, phases: PhaseEntry[]) => {
-        api.ui.dialog.clear()
-        api.ui.dialog.setSize('large')
-        api.ui.dialog.replace(() =>
-          DS({
-            title,
-            placeholder: 'Type to filter…',
-            options: phases.map((p) => ({ title: p.label, value: p.label, description: p.description })),
-            onSelect: (sel: TuiDialogSelectOption<string>) => {
-              const phase = phases.find((p) => p.label === sel.value)
-              if (phase) choosePhase(phase)
-            },
-          }),
-        )
-      }
-
-      // Level 1 — categories. Five entries plus "All phases", so it fits on
-      // any terminal.
+      // One flat dialog listing every phase, grouped by category. DialogSelect
+      // scrolls a fixed-height window (arrows / page-up/down / home/end) with a
+      // `…` overflow indicator, and `sectionNavigation` binds alt+↑/↓ to jump
+      // between category sections — so nothing ever runs off the viewport.
       const openMenu = () => {
         api.ui.dialog.setSize('large')
+        const options: TuiDialogSelectOption<string>[] = BUCHBINDER_MENU.flatMap((c) =>
+          c.phases.map((p) => ({
+            title: p.label,
+            value: p.label,
+            description: p.description,
+            category: c.title,
+          })),
+        )
         api.ui.dialog.replace(() =>
           DS({
-            title: 'Buchbinder — Select Category',
-            placeholder: 'Choose a category…',
-            options: [
-              {
-                title: 'All phases',
-                value: '__all__',
-                description: `Type to filter all ${ALL_PHASES.length} phases`,
-              },
-              ...BUCHBINDER_MENU.map((c) => ({
-                title: c.title,
-                value: c.key,
-                description: `${c.description} · ${c.phases.length} phases`,
-              })),
-            ],
+            title: 'Buchbinder — Phases',
+            placeholder: `Type to filter ${ALL_PHASES.length} phases · alt+↑/↓ jumps sections · scroll for more`,
+            options,
+            sectionNavigation: true,
             onSelect: (sel: TuiDialogSelectOption<string>) => {
-              if (sel.value === '__all__') {
-                openPhases('Buchbinder — All Phases', ALL_PHASES)
-                return
-              }
-              const cat = BUCHBINDER_MENU.find((c) => c.key === sel.value)
-              if (cat) openPhases(`Buchbinder — ${cat.title}`, cat.phases)
+              const phase = ALL_PHASES.find((p) => p.label === sel.value)
+              if (phase) choosePhase(phase)
             },
-          }),
+          } as BuchbinderDialogSelectProps),
         )
       }
 

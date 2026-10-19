@@ -109,6 +109,77 @@ export function loadSubcommandSpec(hubName: string, subLabel: string): HubSubcom
   }
 }
 
+// ─── Skill Resolution ─────────────────────────────────────────────────────
+// Skills live in nested category directories (e.g. quality-assurance/
+// workflow-guide/, fiction/writing-techniques/scene-structure/). Specs
+// reference them by bare name, so build a one-time index of every SKILL.md
+// and resolve by suffix match: "category/name" first, bare "name" second.
+
+const skillIndexCache = new Map<string, string>()
+
+function findSkillPath(skillsDir: string, name: string): string | null {
+  if (skillIndexCache.size === 0) buildSkillIndex(skillsDir)
+  return skillIndexCache.get(name) ?? null
+}
+
+function buildSkillIndex(skillsDir: string): void {
+  try {
+    if (!fs.existsSync(skillsDir)) return
+    walkForSkillFiles(skillsDir, skillsDir)
+  } catch {}
+}
+
+function walkForSkillFiles(dir: string, skillsDir: string): void {
+  let entries: fs.Dirent[]
+  try {
+    entries = fs.readdirSync(dir, { withFileTypes: true })
+  } catch {
+    return
+  }
+  for (const entry of entries) {
+    if (entry.name === 'node_modules' || entry.name.startsWith('.')) continue
+    const full = path.join(dir, entry.name)
+    if (entry.isDirectory()) {
+      walkForSkillFiles(full, skillsDir)
+      continue
+    }
+    if (entry.name !== 'SKILL.md') continue
+    const rel = path.relative(skillsDir, full).replace(/\\/g, '/')
+    const parts = rel.split('/')
+    if (parts[parts.length - 1] !== 'SKILL.md') continue
+    // Full path without the SKILL.md segment, e.g. "quality-assurance/workflow-guide"
+    const relDir = parts.slice(0, -1).join('/')
+    // Preferred key: the full category path ("category/sub/name" or "category/name")
+    if (!skillIndexCache.has(relDir)) skillIndexCache.set(relDir, full)
+    // Bare-name fallback key, e.g. "workflow-guide"
+    const bare = parts[parts.length - 2]
+    if (bare && !skillIndexCache.has(bare)) skillIndexCache.set(bare, full)
+  }
+}
+
+// ─── Library Module Resolution ────────────────────────────────────────────
+// Some specs list library modules (lib/*.ts — phase-preview, provenance,
+// diff-approval, …) alongside skills. They are not SKILL.md directories, so
+// resolve them against the sibling lib/ tree as a fallback.
+
+const libIndexCache = new Map<string, string>()
+
+function findLibModulePath(name: string): string | null {
+  if (libIndexCache.size === 0) {
+    const libDir = path.join(__dirname, '..', 'lib')
+    try {
+      if (fs.existsSync(libDir)) {
+        for (const file of fs.readdirSync(libDir)) {
+          if (file.endsWith('.ts') && !libIndexCache.has(file.slice(0, -3))) {
+            libIndexCache.set(file.slice(0, -3), path.join(libDir, file))
+          }
+        }
+      }
+    } catch {}
+  }
+  return libIndexCache.get(name) ?? null
+}
+
 export function loadSubcommandSpecFull(hubName: string, subLabel: string): {
   spec: HubSubcommandSpec | null
   rulesContent: Array<{ name: string; content: string }>
@@ -120,9 +191,13 @@ export function loadSubcommandSpecFull(hubName: string, subLabel: string): {
   const rulesContent: Array<{ name: string; content: string }> = []
   const relatedSkillMeta: Array<{ name: string; path: string; description: string }> = []
 
-  // Rules are in the buchbinder project's rules/ directory
+  // Rules are in the buchbinder project's rules/ directory — one level up
+  // from tools/ (i.e. .opencode/rules or src/rules, depending on the tree).
+  // NOTE: this hub's specs carry rule TEXT in spec.rules, which hubMenu
+  // returns verbatim; rulesContent only fills in when an entry happens to
+  // name a rule file (e.g. "ai-writing-patterns").
   if (spec.rules && spec.rules.length > 0) {
-    const rulesDir = path.join(__dirname, '..', '..', 'rules')
+    const rulesDir = path.join(__dirname, '..', 'rules')
     for (const ruleName of spec.rules) {
       const rulePath = path.join(rulesDir, `${ruleName}.md`)
       try {
@@ -133,23 +208,37 @@ export function loadSubcommandSpecFull(hubName: string, subLabel: string): {
     }
   }
 
-  // Related skills are in the buchbinder project's skills/ directory
+  // Related skills are in the buchbinder project's skills/ directory — one
+  // level up from tools/ (i.e. .opencode/skills or src/skills). Skills are
+  // nested by category (e.g. quality-assurance/workflow-guide/ or fiction/
+  // writing-techniques/scene-structure/), so resolve each name against a
+  // lazily-built index of every SKILL.md under skills/.
   if (spec.relatedSkills && spec.relatedSkills.length > 0) {
-    const skillsDir = path.join(__dirname, '..', '..', 'skills')
+    const skillsDir = path.join(__dirname, '..', 'skills')
     for (const skillName of spec.relatedSkills) {
-      const skillPath = path.join(skillsDir, skillName, 'SKILL.md')
+      // Skills first; some specs reference library modules (src/lib/*.ts)
+      // by bare name, so fall back to the lib index for those.
+      const skillPath = findSkillPath(skillsDir, skillName)
+        ?? findLibModulePath(skillName)
+      if (!skillPath) continue
       try {
-        if (fs.existsSync(skillPath)) {
-          const content = fs.readFileSync(skillPath, 'utf-8')
-          const fmMatch = content.match(/^---\n([\s\S]*?)\n---/)
-          if (fmMatch) {
-            const descMatch = fmMatch[1].match(/^description:\s*(.+)$/m)
-            relatedSkillMeta.push({
-              name: skillName,
-              path: skillPath,
-              description: descMatch ? descMatch[1].trim() : ''
-            })
-          }
+        const content = fs.readFileSync(skillPath, 'utf-8')
+        const fmMatch = content.match(/^---\n([\s\S]*?)\n---/)
+        if (fmMatch) {
+          const descMatch = fmMatch[1].match(/^description:\s*(.+)$/m)
+          relatedSkillMeta.push({
+            name: skillName,
+            path: skillPath,
+            description: descMatch ? descMatch[1].trim() : ''
+          })
+        } else {
+          // Library module — use its leading JSDoc line as the description.
+          const jsdoc = content.match(/^\/\*\*\s*\n(?:\s*\*.*\n)*?\s*\*\s*(.+)\n/)
+          relatedSkillMeta.push({
+            name: skillName,
+            path: skillPath,
+            description: jsdoc ? jsdoc[1].trim() : `Library module — ${path.basename(skillPath)}`
+          })
         }
       } catch {}
     }

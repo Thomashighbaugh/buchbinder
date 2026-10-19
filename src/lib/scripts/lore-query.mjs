@@ -90,15 +90,19 @@ function rerankLabel() {
 // ─── Index-backed query ────────────────────────────────────────────────────
 
 async function queryWithIndex(index, queryVec, query, topK, doRerank, backend = RERANK_BACKEND) {
-    // Score every chunk in the index against the query vector
+    // Score every chunk in the index against the query vector.
+    // Keep only the score alongside a reference to the chunk — spreading the
+    // chunk here would copy its full embedding (768 floats) for every
+    // candidate, which is pure garbage once the slice is taken.
     const scored = []
     for (const chunk of index.chunks) {
         if (!chunk.embedding) continue
-        const score = cosineSimilarity(queryVec, chunk.embedding)
-        scored.push({ ...chunk, score })
+        scored.push({ chunk, score: cosineSimilarity(queryVec, chunk.embedding) })
     }
     scored.sort((a, b) => b.score - a.score)
-    const candidates = scored.slice(0, doRerank ? topK * 3 : topK)
+    const candidates = scored
+        .slice(0, doRerank ? topK * 3 : topK)
+        .map(s => ({ ...s.chunk, score: s.score }))
     if (doRerank && candidates.length > 1) {
         try {
             return await rerank(query, candidates, backend)
@@ -126,6 +130,10 @@ async function queryWithoutIndex(projectRoot, query, topK, doRerank, backend, em
     }
     if (allChunks.length === 0) return []
 
+    // Embed the query and every chunk in one batched pass. Embedding chunk by
+    // chunk costs a forward pass each; the extractor accepts an array, so one
+    // batched call replaces N and is where nearly all of this path's time goes.
+    const BATCH_SIZE = 32
     let queryVec
     try {
         const [v] = await embed([query], { model: embedModel })
@@ -136,16 +144,32 @@ async function queryWithoutIndex(projectRoot, query, topK, doRerank, backend, em
     }
 
     const scored = []
-    for (const chunk of allChunks) {
+    for (let start = 0; start < allChunks.length; start += BATCH_SIZE) {
+        const slice = allChunks.slice(start, start + BATCH_SIZE)
         try {
-            const [vec] = await embed([chunk.text], { model: embedModel })
-            scored.push({ ...chunk, score: cosineSimilarity(queryVec, vec) })
-        } catch {
-            // skip
+            const vecs = await embed(slice.map(c => c.text), { model: embedModel })
+            for (let i = 0; i < slice.length; i++) {
+                const vec = vecs[i]
+                if (!vec) continue
+                scored.push({ chunk: slice[i], score: cosineSimilarity(queryVec, vec) })
+            }
+        } catch (err) {
+            // Batch failed — isolate per chunk so the rest still score.
+            console.error(`[lore-query] Batch embedding failed (${slice.length} chunks): ${err.message}`)
+            for (const chunk of slice) {
+                try {
+                    const [vec] = await embed([chunk.text], { model: embedModel })
+                    if (vec) scored.push({ chunk, score: cosineSimilarity(queryVec, vec) })
+                } catch {
+                    // skip
+                }
+            }
         }
     }
     scored.sort((a, b) => b.score - a.score)
-    const candidates = scored.slice(0, doRerank ? topK * 3 : topK)
+    const candidates = scored
+        .slice(0, doRerank ? topK * 3 : topK)
+        .map(s => ({ ...s.chunk, score: s.score }))
     if (doRerank && candidates.length > 1) {
         try {
             return await rerank(query, candidates, backend)

@@ -148,6 +148,55 @@ function hashFile(filePath) {
     return h.digest('hex')
 }
 
+// ─── Batched embedding ──────────────────────────────────────────────────────
+
+/**
+ * Embed a source's chunks in batches, returning one vector per chunk (null for
+ * chunks that could not be embedded).
+ *
+ * A single call per chunk costs one forward pass per chunk; a batched call
+ * amortizes model invocation across the batch, which is where nearly all of a
+ * build's wall time goes. If a batch fails, it is retried chunk-by-chunk so one
+ * pathological input cannot discard every chunk in the source.
+ *
+ * @param {Array<{text: string, source?: string}>} chunks
+ * @param {string} embedModel
+ * @param {{quiet?: boolean}} opts
+ * @returns {Promise<Array<number[]|null>>}
+ */
+async function embedChunksBatched(chunks, embedModel, opts = {}) {
+    const vectors = new Array(chunks.length).fill(null)
+    if (chunks.length === 0) return vectors
+
+    const BATCH_SIZE = 32
+    for (let start = 0; start < chunks.length; start += BATCH_SIZE) {
+        const slice = chunks.slice(start, start + BATCH_SIZE)
+        try {
+            const vecs = await embed(slice.map(c => c.text), { model: embedModel })
+            for (let i = 0; i < slice.length; i++) {
+                vectors[start + i] = vecs[i] ?? null
+            }
+        } catch (err) {
+            // Batch failed — isolate the failure per chunk so the rest survive.
+            if (!opts.quiet) {
+                console.error(`[index-builder] Batch embedding failed (${slice.length} chunks): ${err.message}`)
+                console.error('[index-builder] Retrying those chunks individually.')
+            }
+            for (let i = 0; i < slice.length; i++) {
+                try {
+                    const [vec] = await embed([slice[i].text], { model: embedModel })
+                    vectors[start + i] = vec ?? null
+                } catch (innerErr) {
+                    if (!opts.quiet) {
+                        console.error(`[index-builder] Embedding failed for ${slice[i].source || 'chunk'}: ${innerErr.message}`)
+                    }
+                }
+            }
+        }
+    }
+    return vectors
+}
+
 // ─── Chunking dispatch ──────────────────────────────────────────────────────
 
 /**
@@ -250,6 +299,19 @@ export async function buildIndex(projectRoot, opts = {}) {
         for (const s of prev.sources) prevSources.set(s.path, s)
     }
 
+    // Index prior chunks by source path once. Reusing an unchanged source then
+    // costs O(chunks-of-that-source) instead of scanning every chunk in the
+    // prior index for each of the sources (previously O(sources x chunks)).
+    const prevChunksBySource = new Map()
+    if (prev && Array.isArray(prev.chunks)) {
+        for (const c of prev.chunks) {
+            const key = c.sourcePath
+            const bucket = prevChunksBySource.get(key)
+            if (bucket) bucket.push(c)
+            else prevChunksBySource.set(key, [c])
+        }
+    }
+
     const newSources = []
     const newChunks = []
     let sourcesAdded = 0, sourcesUpdated = 0, sourcesUnchanged = 0
@@ -276,7 +338,7 @@ export async function buildIndex(projectRoot, opts = {}) {
             // Unchanged — reuse prior chunks for this source
             sourcesUnchanged++
             newSources.push(sourceEntry)
-            for (const c of (prev.chunks || []).filter(c => c.sourcePath === source.path)) {
+            for (const c of (prevChunksBySource.get(source.path) || [])) {
                 newChunks.push(c)
                 chunksReused++
             }
@@ -289,21 +351,21 @@ export async function buildIndex(projectRoot, opts = {}) {
 
         newSources.push(sourceEntry)
         const chunks = chunkSource(source, projectRoot)
-        for (const c of chunks) {
+
+        // Embed this source's chunks in one batched inference instead of one
+        // call per chunk. The ONNX extractor accepts an array, so a batch is
+        // a single forward pass rather than N — the dominant cost of a build.
+        // A batch that fails is retried per chunk so one bad chunk cannot
+        // discard the rest of the source.
+        const vectors = await embedChunksBatched(chunks, embedModel, opts)
+
+        for (let i = 0; i < chunks.length; i++) {
+            const c = chunks[i]
+            const embedding = vectors[i]
+            if (!embedding) continue // failed to embed — retried on the next build
             chunkIdCounter++
             const id = `chunk-${String(chunkIdCounter).padStart(5, '0')}`
-            let embedding = null
-            try {
-                const [vec] = await embed([c.text], { model: embedModel })
-                embedding = vec
-                chunksEmbedded++
-            } catch (err) {
-                if (!opts.quiet) {
-                    console.error(`[index-builder] Embedding failed for ${c.source}: ${err.message}`)
-                }
-                // Skip chunks that fail to embed — they'll be retried on the next build
-                continue
-            }
+            chunksEmbedded++
             newChunks.push({
                 id,
                 sourcePath: source.path,

@@ -133,7 +133,11 @@ async function queryWithoutIndex(projectRoot, query, topK, doRerank, backend, em
     // Embed the query and every chunk in one batched pass. Embedding chunk by
     // chunk costs a forward pass each; the extractor accepts an array, so one
     // batched call replaces N and is where nearly all of this path's time goes.
-    const BATCH_SIZE = 32
+    // BUCHBINDER_EMBED_PER_CHUNK=1 falls back to the original per-chunk loop
+    // (byte-identical embeddings; batching perturbs them slightly — see
+    // index-builder.mjs embedChunksBatched).
+    const PER_CHUNK = process.env.BUCHBINDER_EMBED_PER_CHUNK === '1'
+    const BATCH_SIZE = PER_CHUNK ? 1 : 32
     let queryVec
     try {
         const [v] = await embed([query], { model: embedModel })

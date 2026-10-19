@@ -168,6 +168,26 @@ async function embedChunksBatched(chunks, embedModel, opts = {}) {
     const vectors = new Array(chunks.length).fill(null)
     if (chunks.length === 0) return vectors
 
+    // Batched inference is the default (it is where the build's time goes), but
+    // it is not byte-identical to per-chunk inference: ONNX pads each batch to
+    // its longest sequence, which perturbs embeddings by ~1e-2 per element
+    // (cosine ~0.995) and can reorder near-tied retrieval results.
+    // Set BUCHBINDER_EMBED_PER_CHUNK=1 to restore the original per-chunk behavior
+    // exactly (verified: byte-identical embeddings, max delta 0.0).
+    if (process.env.BUCHBINDER_EMBED_PER_CHUNK === '1') {
+        for (let i = 0; i < chunks.length; i++) {
+            try {
+                const [vec] = await embed([chunks[i].text], { model: embedModel })
+                vectors[i] = vec ?? null
+            } catch (err) {
+                if (!opts.quiet) {
+                    console.error(`[index-builder] Embedding failed for ${chunks[i].source || 'chunk'}: ${err.message}`)
+                }
+            }
+        }
+        return vectors
+    }
+
     const BATCH_SIZE = 32
     for (let start = 0; start < chunks.length; start += BATCH_SIZE) {
         const slice = chunks.slice(start, start + BATCH_SIZE)

@@ -4,6 +4,11 @@
   "description": "Professional-grade book writing workflow for OpenCode — 29-subcommand slash command router, 26 hard-block quality gates, 8 HITL features, XML-structured drafting, per-character voice profiles, series lorebook infrastructure, and an OpenCode TUI sidebar plugin.",
   "type": "module",
   "main": "bin/install.mjs",
+  "exports": {
+    ".": "./src/hooks-plugin/index.ts",
+    "./server": "./src/hooks-plugin/index.ts",
+    "./tui": "./src/plugins/buchbinder-sidebar.tsx"
+  },
   "bin": {
     "buchbinder": "bin/install.mjs",
     "buchbinder-refresh": "bin/refresh.mjs",
@@ -57,6 +62,7 @@
   "dependencies": {
     "@huggingface/transformers": "^4.3.0",
     "@inquirer/prompts": "^7.0.0",
+    "@opencode/plugin": "latest",
     "@opentui/core": ">=0.1.97",
     "@opentui/solid": ">=0.1.97",
     "chalk": "^5.3.0",

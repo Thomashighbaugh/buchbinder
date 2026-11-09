@@ -14,7 +14,7 @@
     "jsx": "preserve",
     "jsxImportSource": "@opentui/solid",
     "noEmit": true,
-    "types": ["@opencode-ai/plugin"]
+    "types": ["@opencode/plugin"]
   },
   "include": [
     "buchbinder-sidebar.tsx",

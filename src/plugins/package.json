@@ -1,24 +1,21 @@
 {
   "name": "buchbinder-sidebar",
-  "version": "0.1.0",
-  "description": "Buchbinder TUI Sidebar Plugin — instant /buchbinder menu, dashboard, gates, diff, visualizations",
+  "version": "0.2.1",
+  "description": "Buchbinder TUI Sidebar Plugin (OpenCode v2) — /buchbinder menu, dashboard, gates, diff, visualizations",
   "type": "module",
   "main": "./buchbinder-sidebar.tsx",
   "exports": {
     ".": "./buchbinder-sidebar.tsx",
     "./tui": "./buchbinder-sidebar.tsx"
   },
-  "oc-plugin": ["tui"],
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
-  "dependencies": {
-    "@opentui/core": ">=0.1.97",
-    "@opentui/solid": ">=0.1.97",
-    "solid-js": "^1.9.0"
-  },
   "peerDependencies": {
-    "@opencode-ai/plugin": ">=1.14.0",
+    "@opencode-ai/plugin": "*",
+    "@opentui/core": "*",
+    "@opentui/solid": "*",
+    "solid-js": ">=1.9.0",
     "fs-extra": "^11.0.0"
   },
   "license": "MIT"

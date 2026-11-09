@@ -1,21 +1,24 @@
 /**
- * Buchbinder — Token Efficiency & API Reduction Hooks
+ * Buchbinder — Token Efficiency & API Reduction Hooks (OpenCode v2 server plugin)
  *
- * Registered as a server-side plugin in .opencode/opencode.jsonc alongside
- * the TUI sidebar plugin. These hooks reduce API calls and token waste
- * without reducing functionality.
+ * Registered as the server part of the Buchbinder plugin package. These hooks
+ * reduce API calls and token waste without reducing functionality.
  *
- * Hooks implemented:
- *   1. experimental.session.compacting — Preserve phase state across compaction
- *   2. experimental.chat.system.transform — Inject only relevant phase instructions
- *   3. experimental.chat.messages.transform — Prune stale/resolved messages
- *   4. tool.execute.after — Cache deterministic tool outputs
- *   5. chat.params — Reduce output tokens for non-creative phases
- *   6. experimental.compaction.autocontinue — Skip synthetic continue when done
- *   7. tool.execute.before — Block redundant re-reads of unchanged files
+ * Migrated from the V1 hook-return-object pattern to the OpenCode v2 spec:
+ *   - `Plugin.define({ id, setup(ctx) })` entrypoint (`@opencode/plugin`)
+ *   - Hooks registered via `ctx.session.hook(...)` / `ctx.tool.hook(...)`
+ *
+ * Hook mapping (V1 -> V2):
+ *   1. experimental.session.compacting      -> ctx.session.hook("compaction")
+ *   2. experimental.chat.system.transform   -> ctx.session.hook("context")  [system]
+ *   3. experimental.chat.messages.transform -> ctx.session.hook("context")  [messages]
+ *   4. tool.execute.after                   -> ctx.tool.hook("execute.after")
+ *   5. chat.params                          -> ctx.session.hook("context")  [options]
+ *   6. experimental.compaction.autocontinue -> no direct V2 hook (re-evaluated;
+ *                                              phase state gates compaction work)
+ *   7. tool.execute.before                  -> ctx.tool.hook("execute.before")
  */
 
-import type { Plugin } from '@opencode-ai/plugin'
 import { readFileSync, existsSync, writeFileSync, mkdirSync } from 'fs'
 import { join, dirname } from 'path'
 
@@ -84,48 +87,46 @@ interface PhaseState {
   nextStep?: string
 }
 
-/** Extract the buchbinder phase from a message, if any. */
+/** Extract the buchbinder phase from text, if any. */
 function detectPhase(text: string | undefined | null): string | null {
   if (!text || typeof text !== 'string') return null
   const m = text.match(/\/buchbinder(?:-router)?\s+(\S+)/)
   return m ? m[1] : null
 }
 
-/** Safely extract text content from a UserMessage (content field varies by SDK version). */
-function getMessageText(message: any): string {
-  if (!message) return ''
-  if (typeof message.content === 'string') return message.content
-  if (typeof message.text === 'string') return message.text
-  if (Array.isArray(message.parts)) {
-    return message.parts
-      .filter((p: any) => p?.type === 'text' && typeof p.text === 'string')
-      .map((p: any) => p.text)
-      .join(' ')
+/** Best-effort text extraction from v2 message/context shapes. */
+function extractText(value: any): string {
+  if (!value) return ''
+  if (typeof value === 'string') return value
+  if (Array.isArray(value)) return value.map(extractText).join(' ')
+  if (typeof value === 'object') {
+    if (typeof value.text === 'string') return value.text
+    if (typeof value.content === 'string') return value.content
+    if (Array.isArray(value.content)) return extractText(value.content)
+    if (Array.isArray(value.parts)) return extractText(value.parts)
   }
   return ''
 }
 
-/** Files that are safe to cache (deterministic reads). */
-const CACHEABLE_READS = new Set([
-  'read', 'grep', 'glob', 'list_mcp_resources', 'list_mcp_resource_templates',
-])
+function phaseFromContext(event: any, projectRoot: string): string | null {
+  // Prefer persisted phase state (set by the workflow), fall back to scanning
+  // the request messages for a /buchbinder command.
+  const state = readJson<PhaseState>(statePath(projectRoot, PHASE_STATE_FILE), {})
+  if (state.currentPhase) return state.currentPhase
+  const msgs = event?.messages
+  if (Array.isArray(msgs)) {
+    for (let i = msgs.length - 1; i >= 0; i--) {
+      const p = detectPhase(extractText(msgs[i]))
+      if (p) return p
+    }
+  }
+  return null
+}
 
-// ─── Plugin ────────────────────────────────────────────────────────────────
-
-const plugin: Plugin = async ({ directory, client }) => {
-  const projectRoot = directory
-  const sp = (file: string) => statePath(projectRoot, file)
-
-  return {
-    // ── 1. Preserve phase state across compaction ──
-    // Without this, after compaction the agent forgets what phase it's in,
-    // what chapter it was working on, and what gate results were. It has to
-    // re-read state files, costing 2-3 extra API calls per compaction.
-    "experimental.session.compacting": async (_input, output) => {
-      const phaseState = readJson<PhaseState>(sp(PHASE_STATE_FILE), {})
-      if (!phaseState.currentPhase) return
-
-      output.context.push(`
+function phaseStateSummary(projectRoot: string): string | null {
+  const phaseState = readJson<PhaseState>(statePath(projectRoot, PHASE_STATE_FILE), {})
+  if (!phaseState.currentPhase) return null
+  return `
 ## Buchbinder Phase State (preserved across compaction)
 
 Current phase: ${phaseState.currentPhase || 'none'}
@@ -133,129 +134,145 @@ Current chapter: ${phaseState.currentChapter || 'none'}
 Gate results: ${phaseState.gateSummary || 'none'}
 Last action: ${phaseState.lastAction || 'none'}
 Next step: ${phaseState.nextStep || 'Run /buchbinder guided to assess state'}
-`)
-    },
+`.trim()
+}
 
-    // ── 2. Inject only relevant system instructions per phase ──
-    // The default system prompt includes every skill, rule, and instruction
-    // file. For a specific phase like "cite" or "verify", most of that is
-    // dead weight. This hook trims the system prompt to only what the
-    // current phase needs, saving 30-50% on system prompt tokens.
-    "experimental.chat.system.transform": async (input, output) => {
-      // Only trim if we can detect the phase from recent messages
-      // (we don't have access to messages here, so we use the phase state)
-      const phaseState = readJson<PhaseState>(sp(PHASE_STATE_FILE), {})
-      const phase = phaseState.currentPhase
+/** System parts that carry OpenCode/buchbinder instructions worth keeping. */
+function isEssentialSystemPart(part: any, phase: string): boolean {
+  const text = typeof part === 'string' ? part : extractText(part)
+  if (!text) return true
+  if (text.includes('AGENTS.md') || text.includes('karpathy') || text.includes('shell_strategy')) return true
+  if (text.includes('file-operations') || text.includes('security') || text.includes('completion-guardrail')) return true
+  if (phase && text.includes(phase)) return true
+  if (text.includes('buchbinder') || text.includes('Buchbinder')) return true
+  return false
+}
 
-      if (!phase) return // no phase detected, keep default system prompt
+/** Files/tools that are safe to cache (deterministic reads). */
+const CACHEABLE_READS = new Set([
+  'read', 'grep', 'glob', 'list_mcp_resources', 'list_mcp_resource_templates',
+])
 
-      // Keep only the essential instructions. The phase-specific skills
-      // and rules will be loaded by the agent when it needs them.
-      // This prevents the system prompt from ballooning with every
-      // possible skill definition.
-      output.system = output.system.filter(s => {
-        // Always keep core instructions
-        if (s.includes('AGENTS.md') || s.includes('karpathy') || s.includes('shell_strategy')) return true
-        if (s.includes('file-operations') || s.includes('security') || s.includes('completion-guardrail')) return true
-        // Keep phase-relevant instructions
-        if (s.includes(phase)) return true
-        // Keep buchbinder-specific instructions
-        if (s.includes('buchbinder') || s.includes('Buchbinder')) return true
-        // Drop everything else — the agent loads skills on demand
-        return false
-      })
-    },
+// ─── Plugin (OpenCode v2 server part) ─────────────────────────────────────
 
-    // ── 3. Prune stale messages from context ──
-    // After a tool call produces output, the full output stays in the
-    // message history forever. For large outputs (file reads, grep results),
-    // this bloats context. We keep the last N messages and drop resolved
-    // tool outputs that are no longer needed.
-    "experimental.chat.messages.transform": async (_input, output) => {
-      const MAX_MESSAGES = 30
-      if (output.messages.length <= MAX_MESSAGES) return
+export default {
+  id: 'buchbinder-hooks',
+  async setup(ctx: any) {
+    // V2 context exposes the plugin's load location. Fall back to cwd for
+    // compatibility with runtimes that may not populate every field.
+    const projectRoot: string = (ctx as any).location?.directory || process.cwd()
+    const sp = (file: string) => statePath(projectRoot, file)
 
-      // Keep the first message (system/user intent) and last MAX_MESSAGES
-      const first = output.messages[0]
-      const recent = output.messages.slice(-MAX_MESSAGES)
-      output.messages = [first, ...recent]
-    },
+    // ── 1. Preserve phase state across compaction ──
+    // V1: experimental.session.compacting (pushed to output.context).
+    // V2: session "compaction" hook. Inject phase state into the compaction
+    // request's system parts so the summary retains workflow position. We do
+    // NOT set event.result (that would skip the model summary entirely).
+    await ctx.session.hook('compaction', (event: any) => {
+      const summary = phaseStateSummary(projectRoot)
+      if (!summary) return
+      const part = { type: 'text', text: summary }
+      if (Array.isArray(event.system)) event.system.push(part)
+      else if (Array.isArray(event.messages)) event.messages.push({ role: 'system', content: summary })
+    })
 
-    // ── 4. Cache deterministic tool outputs ──
-    // Repeated reads of the same file in the same session produce the same
-    // output but cost LLM context tokens each time. Cache them.
-    "tool.execute.after": async (input, output) => {
-      if (!CACHEABLE_READS.has(input.tool)) return
+    // ── 2 & 3 & 5. Agent-loop context shaping ──
+    // V1: experimental.chat.system.transform, experimental.chat.messages.transform,
+    //     chat.params. V2: session "context" hook (agent loop) edits system,
+    //     messages, and options for the outgoing model call only.
+    await ctx.session.hook('context', (event: any) => {
+      const phase = phaseFromContext(event, projectRoot)
 
-      // Only cache reads that reference specific file paths
-      const args = input.args as any
-      const cacheKey = `${input.tool}:${JSON.stringify(args)}`
-      const cache = readJson<Record<string, { output: string; title: string }>>(sp(TOOL_CACHE_FILE), {})
-
-      // Store the output for future reuse
-      cache[cacheKey] = {
-        output: output.output,
-        title: output.title,
+      // (2) Keep only essential + phase-relevant system instructions.
+      if (phase && Array.isArray(event.system)) {
+        event.system = event.system.filter((s: any) => isEssentialSystemPart(s, phase))
       }
 
-      // Prune old entries
+      // (3) Prune stale messages — keep the first and the most recent window.
+      if (Array.isArray(event.messages)) {
+        const MAX_MESSAGES = 30
+        if (event.messages.length > MAX_MESSAGES) {
+          const first = event.messages[0]
+          const recent = event.messages.slice(-MAX_MESSAGES)
+          event.messages = [first, ...recent]
+        }
+      }
+
+      // (5) Reduce output tokens / temperature for non-creative phases.
+      if (phase) {
+        const budget = PHASE_BUDGETS[phase]
+        if (budget) {
+          event.options ??= {}
+          event.options.maxTokens = budget.maxTokens
+          event.options.temperature = budget.temperature
+        }
+      }
+    })
+
+    // Also apply phase-aware trimming to transient generate requests.
+    await ctx.session.hook('generate', (event: any) => {
+      const phase = phaseFromContext(event, projectRoot)
+      if (phase && Array.isArray(event.system)) {
+        event.system = event.system.filter((s: any) => isEssentialSystemPart(s, phase))
+      }
+      if (phase) {
+        const budget = PHASE_BUDGETS[phase]
+        if (budget) {
+          event.options ??= {}
+          event.options.maxTokens = budget.maxTokens
+          event.options.temperature = budget.temperature
+        }
+      }
+    })
+
+    // ── 4. Cache deterministic tool outputs ──
+    await ctx.tool.hook('execute.after', (event: any) => {
+      const toolName: string = event.tool || event.name || ''
+      if (!CACHEABLE_READS.has(toolName)) return
+
+      // V2 event shape: completed results carry `result`; tolerate V1-like
+      // `output` for compatibility across minor SDK revisions.
+      const result = event.result ?? event.output
+      if (event.status && event.status !== 'completed') return
+      if (!result) return
+
+      const args = event.input ?? event.args ?? {}
+      const cacheKey = `${toolName}:${JSON.stringify(args)}`
+      const cache = readJson<Record<string, any>>(sp(TOOL_CACHE_FILE), {})
+
+      cache[cacheKey] = {
+        output: typeof result === 'string' ? result : (result.content ?? result.output ?? result),
+        title: result.title ?? toolName,
+      }
+
       const keys = Object.keys(cache)
       if (keys.length > MAX_CACHED_TOOLS) {
-        const toDelete = keys.slice(0, keys.length - MAX_CACHED_TOOLS)
-        for (const k of toDelete) delete cache[k]
+        for (const k of keys.slice(0, keys.length - MAX_CACHED_TOOLS)) delete cache[k]
       }
 
       writeJson(sp(TOOL_CACHE_FILE), cache)
-    },
+    })
 
-    // ── 5. Reduce output tokens for non-creative phases ──
-    // Phases like verify, cite, publish don't need 16K output tokens.
-    // Reducing maxOutputTokens saves API costs and speeds up responses.
-    "chat.params": async (input, output) => {
-      // Detect phase from the user message
-      const phase = detectPhase(getMessageText(input.message))
-      if (!phase) return
+    // ── 7. Redundant re-read guard (cache-aware) ──
+    // V2 has no supported way to short-circuit tool execution from a hook, so
+    // we keep the read cheap by maintaining the cache (hook 4) and leaving a
+    // marker point for future cache-hit injection if the SDK adds it.
+    await ctx.tool.hook('execute.before', (event: any) => {
+      const toolName: string = event.tool || event.name || ''
+      if (toolName !== 'read') return
+      const args = event.input ?? event.args ?? {}
+      if (!args.filePath && !args.path) return
+      const cacheKey = `read:${JSON.stringify(args)}`
+      const cache = readJson<Record<string, any>>(sp(TOOL_CACHE_FILE), {})
+      // Cache hit exists: the read will proceed (v2 hook cannot return a cached
+      // result), but the after-hook keeps the cache warm for the session.
+      void cache[cacheKey]
+    })
 
-      const budget = PHASE_BUDGETS[phase]
-      if (!budget) return
-
-      output.maxOutputTokens = budget.maxTokens
-      output.temperature = budget.temperature
-    },
-
-    // ── 6. Skip synthetic continue when phase is complete ──
-    // After a phase finishes, OpenCode adds a synthetic "continue" message
-    // to keep the agent going. For buchbinder phases, this is wasteful —
-    // the phase should end cleanly. Skip it.
-    "experimental.compaction.autocontinue": async (input, output) => {
-      const phase = detectPhase(getMessageText(input.message))
-      if (phase) {
-        // Phase commands should not auto-continue — the agent reports
-        // results and stops. The user decides what to do next.
-        output.enabled = false
-      }
-    },
-
-    // ── 7. Block redundant re-reads of unchanged files ──
-    // If the agent reads a file it already read (and the file hasn't been
-    // written to since), the cached output from hook #4 can serve it.
-    // This hook marks the read as cacheable so the agent can skip it.
-    "tool.execute.before": async (input, output) => {
-      if (input.tool === 'read') {
-        const args = output.args as any
-        if (args.filePath) {
-          // Check if we have a cached result for this exact read
-          const cacheKey = `read:${JSON.stringify(args)}`
-          const cache = readJson<Record<string, any>>(sp(TOOL_CACHE_FILE), {})
-          if (cache[cacheKey]) {
-            // The output is cached — we could skip the read entirely,
-            // but we let it proceed and rely on the after-hook to
-            // serve the cached version. This is safer.
-          }
-        }
-      }
-    },
-  }
+    // Note (V1: experimental.compaction.autocontinue): no direct V2 equivalent.
+    // The migration guide requires re-evaluating this behavior. Buchbinder phases
+    // report results and stop by design; phase state is preserved by hook (1) so
+    // the user — not an auto-continue — decides the next step.
+  },
 }
 
-export default plugin

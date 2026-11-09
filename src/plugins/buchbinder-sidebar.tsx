@@ -1,45 +1,34 @@
 /** @jsxImportSource @opentui/solid */
 /**
- * Buchbinder Sidebar — TUI Plugin Entry Point
+ * Buchbinder Sidebar — TUI Plugin (OpenCode v2 spec)
  *
  * Registers:
- *   - `/buchbinder` slash command → instant DialogSelect menu
- *   - 3 sidebar slots (title, content, footer)
+ *   - `/buchbinder` slash command (via keymap layer) → dialog select menu
+ *   - sidebar.content / sidebar.footer slots
  *
- * Uses api.command.register() (same API as the working hubs-tui plugin).
+ * Migrated to OpenCode v2 TUI plugin API:
+ *   - `Plugin.define` from `@opencode/plugin/tui`
+ *   - `setup(context)` with `context.keymap`, `context.ui.slot/dialog/toast`,
+ *     `context.client`, `context.location`
  */
 
-import type { TuiPlugin, TuiPluginApi, TuiPluginMeta, TuiDialogSelectOption, TuiDialogSelectProps } from '@opencode-ai/plugin/tui'
+import { Plugin } from '@opencode/plugin/tui'
 import { onMount } from 'solid-js'
 import { SidebarTitle } from './components/sidebar-title.js'
 import { SidebarContent } from './components/sidebar-content.js'
 import { SidebarFooter } from './components/sidebar-footer.js'
 import { useProjectState, setInjector } from './hooks/use-project-state.js'
 
-/** A single /buchbinder phase (label must match the hub subcommand). */
 type PhaseEntry = { label: string; description: string }
 
-/**
- * Local extension of the plugin's DialogSelect props. The shipped
- * `@opencode-ai/plugin` type surface (1.17.x) exposes per-option `category`
- * but omits the dialog-level `sectionNavigation` flag that the runtime
- * DialogSelect supports: when true, it binds alt+↑ / alt+↓ to jump between
- * category sections. Passing it on an older runtime is a harmless no-op.
- */
-type BuchbinderDialogSelectProps = TuiDialogSelectProps<string> & { sectionNavigation?: boolean }
+type MenuCategory = { key: string; title: string; description: string; phases: PhaseEntry[] }
 
 /**
- * A grouped menu category. DialogSelect renders a single scrolling list with
- * a `floor(terminalHeight / 2) - 6`-row visible window, a `…` overflow
- * indicator, and full keyboard scroll (arrows, page-up/down, home/end), so a
- * flat 29-phase menu scrolls rather than truncating. Grouping every phase
- * under its `category` renders bold section headers and — with
- * `sectionNavigation` — lets alt+↑/↓ jump between sections like tabs.
+ * Grouped /buchbinder phases. Dialog select renders a scrollable list with
+ * category headers and keyboard navigation (arrows, page up/down, home/end).
  *
  * Must stay in sync with tools/hubs/buchbinder/index.ts.
  */
-type MenuCategory = { key: string; title: string; description: string; phases: PhaseEntry[] }
-
 const BUCHBINDER_MENU: MenuCategory[] = [
   {
     key: 'start',
@@ -107,99 +96,171 @@ const BUCHBINDER_MENU: MenuCategory[] = [
   },
 ]
 
-/** Flat view of every phase, for the "All phases" filter entry. */
 const ALL_PHASES: PhaseEntry[] = BUCHBINDER_MENU.flatMap((c) => c.phases)
 
-const tui: TuiPlugin = async (api: TuiPluginApi, _o, _meta: TuiPluginMeta) => {
-  const projectRoot = api.state.path.directory
+export default Plugin.define({
+  id: 'buchbinder-sidebar',
+  setup(context) {
+    // Resolve the project directory from the v2 location/context.
+    const location: any = (context as any).location ?? (context as any).data?.location?.default?.()
+    const projectRoot: string = location?.directory || process.cwd()
 
-  // Wire command injector so sidebar can inject /buchbinder commands into the prompt.
-  setInjector((cmd: string) => {
-    api.client.tui.appendPrompt({ text: cmd + ' ' }).catch(() => {})
-  })
+    const client: any = (context as any).client
+    const toast = (message: string, variant: 'info' | 'warning' | 'error' = 'info') =>
+      (context as any).ui?.toast?.show?.({ title: 'Buchbinder', message, variant })
 
-  // Single sidebar state — no tab switching.
-  const noopSet = () => {}
-  const sidebarState = useProjectState(projectRoot, () => 'dashboard', noopSet)
-
-  onMount(() => {
-    api.ui.toast({
-      title: 'Buchbinder',
-      message: 'Scroll sidebar for all sections · /buchbinder for the menu',
-      duration: 6000,
-      variant: 'info',
-    })
-  })
-
-  // Register sidebar slots
-  api.slots.register({
-    slots: {
-      'sidebar_title': (_ctx, props: { session_id: string; title: string }) =>
-        <SidebarTitle {...props} state={sidebarState} />,
-
-      'sidebar_content': (_ctx, props: { session_id: string }) =>
-        <SidebarContent {...props} state={sidebarState} />,
-
-      'sidebar_footer': (_ctx, props: { session_id: string }) =>
-        <SidebarFooter {...props} state={sidebarState} />,
-    },
-  })
-
-  // Register the /buchbinder slash command — uses the same api.command.register()
-  // API that the working hubs-tui plugin uses. The deprecated keymap API
-  // silently fails in current OpenCode.
-  if (api.command) {
-    api.command.register(() => {
-      const DS = api.ui.DialogSelect
-
-      // Dispatch a chosen phase into the prompt. The user presses Enter to run
-      // it through the buchbinder.md router, which calls hubMenu.
-      const choosePhase = (phase: PhaseEntry) => {
-        api.ui.dialog.clear()
-        const cmd = `/buchbinder ${phase.label}`
-        api.ui.toast({ title: 'Buchbinder', message: `Routing to ${phase.label}` })
-        api.client.tui.appendPrompt({ text: cmd }).catch(() => {})
+    // Resolve the active session across OpenCode v2 TUI route shapes.
+    const sessionID = (): string | undefined => {
+      const pick = (v: any): string | undefined => (typeof v === 'string' && /^ses/.test(v) ? v : undefined)
+      const dig = (o: any, depth = 0): string | undefined => {
+        if (!o || typeof o !== 'object' || depth > 3) return undefined
+        const direct = pick(o.sessionID) ?? pick(o.sessionId) ?? pick(o.session_id) ?? pick(o.id)
+        if (direct) return direct
+        for (const k of ['route', 'params', 'data', 'value', 'info', 'session', 'state']) {
+          const r = dig(o[k], depth + 1); if (r) return r
+        }
+        return undefined
       }
+      try {
+        const candidates = [
+          (context as any).ui?.router?.current?.(),
+          (context as any).ui?.router?.route,
+          (context as any).route?.current,
+          (context as any).route,
+        ]
+        for (const c of candidates) { const id = dig(c); if (id) return id }
+      } catch { /* ignore */ }
+      return undefined
+    }
 
-      // One flat dialog listing every phase, grouped by category. DialogSelect
-      // scrolls a fixed-height window (arrows / page-up/down / home/end) with a
-      // `…` overflow indicator, and `sectionNavigation` binds alt+↑/↓ to jump
-      // between category sections — so nothing ever runs off the viewport.
-      const openMenu = () => {
-        api.ui.dialog.setSize('large')
-        const options: TuiDialogSelectOption<string>[] = BUCHBINDER_MENU.flatMap((c) =>
-          c.phases.map((p) => ({
-            title: p.label,
-            value: p.label,
-            description: p.description,
-            category: c.title,
-          })),
-        )
-        api.ui.dialog.replace(() =>
-          DS({
-            title: 'Buchbinder — Phases',
-            placeholder: `Type to filter ${ALL_PHASES.length} phases · alt+↑/↓ jumps sections · scroll for more`,
-            options,
-            sectionNavigation: true,
-            onSelect: (sel: TuiDialogSelectOption<string>) => {
-              const phase = ALL_PHASES.find((p) => p.label === sel.value)
-              if (phase) choosePhase(phase)
-            },
-          } as BuchbinderDialogSelectProps),
-        )
+    // Phases backed by a real registered slash command (bypass prompt routing).
+    const DIRECT_CMD: Record<string, string> = {
+      // none of the menu phases have a dedicated /buchbinder-<id> today; extend here if added.
+    }
+
+    // Submit text to the current session. Uses session.prompt (steer) so it runs now.
+    const submitPrompt = async (text: string) => {
+      const sid = sessionID()
+      if (!sid) { toast('Open a session first (restart TUI if already in one)', 'warning'); return }
+      try {
+        if (client?.session?.prompt) {
+          await client.session.prompt({ sessionID: sid, text, resume: true, delivery: 'steer' })
+          return
+        }
+      } catch (e) {
+        toast(`Could not submit: ${e instanceof Error ? e.message : String(e)}`, 'error')
+        return
       }
+      if (client?.tui?.appendPrompt) {
+        await client.tui.appendPrompt({ text: text + ' ' }).catch(() => {})
+        return
+      }
+      toast('No session prompt API available', 'error')
+    }
 
-      return [{
-        title: 'Buchbinder: Phase Menu',
-        value: 'buchbinder',
-        description: 'Open the Buchbinder phase menu — grouped by stage, every phase visible',
-        category: 'Buchbinder',
-        slash: { name: 'buchbinder', aliases: ['kom', 'k'] },
-        onSelect: openMenu,
-      }]
+    // Self-contained dispatch: never routes via global hubMenu/user-scope hubs.
+    const dispatchPhase = async (label: string, args = '') => {
+      const phase = ALL_PHASES.find((p) => p.label === label)
+      if (!phase) return
+      const suffix = args.trim()
+      toast(`Routing to ${phase.label}`)
+      if (DIRECT_CMD[phase.label]) {
+        await submitPrompt(`${DIRECT_CMD[phase.label]}${suffix ? ` ${suffix}` : ''}`)
+        return
+      }
+      const prompt =
+        `Buchbinder (self-contained project workflow): execute phase \`${phase.label}\`${suffix ? ` with args: ${suffix}` : ''}.\n\n` +
+        `IMPORTANT: This is a project-local Buchbinder pipeline. Do NOT call \`hubMenu\` and do NOT route to global/user-scope OpenCode hubs. ` +
+        `Use this project's installed Buchbinder skills, commands, and tools under .opencode/ to perform the phase. Report results and suggest the next phase.`
+      await submitPrompt(prompt)
+    }
+
+    // Ask for optional details (chapter, topic, mode, instructions) then run.
+    const askAndDispatch = async (label: string) => {
+      const prompt: any = (context as any).ui?.dialog?.prompt
+      if (prompt) {
+        try {
+          const details = await prompt({
+            title: `Buchbinder — ${label}`,
+            placeholder: 'Details / instructions (Enter to run, Esc for none)',
+          })
+          if (details === null || details === undefined) return // cancelled
+          await dispatchPhase(label, typeof details === 'string' ? details : '')
+          return
+        } catch { /* fall through */ }
+      }
+      await dispatchPhase(label)
+    }
+
+    // Wire command injector so sidebar buttons run /buchbinder commands.
+    setInjector((cmd: string) => { void submitPrompt(cmd) })
+
+    // Single sidebar state — no tab switching.
+    const noopSet = () => {}
+    const sidebarState = useProjectState(projectRoot, () => 'dashboard', noopSet)
+
+    onMount(() => {
+      toast('Scroll sidebar for sections · /buchbinder for the menu', 'info')
     })
-  }
-}
 
-const plugin = { id: 'buchbinder-sidebar', tui }
-export default plugin
+    const openMenu = async () => {
+      const select = (context as any).ui?.dialog?.select
+      if (!select) return
+      const options = BUCHBINDER_MENU.flatMap((c) =>
+        c.phases.map((p) => ({
+          title: p.label,
+          value: p.label,
+          description: p.description,
+          category: c.title,
+        })),
+      )
+      const value = await select({
+        title: 'Buchbinder — Phases',
+        placeholder: 'Choose a phase or sub-command…',
+        options,
+      })
+      if (typeof value === 'string') await askAndDispatch(value)
+    }
+
+    // Sole /buchbinder handler (arg-aware): bare -> menu; `<phase> [args]` -> run.
+    // `arguments: true` lets `/buchbinder draft 3` dispatch directly.
+    ;(context as any).keymap?.layer?.(() => ({
+      mode: 'global',
+      priority: 10,
+      commands: [
+        {
+          id: 'buchbinder.menu',
+          title: 'Buchbinder: Phase Menu',
+          description: 'Open the Buchbinder phase menu — grouped by stage, every phase visible',
+          group: 'Buchbinder',
+          palette: true,
+          slash: { name: 'buchbinder', aliases: ['kom', 'k'], arguments: true },
+          run: (input?: string) => {
+            const raw = (typeof input === 'string' ? input : '').trim()
+            if (!raw) { void openMenu(); return }
+            const [head, ...rest] = raw.split(/\s+/)
+            const phase = ALL_PHASES.find((p) => p.label === head)
+            if (phase) void dispatchPhase(phase.label, rest.join(' '))
+            else void openMenu()
+          },
+        },
+      ],
+    }))
+
+    // Register sidebar slots (v2: sidebar.content / sidebar.footer).
+    ;(context as any).ui?.slot?.({
+      append: 'sidebar.content',
+      render: (props: any) => (
+        <box flexDirection="column">
+          <SidebarTitle session_id={props?.sessionID} title={props?.title ?? 'Buchbinder'} state={sidebarState} />
+          <SidebarContent session_id={props?.sessionID} state={sidebarState} />
+        </box>
+      ),
+    })
+
+    ;(context as any).ui?.slot?.({
+      append: 'sidebar.footer',
+      render: (props: any) => <SidebarFooter session_id={props?.sessionID} state={sidebarState} />,
+    })
+  },
+})

@@ -3,8 +3,9 @@
  * Buchbinder — Per-Project Installer (OpenCode only)
  *
  * Installs the buchbinder workflow into a book project's .opencode/ directory.
- * Copies skills, tools, lib, templates, slash commands, and the built TUI sidebar plugin.
- * Writes opencode.jsonc to register the plugin so the /buchbinder instant menu loads.
+ * Copies skills, tools, lib, templates, slash commands, and the local plugins
+ * (hooks server plugin + Buchbinder sidebar TUI plugin, OpenCode 2 spec).
+ * Writes opencode.jsonc (v2 `plugins`) to register both local plugin directories.
  *
  * Usage:
  *   node bin/install.mjs      # run it; every decision is a prompt
@@ -69,7 +70,7 @@ async function printPerProjectAck() {
     console.log('');
     console.log(chalk.white('  • Copy skills, tools, templates, slash commands, and the TUI plugin'));
     console.log(chalk.white('  • Create .opencode/opencode.jsonc, tui.json, and package.json'));
-    console.log(chalk.white('    (registering buchbinder-sidebar as a project-local plugin)'));
+    console.log(chalk.white('    (registering hooks + buchbinder-sidebar as local OpenCode 2 plugins)'));
     console.log(chalk.white('  • Install the npm deps buchbinder needs to run'));
     console.log(chalk.white('  • Create ./book, ./memory, ./output/manuscript if they don\'t exist'));
     console.log('');
@@ -532,15 +533,16 @@ async function main() {
     log(`    ${chalk.green('\u2713')} skills/`);
     log(`    ${chalk.green('\u2713')} tools/ (incl. hubs/buchbinder/) + lib/ + plugins/lib/`);
     log(`    ${chalk.green('\u2713')} templates/`);
-    log(`    ${chalk.green('\u2713')} plugins/buchbinder-sidebar/ (TSX source — registers /buchbinder menu)`);
+    log(`    ${chalk.green('\u2713')} plugins/buchbinder-sidebar/ (OpenCode 2 TUI plugin — /buchbinder menu)`);
+    log(`    ${chalk.green('\u2713')} plugins/hooks/ (OpenCode 2 server hooks plugin)`);
     log('');
-    log(`  ${chalk.green('\u2713')} tui.json — TUI keybinds + plugin path`);
-    log(`  ${chalk.green('\u2713')} opencode.jsonc — plugin registered (loads the sidebar)`);
-    log(`  ${chalk.green('\u2713')} package.json — runtime deps (solid-js, @opentui/solid, fs-extra, @huggingface/transformers)`);
+    log(`  ${chalk.green('\u2713')} tui.json — TUI keybinds + plugins`);
+    log(`  ${chalk.green('\u2713')} opencode.jsonc — plugins registered (v2 \`plugins\`: hooks + sidebar)`);
+    log(`  ${chalk.green('\u2713')} package.json — runtime deps (@opencode/plugin, @opentui/*, solid-js, fs-extra, @huggingface/transformers)`);
     log('');
     log('  Next steps:');
     log('    1. Open your project in OpenCode (restart if already open)');
-    log('    2. Verify plugin loaded: opencode debug info should list buchbinder-sidebar');
+    log('    2. Verify plugins loaded: opencode debug info should list hooks and buchbinder-sidebar');
     log('    3. Type /buchbinder to open the instant phase menu');
     if (isSeries) {
         log(`    ✓ Series linked: ${seriesId}, book ${bookNumber}`);

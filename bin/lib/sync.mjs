@@ -147,7 +147,8 @@ function walkAndCopy(srcDir, destDir, mode, manifestFiles, callback) {
             walkAndCopy(srcPath, destPath, mode, manifestFiles, callback)
         } else if (entry.name.endsWith('.ts') || entry.name.endsWith('.mjs')) {
             // Compute rel path under .opencode/ for the manifest lookup
-            const relUnderOpencode = path.relative(path.join(destDir, '..', '..'), destPath)
+            // Path relative to .opencode/ (destDir) so manifest lookups resolve in protect mode.
+            const relUnderOpencode = path.relative(destDir, destPath)
             const manifestSha = manifestFiles ? manifestFiles.get(relUnderOpencode) : null
             const result = smartCopyFile(srcPath, destPath, mode, manifestSha)
             callback(result)
@@ -293,7 +294,9 @@ export function copyHooksPlugin(destDir, mode, manifestFiles = null) {
     let copied = 0, skipped = 0
     for (const entry of fs.readdirSync(srcDir, { withFileTypes: true })) {
         if (!entry.isFile()) continue
-        if (!entry.name.endsWith('.ts') && !entry.name.endsWith('.js')) continue
+        const isCode = entry.name.endsWith('.ts') || entry.name.endsWith('.js')
+        const isManifest = entry.name === 'package.json'
+        if (!isCode && !isManifest) continue
         const result = smartCopyFile(
             path.join(srcDir, entry.name),
             path.join(destDir2, entry.name),
@@ -325,12 +328,21 @@ function copyDirDereferenced(srcDir, destDir, mode, manifestFiles) {
 
 // ─── Project Config (tui.json, opencode.jsonc, package.json) ────────────────
 
-const PLUGIN_ENTRY = './plugins/buchbinder-sidebar/index.js'
-const HOOKS_ENTRY = './plugins/hooks/index.js'
+// OpenCode v2: register local plugin directories (each exports ./server and/or ./tui).
+const PLUGIN_ENTRY = './plugins/buchbinder-sidebar'
+const HOOKS_ENTRY = './plugins/hooks'
+
+// Accept legacy (index.js file) and v2 (directory) entry forms for idempotent upgrades.
+function isSidebarEntry(p) {
+    return typeof p === 'string' && /buchbinder-sidebar(\/index\.(js|ts|tsx))?\/?$/.test(p)
+}
+function isHooksEntry(p) {
+    return typeof p === 'string' && /\/hooks(\/index\.(js|ts))?\/?$/.test(p)
+}
 
 // Transitive pins for the installed project. solid-js declares seroval
 // ~1.5.0, and 1.5.x carries a critical advisory (GHSA-p6vx-979v-rg4c) plus a
-// high one (GHSA-jp82-f5mq-hwhp); 1.6.3+ is patched. Forcing the override
+// high one (GHSA-jp82-f5mq-hwhp); 1.5.3+ is patched. Forcing the override
 // keeps every installed project off the vulnerable range.
 const REQUIRED_OVERRIDES = {
     seroval: '^1.6.3',
@@ -338,7 +350,7 @@ const REQUIRED_OVERRIDES = {
 }
 
 const REQUIRED_DEPS = {
-    '@opencode-ai/plugin': '1.17.9',
+    '@opencode/plugin': '*',
     '@opentui/core': '>=0.1.97',
     '@opentui/solid': '>=0.1.97',
     'solid-js': '^1.9.0',
@@ -349,42 +361,56 @@ const REQUIRED_DEPS = {
 
 /**
  * Ensure tui.json, opencode.jsonc, and package.json exist and register the
- * buchbinder-sidebar plugin. Additive only — never removes user-added keys.
+ * Buchbinder plugins (OpenCode v2: `plugins` key, directory entries). Additive
+ * only — never removes user-added keys. Migrates legacy `plugin` -> `plugins`.
  */
 export function ensureProjectConfig(destDir) {
     const tuiJsonPath = path.join(destDir, 'tui.json')
     const opencodeJsoncPath = path.join(destDir, 'opencode.jsonc')
     const pkgJsonPath = path.join(destDir, 'package.json')
 
-    // tui.json
+    // tui.json (v2: `plugins`, directory entries; migrate legacy `plugin`)
     if (!fs.existsSync(tuiJsonPath)) {
-        const config = { $schema: 'https://opencode.ai/tui.json', plugin: [PLUGIN_ENTRY] }
+        const config = { $schema: 'https://opencode.ai/tui.json', plugins: [PLUGIN_ENTRY] }
         fs.writeJsonSync(tuiJsonPath, config, { spaces: 2 })
     } else {
         const config = parseJsonc(tuiJsonPath)
         if (config) {
-            const plugins = Array.isArray(config.plugin) ? config.plugin : []
-            if (!plugins.some(p => typeof p === 'string' && p.endsWith('buchbinder-sidebar/index.js'))) {
-                config.plugin = [...plugins, PLUGIN_ENTRY]
+            let changed = false
+            const plugins = Array.isArray(config.plugins) ? config.plugins : []
+            if (Array.isArray(config.plugin)) {
+                for (const e of config.plugin) if (!plugins.includes(e)) plugins.push(e)
+                delete config.plugin
+                changed = true
+            }
+            if (!plugins.some(isSidebarEntry)) { plugins.push(PLUGIN_ENTRY); changed = true }
+            if (changed) {
+                config.plugins = plugins
+                delete config.plugin
                 fs.writeFileSync(tuiJsonPath, JSON.stringify(config, null, 2) + '\n', 'utf-8')
             }
         }
     }
 
-    // opencode.jsonc — register both plugins
+    // opencode.jsonc — register both plugins (v2: `plugins`, migrate legacy `plugin`)
     if (!fs.existsSync(opencodeJsoncPath)) {
-        const config = { plugin: [PLUGIN_ENTRY, HOOKS_ENTRY] }
+        const config = { plugins: [PLUGIN_ENTRY, HOOKS_ENTRY] }
         fs.writeFileSync(opencodeJsoncPath, JSON.stringify(config, null, 2) + '\n', 'utf-8')
     } else {
         const config = parseJsonc(opencodeJsoncPath)
         if (config) {
-            const plugins = Array.isArray(config.plugin) ? config.plugin : []
-            const hasSidebar = plugins.some(p => typeof p === 'string' && p.endsWith('buchbinder-sidebar/index.js'))
-            const hasHooks = plugins.some(p => typeof p === 'string' && p.endsWith('hooks/index.js'))
-            if (!hasSidebar) plugins.push(PLUGIN_ENTRY)
-            if (!hasHooks) plugins.push(HOOKS_ENTRY)
-            if (!hasSidebar || !hasHooks) {
-                config.plugin = plugins
+            let changed = false
+            const plugins = Array.isArray(config.plugins) ? config.plugins : []
+            if (Array.isArray(config.plugin)) {
+                for (const e of config.plugin) if (!plugins.includes(e)) plugins.push(e)
+                delete config.plugin
+                changed = true
+            }
+            if (!plugins.some(isSidebarEntry)) { plugins.push(PLUGIN_ENTRY); changed = true }
+            if (!plugins.some(isHooksEntry)) { plugins.push(HOOKS_ENTRY); changed = true }
+            if (changed) {
+                config.plugins = plugins
+                delete config.plugin
                 fs.writeFileSync(opencodeJsoncPath, JSON.stringify(config, null, 2) + '\n', 'utf-8')
             }
         }

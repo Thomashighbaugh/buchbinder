@@ -767,6 +767,17 @@ Agentic AI · LLM orchestration · multi-agent systems · compound AI systems ·
 
 ---
 
+## OpenCode v2 migration
+
+Buchbinder's TUI integration and command dispatch were migrated to the **OpenCode v2** plugin/command model:
+
+- **TUI plugin spec (v2):** the sidebar is a `Plugin.define` module (`@opencode/plugin/tui`) with `setup(ctx)`. It registers UI via `ctx.ui.slot` (`sidebar.content` / `sidebar.footer`), commands via `ctx.keymap.layer` (global, palette + slash), and interaction via `ctx.ui.dialog.select` / `ctx.ui.dialog.prompt` and `ctx.ui.toast.show`. Project location comes from `ctx.location`; prompts are delivered into the active session with `ctx.client.session.prompt({ sessionID, text, resume: true, delivery: "steer" })` and a robust session-id resolver across v2 route shapes.
+- **Self-contained dispatch (no global hub routing):** selecting a phase submits a **project-local, guarded** prompt. The sidebar never calls `hubMenu` and never routes to global/user-scope OpenCode hubs — Buchbinder owns its own pipeline and executes through this project's installed skills, commands, and tools under `.opencode/`. This fixes misrouting where a bare `/buchbinder <phase>` token was treated as text and delegated to the global hubs menu.
+- **Dispatcher removed:** the legacy `src/commands/buchbinder.md` text dispatcher is removed. The `/buchbinder` entrypoint is the plugin menu (picker + per-subcommand palette/slash entries), backed by the registered project subcommands (e.g. `buchbinder-gates`, `buchbinder-router`, `buchbinder-split-outline`) and the installed skills/tools.
+- **Project config:** `.opencode.json` / `opencode.jsonc` registers the project-local `buchbinder-sidebar` plugin; install/refresh/sync keep the plugin, commands, skills, and tools in sync per project.
+
+---
+
 ## License
 
 MIT. See [LICENSE](./LICENSE).

@@ -212,6 +212,13 @@ async function main() {
         log(`  Plugin:    ${pluginResult.copied} copied (${pluginResult.source})`)
     }
 
+    // Hooks plugin sync (idempotent, source-direct when present)
+    try {
+        const hr = copyHooksPlugin(destDir, 'overwrite', manifestFiles)
+        if (hr && (hr.copied || hr.skipped)) log(`  Hooks:     ${hr.copied} copied`)
+    } catch {}
+
+
     // ── Lore index ──
     let indexResult = null
     if (args.skipIndex) {

@@ -1,1 +1,1 @@
-export { default } from "./buchbinder-sidebar.tsx"
+export { default } from './buchbinder-sidebar.tsx'

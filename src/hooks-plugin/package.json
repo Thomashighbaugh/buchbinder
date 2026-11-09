@@ -1,0 +1,15 @@
+{
+  "name": "buchbinder-hooks",
+  "version": "0.1.0",
+  "description": "Buchbinder server hooks plugin (OpenCode 2)",
+  "type": "module",
+  "main": "./index.js",
+  "exports": {
+    ".": "./index.js",
+    "./server": "./index.js"
+  },
+  "dependencies": {
+    "@opencode/plugin": "*"
+  },
+  "license": "MIT"
+}

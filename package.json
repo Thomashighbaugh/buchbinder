@@ -1,7 +1,7 @@
 {
   "name": "buchbinder",
   "version": "0.2.1",
-  "description": "Professional-grade book writing workflow for OpenCode — 29-subcommand slash command router, 26 hard-block quality gates, 8 HITL features, XML-structured drafting, per-character voice profiles, series lorebook infrastructure, and an OpenCode TUI sidebar plugin.",
+  "description": "Professional-grade book writing workflow for OpenCode \u2014 29-subcommand slash command router, 26 hard-block quality gates, 8 HITL features, XML-structured drafting, per-character voice profiles, series lorebook infrastructure, and an OpenCode TUI sidebar plugin.",
   "type": "module",
   "main": "bin/install.mjs",
   "exports": {
@@ -20,7 +20,10 @@
     "typecheck": "tsc --noEmit && tsc --noEmit -p src/plugins/tsconfig.json",
     "prepublishOnly": "npm run build",
     "prepack": "npm run build",
-    "postinstall": "node bin/refresh.mjs --postinstall || true"
+    "postinstall": "node bin/refresh.mjs --postinstall || true",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "keywords": [
     "opencode",
@@ -73,13 +76,14 @@
     "@types/fs-extra": "^11.0.4",
     "@types/node": "^22.0.0",
     "solid-js": "^1.9.12",
-    "typescript": "^5.7.0"
+    "typescript": "^5.7.0",
+    "vitest": "^2.1.9"
   },
   "overrides": {
     "brace-expansion": "^2.1.4",
-    "@babel/core": "^7.29.7",
-    "seroval": "^1.6.3",
-    "seroval-plugins": "^1.6.3"
+    "seroval": "^1.6.11",
+    "seroval-plugins": "^1.6.11",
+    "babel-plugin-module-resolver": {}
   },
   "files": [
     "bin/",

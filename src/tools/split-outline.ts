@@ -10,10 +10,9 @@
  * the user running it from a terminal.
  */
 
-import { tool } from "@opencode-ai/plugin"
+import tool from "./opencode-tool.js"
 import { splitOutline } from "../lib/outline-splitter.js"
 import path from "path"
-import os from "os"
 
 export default tool({
   description:
@@ -24,7 +23,7 @@ export default tool({
     projectRoot: tool.schema.string().optional().describe("Absolute path to the project root. Default: process.cwd()"),
     dryRun: tool.schema.boolean().optional().describe("Parse and report without writing files. Default: false"),
   },
-  async execute(args) {
+  async execute(args: any) {
     const projectRoot = args.projectRoot ?? process.cwd()
     const result = await splitOutline(projectRoot, {
       track: args.track,

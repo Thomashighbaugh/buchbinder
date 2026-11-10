@@ -56,7 +56,7 @@ Buchbinder exposes a single hub command `/buchbinder` with a TUI menu system for
 
 ### Shorthand Aliases
 
-The `/buchbinder` command uses the hubMenu tool for routing. Subcommands are selected via the TUI menu; direct dispatch works by appending the subcommand label (e.g. `/buchbinder draft`).
+The `/buchbinder` command uses the project-local `buchbinder-router` tool for spec resolution and routing. Subcommands are selected via the TUI menu; direct dispatch works by appending the subcommand label (e.g. `/buchbinder draft`). Buchbinder is self-contained and does not route through global/user-scope `hubMenu`.
 
 ---
 

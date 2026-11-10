@@ -340,6 +340,32 @@ function isHooksEntry(p) {
     return typeof p === 'string' && /\/hooks(\/index\.(js|ts))?\/?$/.test(p)
 }
 
+function normalizePluginList(list, { wantSidebar = false, wantHooks = false } = {}) {
+    const out = []
+    let hasSidebar = false
+    let hasHooks = false
+    for (const raw of Array.isArray(list) ? list : []) {
+        if (isSidebarEntry(raw)) {
+            if (!hasSidebar) { out.push(PLUGIN_ENTRY); hasSidebar = true }
+            continue
+        }
+        if (isHooksEntry(raw)) {
+            if (!hasHooks) { out.push(HOOKS_ENTRY); hasHooks = true }
+            continue
+        }
+        out.push(raw)
+    }
+    if (wantSidebar && !hasSidebar) out.push(PLUGIN_ENTRY)
+    if (wantHooks && !hasHooks) out.push(HOOKS_ENTRY)
+    return out
+}
+
+function sameStringArray(a, b) {
+    if (!Array.isArray(a) || !Array.isArray(b) || a.length !== b.length) return false
+    for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false
+    return true
+}
+
 // Transitive pins for the installed project. solid-js declares seroval
 // ~1.5.0, and 1.5.x carries a critical advisory (GHSA-p6vx-979v-rg4c) plus a
 // high one (GHSA-jp82-f5mq-hwhp); 1.5.3+ is patched. Forcing the override
@@ -362,54 +388,46 @@ const REQUIRED_DEPS = {
 /**
  * Ensure tui.json, opencode.jsonc, and package.json exist and register the
  * Buchbinder plugins (OpenCode v2: `plugins` key, directory entries). Additive
- * only — never removes user-added keys. Migrates legacy `plugin` -> `plugins`.
+ * only — never removes unrelated user-added keys. Migrates/normalizes legacy
+ * `plugin` -> `plugins` and legacy file-style plugin paths in one pass.
  */
 export function ensureProjectConfig(destDir) {
     const tuiJsonPath = path.join(destDir, 'tui.json')
     const opencodeJsoncPath = path.join(destDir, 'opencode.jsonc')
     const pkgJsonPath = path.join(destDir, 'package.json')
 
-    // tui.json (v2: `plugins`, directory entries; migrate legacy `plugin`)
+    // tui.json (v2: `plugins`, directory entries; migrate/normalize legacy `plugin`)
     if (!fs.existsSync(tuiJsonPath)) {
         const config = { $schema: 'https://opencode.ai/tui.json', plugins: [PLUGIN_ENTRY] }
         fs.writeJsonSync(tuiJsonPath, config, { spaces: 2 })
     } else {
         const config = parseJsonc(tuiJsonPath)
         if (config) {
-            let changed = false
-            const plugins = Array.isArray(config.plugins) ? config.plugins : []
-            if (Array.isArray(config.plugin)) {
-                for (const e of config.plugin) if (!plugins.includes(e)) plugins.push(e)
-                delete config.plugin
-                changed = true
-            }
-            if (!plugins.some(isSidebarEntry)) { plugins.push(PLUGIN_ENTRY); changed = true }
+            const merged = Array.isArray(config.plugins) ? [...config.plugins] : []
+            if (Array.isArray(config.plugin)) for (const e of config.plugin) merged.push(e)
+            const normalized = normalizePluginList(merged, { wantSidebar: true, wantHooks: false })
+            const changed = !Array.isArray(config.plugins) || !sameStringArray(config.plugins, normalized) || Object.prototype.hasOwnProperty.call(config, 'plugin')
             if (changed) {
-                config.plugins = plugins
+                config.plugins = normalized
                 delete config.plugin
                 fs.writeFileSync(tuiJsonPath, JSON.stringify(config, null, 2) + '\n', 'utf-8')
             }
         }
     }
 
-    // opencode.jsonc — register both plugins (v2: `plugins`, migrate legacy `plugin`)
+    // opencode.jsonc — register both plugins (v2: `plugins`, migrate/normalize legacy `plugin`)
     if (!fs.existsSync(opencodeJsoncPath)) {
         const config = { plugins: [PLUGIN_ENTRY, HOOKS_ENTRY] }
         fs.writeFileSync(opencodeJsoncPath, JSON.stringify(config, null, 2) + '\n', 'utf-8')
     } else {
         const config = parseJsonc(opencodeJsoncPath)
         if (config) {
-            let changed = false
-            const plugins = Array.isArray(config.plugins) ? config.plugins : []
-            if (Array.isArray(config.plugin)) {
-                for (const e of config.plugin) if (!plugins.includes(e)) plugins.push(e)
-                delete config.plugin
-                changed = true
-            }
-            if (!plugins.some(isSidebarEntry)) { plugins.push(PLUGIN_ENTRY); changed = true }
-            if (!plugins.some(isHooksEntry)) { plugins.push(HOOKS_ENTRY); changed = true }
+            const merged = Array.isArray(config.plugins) ? [...config.plugins] : []
+            if (Array.isArray(config.plugin)) for (const e of config.plugin) merged.push(e)
+            const normalized = normalizePluginList(merged, { wantSidebar: true, wantHooks: true })
+            const changed = !Array.isArray(config.plugins) || !sameStringArray(config.plugins, normalized) || Object.prototype.hasOwnProperty.call(config, 'plugin')
             if (changed) {
-                config.plugins = plugins
+                config.plugins = normalized
                 delete config.plugin
                 fs.writeFileSync(opencodeJsoncPath, JSON.stringify(config, null, 2) + '\n', 'utf-8')
             }
@@ -424,28 +442,61 @@ export function ensureProjectConfig(destDir) {
     pkg.type = pkg.type || 'module'
     pkg.dependencies = pkg.dependencies || {}
     pkg.overrides = pkg.overrides || {}
-    let depsAdded = false
+    let depsChanged = false
     for (const [name, version] of Object.entries(REQUIRED_DEPS)) {
         if (!pkg.dependencies[name]) {
             pkg.dependencies[name] = version
-            depsAdded = true
+            depsChanged = true
         }
     }
     for (const [name, version] of Object.entries(REQUIRED_OVERRIDES)) {
         if (!pkg.overrides[name]) {
             pkg.overrides[name] = version
-            depsAdded = true
+            depsChanged = true
         }
     }
-    if (depsAdded) {
+    if (depsChanged) {
         fs.writeFileSync(pkgJsonPath, JSON.stringify(pkg, null, 2) + '\n', 'utf-8')
     }
 }
 
 function parseJsonc(filePath) {
     const raw = fs.readFileSync(filePath, 'utf-8')
-    const stripped = raw.replace(/\/\/[^\n]*/g, '').replace(/\/\*[\s\S]*?\*\//g, '')
-    try { return JSON.parse(stripped) } catch { return null }
+    // Strip BOM
+    const text = raw.charCodeAt(0) === 0xfeff ? raw.slice(1) : raw
+    // Try strict JSON first (most config files are plain JSON)
+    try { return JSON.parse(text) } catch {}
+    // Minimal JSONC stripping that preserves // inside strings (e.g. https://)
+    let out = ''
+    let inString = false
+    let stringChar = ''
+    let escape = false
+    let inLine = false
+    let inBlock = false
+    for (let i = 0; i < text.length; i++) {
+        const ch = text[i]
+        const next = text[i + 1]
+        if (inLine) {
+            if (ch === '\n' || ch === '\r') { inLine = false; out += ch }
+            continue
+        }
+        if (inBlock) {
+            if (ch === '*' && next === '/') { inBlock = false; i++ }
+            continue
+        }
+        if (inString) {
+            out += ch
+            if (escape) { escape = false; continue }
+            if (ch === '\\') { escape = true; continue }
+            if (ch === stringChar) { inString = false; stringChar = '' }
+            continue
+        }
+        if (ch === '/' && next === '/') { inLine = true; i++; continue }
+        if (ch === '/' && next === '*') { inBlock = true; i++; continue }
+        if (ch === '"' || ch === "'") { inString = true; stringChar = ch; out += ch; continue }
+        out += ch
+    }
+    try { return JSON.parse(out) } catch { return null }
 }
 
 // ─── Project Structure Init ─────────────────────────────────────────────────

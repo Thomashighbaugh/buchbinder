@@ -12,7 +12,7 @@
  * Buchbinder phases — never the user-scope `hubMenu` tool.
  */
 
-import { tool } from "@opencode-ai/plugin"
+import tool from "./opencode-tool.js"
 import {
   loadHub,
   loadSubcommandSpecFull,
@@ -29,7 +29,7 @@ export default tool({
     ),
     subcommand: tool.schema.string().optional().describe("Subcommand label to route to (for 'route' action)"),
   },
-  async execute(args, context) {
+  async execute(args: any, _context: any) {
     if (!VALID_ACTIONS.includes(args.action as typeof VALID_ACTIONS[number])) {
       return JSON.stringify({ error: `Invalid action '${args.action}'. Valid: ${VALID_ACTIONS.join(', ')}` })
     }

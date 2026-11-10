@@ -70,7 +70,7 @@ project-root/
 ├── .opencode/             # Per-project OpenCode configuration
 │   ├── commands/buchbinder-router.md  # Hub phase router (installed by buchbinder)
 │   ├── skills/            # QA, critique, research, fiction, non-fiction skills
-│   ├── tools/             # TypeScript tools (hubMenu, hub-data, project-state, etc.)
+│   ├── tools/             # TypeScript tools (buchbinder-router, hub-data, project-state, etc.)
 │   │   ├── hubs/buchbinder/ # 29 subcommand spec files
 │   │   └── lib/           # 32 library files (gates, voice, checkpoints, etc.)
 │   └── templates/        # Track templates (fiction/non-fiction/series)

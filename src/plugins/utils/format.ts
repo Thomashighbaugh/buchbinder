@@ -4,7 +4,7 @@
  */
 
 import { createTextAttributes } from '@opentui/core'
-import { c } from './colors.js'
+import { c } from './colors'
 
 /** Truncates text to maxLen, appending ellipsis if truncated. */
 export function truncate(text: string, maxLen: number): string {

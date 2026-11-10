@@ -1,10 +1,10 @@
 /** @jsxImportSource @opentui/solid */
 import { createSignal } from 'solid-js'
 import type { SidebarState } from '../hooks/use-project-state.js'
-import { DashboardTab } from './dashboard-tab.js'
-import { GatesTab } from './gates-tab.js'
-import { DiffTab } from './diff-tab.js'
-import { VizTab } from './viz-tab.js'
+import { DashboardTab } from './dashboard-tab'
+import { GatesTab } from './gates-tab'
+import { DiffTab } from './diff-tab'
+import { VizTab } from './viz-tab'
 
 /**
  * Sidebar content with a tab_select bar at the top. Each tab is a section

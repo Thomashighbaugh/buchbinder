@@ -3,7 +3,7 @@
  * Pacing heartbeat, thread matrix heatmap, provenance bar, cognitive load sparkline, escalation curve.
  */
 
-import { bar } from './format.js'
+import { bar } from './format'
 import type { ThreadMatrix } from '../../lib/thread-matrix.js'
 
 /**

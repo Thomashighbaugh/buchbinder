@@ -249,11 +249,11 @@ After saving the manifest, offer to automatically continue to the next phase. Us
 
 Question: "Manifest saved. Continue to the next phase?"
 Options:
-- **Yes — Specify** (Fiction/Mixed) → Run \`/buchbinder specify\` (call hubMenu route for \`specify\`)
-- **Yes — Research** (Non-Fiction/Mixed) → Run \`/buchbinder research\` (call hubMenu route for \`research\`)
+- **Yes — Specify** (Fiction/Mixed) → Run \`/buchbinder specify\` (call buchbinder-router route for \`specify\`)
+- **Yes — Research** (Non-Fiction/Mixed) → Run \`/buchbinder research\` (call buchbinder-router route for \`research\`)
 - **No — I'll continue later** → Stop
 
-If the user selects a phase, call \`hubMenu\` with \`action: "route"\`, \`hub: "buchbinder"\`, \`subcommand: <chosen>\` and execute it immediately. Do NOT just tell them to type it — run it.
+If the user selects a phase, call \`buchbinder-router\` with \`action: "route"\`, \`subcommand: <chosen>\` and execute it immediately. Do NOT just tell them to type it — run it.
 
 For Mixed track, offer both options in the question.
 

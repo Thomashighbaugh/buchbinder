@@ -193,7 +193,7 @@ export function loadSubcommandSpecFull(hubName: string, subLabel: string): {
 
   // Rules are in the buchbinder project's rules/ directory — one level up
   // from tools/ (i.e. .opencode/rules or src/rules, depending on the tree).
-  // NOTE: this hub's specs carry rule TEXT in spec.rules, which hubMenu
+  // NOTE: this hub's specs carry rule TEXT in spec.rules, which buchbinder-router
   // returns verbatim; rulesContent only fills in when an entry happens to
   // name a rule file (e.g. "ai-writing-patterns").
   if (spec.rules && spec.rules.length > 0) {

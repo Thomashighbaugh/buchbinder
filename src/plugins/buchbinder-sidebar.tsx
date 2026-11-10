@@ -6,10 +6,10 @@
  *   - `/buchbinder` slash command (via keymap layer) → dialog select menu
  *   - sidebar.content / sidebar.footer slots
  *
- * Migrated to OpenCode v2 TUI plugin API:
+ * OpenCode v2 TUI plugin API:
  *   - `Plugin.define` from `@opencode/plugin/tui`
  *   - `setup(context)` with `context.keymap`, `context.ui.slot/dialog/toast`,
- *     `context.client`, `context.location`
+ *     `context.client`, `context.location`, `context.ui.router`
  */
 
 import { Plugin } from '@opencode/plugin/tui'
@@ -20,14 +20,10 @@ import { SidebarFooter } from './components/sidebar-footer.js'
 import { useProjectState, setInjector } from './hooks/use-project-state.js'
 
 type PhaseEntry = { label: string; description: string }
-
 type MenuCategory = { key: string; title: string; description: string; phases: PhaseEntry[] }
 
 /**
- * Grouped /buchbinder phases. Dialog select renders a scrollable list with
- * category headers and keyboard navigation (arrows, page up/down, home/end).
- *
- * Must stay in sync with tools/hubs/buchbinder/index.ts.
+ * Grouped /buchbinder phases. Must stay in sync with tools/hubs/buchbinder/index.ts.
  */
 const BUCHBINDER_MENU: MenuCategory[] = [
   {
@@ -98,97 +94,162 @@ const BUCHBINDER_MENU: MenuCategory[] = [
 
 const ALL_PHASES: PhaseEntry[] = BUCHBINDER_MENU.flatMap((c) => c.phases)
 
+// Phases backed by a dedicated slash command (if any). Extend when added.
+const DIRECT_CMD: Record<string, string> = {}
+
 export default Plugin.define({
   id: 'buchbinder-sidebar',
   setup(context) {
-    // Resolve the project directory from the v2 location/context.
     const location: any = (context as any).location ?? (context as any).data?.location?.default?.()
     const projectRoot: string = location?.directory || process.cwd()
-
     const client: any = (context as any).client
-    const toast = (message: string, variant: 'info' | 'warning' | 'error' = 'info') =>
-      (context as any).ui?.toast?.show?.({ title: 'Buchbinder', message, variant })
+    const router: any = (context as any).ui?.router
 
-    // Resolve the active session across OpenCode v2 TUI route shapes.
-    const sessionID = (): string | undefined => {
-      const pick = (v: any): string | undefined => (typeof v === 'string' && /^ses/.test(v) ? v : undefined)
+    const toast = (message: string, variant: 'info' | 'warning' | 'error' = 'info') => {
+      try { ;(context as any).ui?.toast?.show?.({ title: 'Buchbinder', message, variant }) } catch {}
+    }
+
+    const isSessionID = (v: unknown): v is string => typeof v === 'string' && /^ses/.test(v)
+
+    const resolveSessionID = (): string | undefined => {
       const dig = (o: any, depth = 0): string | undefined => {
-        if (!o || typeof o !== 'object' || depth > 3) return undefined
-        const direct = pick(o.sessionID) ?? pick(o.sessionId) ?? pick(o.session_id) ?? pick(o.id)
-        if (direct) return direct
-        for (const k of ['route', 'params', 'data', 'value', 'info', 'session', 'state']) {
-          const r = dig(o[k], depth + 1); if (r) return r
+        if (!o || typeof o !== 'object' || depth > 4) return undefined
+        for (const k of ['sessionID', 'sessionId', 'session_id', 'id']) {
+          if (isSessionID(o[k])) return o[k]
+        }
+        for (const k of ['params', 'route', 'session', 'data', 'value', 'info', 'state', 'location']) {
+          const r = dig(o[k], depth + 1)
+          if (r) return r
         }
         return undefined
       }
       try {
-        const candidates = [
-          (context as any).ui?.router?.current?.(),
-          (context as any).ui?.router?.route,
-          (context as any).route?.current,
-          (context as any).route,
-        ]
-        for (const c of candidates) { const id = dig(c); if (id) return id }
-      } catch { /* ignore */ }
+        const current = router?.current?.() ?? router?.route
+        if (current) {
+          if ((current.type === 'session' || current.name === 'session') && isSessionID(current.sessionID)) return current.sessionID
+          const fromParams = dig(current.params)
+          if (fromParams) return fromParams
+          const fromRoute = dig(current)
+          if (fromRoute) return fromRoute
+        }
+      } catch {}
+      try {
+        const loc = (context as any).location ?? location
+        const fromLoc = dig(loc) ?? (isSessionID(loc?.sessionID) ? loc.sessionID : undefined)
+        if (fromLoc) return fromLoc
+      } catch {}
       return undefined
     }
 
-    // Phases backed by a real registered slash command (bypass prompt routing).
-    const DIRECT_CMD: Record<string, string> = {
-      // none of the menu phases have a dedicated /buchbinder-<id> today; extend here if added.
+    const pickSessionID = (v: any): string | undefined => {
+      if (isSessionID(v)) return v
+      if (!v || typeof v !== 'object') return undefined
+      for (const k of ['id', 'sessionID', 'sessionId', 'session_id']) {
+        if (isSessionID(v[k])) return v[k]
+      }
+      for (const nested of [v.data, v.session, v.info, v.result, v.value, v.body]) {
+        const n = pickSessionID(nested)
+        if (n) return n
+      }
+      return undefined
     }
 
     const createSessionID = async (): Promise<string | undefined> => {
-      const pickId = (v: any): string | undefined => {
-        if (!v || typeof v !== 'object') return typeof v === 'string' && /^ses/.test(v) ? v : undefined
-        const direct = v.id ?? v.sessionID ?? v.sessionId ?? v.session_id
-        if (typeof direct === 'string' && direct) return direct
-        const nested = v.data ?? v.session ?? v.info ?? v.result
-        if (nested && typeof nested === 'object') {
-          const n = nested.id ?? nested.sessionID ?? nested.sessionId ?? nested.session_id
-          if (typeof n === 'string' && n) return n
-        }
-        return undefined
-      }
+      const dir = projectRoot || process.cwd()
       const attempts: Array<() => Promise<any>> = []
-      if (client?.session?.create) attempts.push(() => client.session.create({ title: 'Buchbinder' }))
-      if (client?.session?.create) attempts.push(() => client.session.create({}))
-      if (client?.session?.new) attempts.push(() => client.session.new({ title: 'Buchbinder' }))
+      if (client?.session?.create) {
+        attempts.push(() => client.session.create({ directory: dir, title: 'Buchbinder' }))
+        attempts.push(() => client.session.create({ directory: dir }))
+        attempts.push(() => client.session.create({}))
+      }
+      if (client?.session?.new) attempts.push(() => client.session.new({ title: 'Buchbinder', directory: dir }))
       if (client?.tui?.createSession) attempts.push(() => client.tui.createSession({ title: 'Buchbinder' }))
+
+      let lastErr: unknown
       for (const run of attempts) {
         try {
           const res = await run()
-          const id = pickId(res)
+          // Some clients return { data, error } envelopes.
+          if (res && typeof res === 'object' && 'error' in res && (res as any).error) {
+            lastErr = (res as any).error
+            continue
+          }
+          const id = pickSessionID(res)
           if (id) return id
-        } catch {
-          /* try next shape */
+        } catch (e) {
+          lastErr = e
         }
       }
+      if (lastErr) throw lastErr
       return undefined
     }
 
-    // Submit text to the current session; create one if none exists (no-session context).
+    const navigateToSession = (sessionID: string) => {
+      try { router?.navigate?.({ name: 'session', params: { sessionID } }) } catch {}
+      try { router?.navigate?.({ type: 'session', sessionID } as any) } catch {}
+      try { router?.navigate?.({ name: 'session.view', params: { sessionID } }) } catch {}
+      try { void client?.tui?.openSession?.({ sessionID }) } catch {}
+      try { void client?.session?.navigate?.({ sessionID }) } catch {}
+    }
+
     const submitPrompt = async (text: string) => {
-      let sid = sessionID()
-      if (!sid) sid = await createSessionID()
-      if (!sid) { toast('Could not find or create a session to send the prompt to', 'warning'); return }
-      try {
-        if (client?.session?.prompt) {
-          await client.session.prompt({ sessionID: sid, text, resume: true, delivery: 'steer' })
-          // Best-effort: focus/navigate to the (possibly new) session if a TUI API exists.
-          try { await client.tui?.openSession?.({ sessionID: sid }) } catch {}
-          try { await client.session?.navigate?.({ sessionID: sid }) } catch {}
+      let sessionID = resolveSessionID()
+      if (!sessionID) {
+        try {
+          sessionID = await createSessionID()
+        } catch (e) {
+          toast(`Could not create a session: ${e instanceof Error ? e.message : String(e)}`, 'error')
           return
         }
-      } catch (e) {
-        toast(`Could not submit: ${e instanceof Error ? e.message : String(e)}`, 'error')
+      }
+      if (!sessionID) {
+        toast('Could not find or create a session to send the prompt to', 'error')
         return
       }
+
+      let lastErr: unknown
+      const tryPrompt = async (payload: any) => {
+        const res = await client.session.prompt(payload)
+        if (res && typeof res === 'object' && 'error' in res && (res as any).error) {
+          throw (res as any).error
+        }
+        return res
+      }
+
+      if (client?.session?.prompt) {
+        // v2-preferred prompt shape (OpenCode client): { sessionID, text, delivery?, resume? }
+        try {
+          await tryPrompt({ sessionID, text, delivery: 'steer', resume: true })
+          navigateToSession(sessionID)
+          return
+        } catch (e) { lastErr = e }
+
+        // Fallback: without delivery/resume flags
+        try {
+          await tryPrompt({ sessionID, text })
+          navigateToSession(sessionID)
+          return
+        } catch (e) { lastErr = e ?? lastErr }
+
+        // Legacy/alternate fallback
+        try {
+          await tryPrompt({ sessionID, parts: [{ type: 'text', text }] })
+          navigateToSession(sessionID)
+          return
+        } catch (e) { lastErr = e ?? lastErr }
+      }
+
+      // Last resort: stage in prompt input (may require user submit) instead of silent failure.
       if (client?.tui?.appendPrompt) {
-        await client.tui.appendPrompt({ text: text + ' ' }).catch(() => {})
-        return
+        try {
+          await client.tui.appendPrompt({ text: text + ' ' })
+          toast('Prompt inserted — press Enter to send if it did not submit automatically', 'warning')
+          navigateToSession(sessionID)
+          return
+        } catch (e) { lastErr = e ?? lastErr }
       }
-      toast('No session prompt API available', 'error')
+
+      toast(`Could not submit prompt: ${lastErr instanceof Error ? lastErr.message : String(lastErr ?? 'no prompt API available')}`, 'error')
     }
 
     // Self-contained dispatch: never routes via global hubMenu/user-scope hubs.
@@ -210,22 +271,24 @@ export default Plugin.define({
 
     // Ask for optional details (chapter, topic, mode, instructions) then run.
     const askAndDispatch = async (label: string) => {
-      const prompt: any = (context as any).ui?.dialog?.prompt
-      if (prompt) {
+      const promptDialog: any = (context as any).ui?.dialog?.prompt
+      if (promptDialog) {
         try {
-          const details = await prompt({
+          const details = await promptDialog({
             title: `Buchbinder — ${label}`,
             placeholder: 'Details / instructions (Enter to run, Esc for none)',
           })
           if (details === null || details === undefined) return // cancelled
           await dispatchPhase(label, typeof details === 'string' ? details : '')
           return
-        } catch { /* fall through */ }
+        } catch {
+          // Fall through to direct dispatch on dialog errors/cancel quirks.
+        }
       }
       await dispatchPhase(label)
     }
 
-    // Wire command injector so sidebar buttons run /buchbinder commands.
+    // Wire command injector so sidebar buttons can dispatch.
     setInjector((cmd: string) => { void submitPrompt(cmd) })
 
     // Single sidebar state — no tab switching.
@@ -247,16 +310,19 @@ export default Plugin.define({
           category: c.title,
         })),
       )
-      const value = await select({
-        title: 'Buchbinder — Phases',
-        placeholder: 'Choose a phase or sub-command…',
-        options,
-      })
-      if (typeof value === 'string') await askAndDispatch(value)
+      try {
+        const value = await select({
+          title: 'Buchbinder — Phases',
+          placeholder: 'Choose a phase or sub-command…',
+          options,
+        })
+        if (typeof value === 'string') await askAndDispatch(value)
+      } catch {
+        // dialog closed/cancelled or unavailable
+      }
     }
 
     // Sole /buchbinder handler (arg-aware): bare -> menu; `<phase> [args]` -> run.
-    // `arguments: true` lets `/buchbinder draft 3` dispatch directly.
     ;(context as any).keymap?.layer?.(() => ({
       mode: 'global',
       priority: 10,

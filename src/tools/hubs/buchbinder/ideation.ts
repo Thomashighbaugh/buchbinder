@@ -179,7 +179,7 @@ options:
   - label: "Save and exit", description: "Cache current state and return later"
 \`\`\`
 
-If "Ready for manifest": Check that at minimum \`premise.md\` and \`theme.md\` exist. If not, warn the user. If yes, run \`/buchbinder manifest\` (call hubMenu route for \`manifest\`).
+If "Ready for manifest": Check that at minimum \`premise.md\` and \`theme.md\` exist. If not, warn the user. If yes, run \`/buchbinder manifest\` (call buchbinder-router route for \`manifest\`).
 
 ## Track Adaptation
 

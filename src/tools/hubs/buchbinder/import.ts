@@ -118,7 +118,7 @@ Print one summary: files written, chapters created, words imported, metadata ext
 
 ### 9. Hand off (MANDATORY)
 
-Use the \`question\` tool to offer the recommended phase(s) for the detected stage — a select when several are plausible (Rule A), a confirm when exactly one is (Rule B). On selection, call \`hubMenu\` with \`action: "route"\`, \`subcommand: <chosen>\`, and execute it immediately. Do not tell the user to type it.
+Use the \`question\` tool to offer the recommended phase(s) for the detected stage — a select when several are plausible (Rule A), a confirm when exactly one is (Rule B). On selection, call \`buchbinder-router\` with \`action: "route"\`, \`subcommand: <chosen>\`, and execute it immediately. Do not tell the user to type it.
 
 ## Kind-Specific Notes
 

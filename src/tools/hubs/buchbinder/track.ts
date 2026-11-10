@@ -61,11 +61,11 @@ After the tracking operation, hand off using the \`question\` tool (Rule A — m
 
 Question: "Tracking complete. What next?"
 Options:
-- **Timeline** → Run \`/buchbinder timeline\` (call hubMenu route for \`timeline\`)
-- **Verify** → Run \`/buchbinder verify\` (call hubMenu route for \`verify\`)
+- **Timeline** → Run \`/buchbinder timeline\` (call buchbinder-router route for \`timeline\`)
+- **Verify** → Run \`/buchbinder verify\` (call buchbinder-router route for \`verify\`)
 - **Stop** → End turn
 
-If the user selects a phase, call \`hubMenu\` with \`action: "route"\`, \`subcommand: <chosen>\` and execute it immediately. Do NOT just tell them to type it — run it.
+If the user selects a phase, call \`buchbinder-router\` with \`action: "route"\`, \`subcommand: <chosen>\` and execute it immediately. Do NOT just tell them to type it — run it.
 
 ## Supplement Skills
 

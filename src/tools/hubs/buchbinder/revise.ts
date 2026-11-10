@@ -292,10 +292,10 @@ After revisions are applied and verified, offer to automatically continue. Use t
 
 Question: "Revisions applied and verified. All Critical items addressed. Continue to editing?"
 Options:
-- **Yes — Edit** → Run \`/buchbinder edit\` (call hubMenu route for \`edit\`)
+- **Yes — Edit** → Run \`/buchbinder edit\` (call buchbinder-router route for \`edit\`)
 - **No — I'll continue later** → Stop
 
-If the user selects, call \`hubMenu\` with \`action: "route"\`, \`hub: "buchbinder"\`, \`subcommand: "edit"\` and execute it immediately.
+If the user selects, call \`buchbinder-router\` with \`action: "route"\`, \`subcommand: "edit"\` and execute it immediately.
 
 ### 9. Human-in-the-Loop Features
 

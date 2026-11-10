@@ -55,11 +55,11 @@ After verifying the timeline, hand off using the \`question\` tool (Rule A — m
 
 Question: "Timeline verified. What next?"
 Options:
-- **Specify** (if gaps found) → Run \`/buchbinder specify\` (call hubMenu route for \`specify\`)
-- **Track** → Run \`/buchbinder track\` (call hubMenu route for \`track\`)
+- **Specify** (if gaps found) → Run \`/buchbinder specify\` (call buchbinder-router route for \`specify\`)
+- **Track** → Run \`/buchbinder track\` (call buchbinder-router route for \`track\`)
 - **Stop** → End turn
 
-If the user selects a phase, call \`hubMenu\` with \`action: "route"\`, \`subcommand: <chosen>\` and execute it immediately. Do NOT just tell them to type it — run it.`,
+If the user selects a phase, call \`buchbinder-router\` with \`action: "route"\`, \`subcommand: <chosen>\` and execute it immediately. Do NOT just tell them to type it — run it.`,
   tools: ["bash", "question"],
   relatedSkills: ["consistency-checker"],
   examples: [

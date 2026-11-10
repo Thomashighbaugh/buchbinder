@@ -185,12 +185,12 @@ After the series operation, hand off using the \`question\` tool (Rule A — mul
 
 Question: "Series operation complete. What next?"
 Options:
-- **Manifest** (after series init) → Run \`/buchbinder manifest\` (call hubMenu route for \`manifest\`) to inherit lorebook into the book
-- **Specify** → Run \`/buchbinder specify\` (call hubMenu route for \`specify\`)
-- **Series status** → Run \`/buchbinder series status\` (call hubMenu route for \`series\`)
+- **Manifest** (after series init) → Run \`/buchbinder manifest\` (call buchbinder-router route for \`manifest\`) to inherit lorebook into the book
+- **Specify** → Run \`/buchbinder specify\` (call buchbinder-router route for \`specify\`)
+- **Series status** → Run \`/buchbinder series status\` (call buchbinder-router route for \`series\`)
 - **Stop** → End turn
 
-If the user selects a phase, call \`hubMenu\` with \`action: "route"\`, \`subcommand: <chosen>\` and execute it immediately. Do NOT just tell them to type it — run it.
+If the user selects a phase, call \`buchbinder-router\` with \`action: "route"\`, \`subcommand: <chosen>\` and execute it immediately. Do NOT just tell them to type it — run it.
 
 ## Supplement Skills
 

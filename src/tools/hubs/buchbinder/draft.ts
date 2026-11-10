@@ -378,12 +378,12 @@ After the batch completes, offer to automatically continue. Use the \`question\`
 
 Question: "Batch [complete/stopped]. [N] chapters drafted. Continue?"
 Options (adjust based on gate results):
-- **Yes — Critique** → Run \`/buchbinder critique\` (call hubMenu route for \`critique\`)
-- **Yes — Draft next batch** → Run \`/buchbinder draft\` again (call hubMenu route for \`draft\`)
+- **Yes — Critique** → Run \`/buchbinder critique\` (call buchbinder-router route for \`critique\`)
+- **Yes — Draft next batch** → Run \`/buchbinder draft\` again (call buchbinder-router route for \`draft\`)
 - **No — I'll continue later** → Stop
 
 If partial/gate failure, only offer "Draft next batch" and "Stop" — do not offer critique on incomplete batches.
-If the user selects, call \`hubMenu\` with \`action: "route"\`, \`hub: "buchbinder"\`, \`subcommand: <chosen>\` and execute it immediately.
+If the user selects, call \`buchbinder-router\` with \`action: "route"\`, \`subcommand: <chosen>\` and execute it immediately.
 
 ### 6. Human-in-the-Loop Features
 

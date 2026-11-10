@@ -62,11 +62,11 @@ After clarifying, offer to automatically continue. Use the \`question\` tool:
 
 Question: "Specification clarified. Continue to the next phase?"
 Options:
-- **Yes — Research** → Run \`/buchbinder research\` (call hubMenu route)
-- **Yes — Outline** → Run \`/buchbinder outline\` (call hubMenu route)
+- **Yes — Research** → Run \`/buchbinder research\` (call buchbinder-router route)
+- **Yes — Outline** → Run \`/buchbinder outline\` (call buchbinder-router route)
 - **No — I'll continue later** → Stop
 
-If the user selects a phase, call \`hubMenu\` with \`action: "route"\`, \`hub: "buchbinder"\`, \`subcommand: <chosen>\` and execute it immediately.
+If the user selects a phase, call \`buchbinder-router\` with \`action: "route"\`, \`subcommand: <chosen>\` and execute it immediately.
 
 ## Supplement Skills
 

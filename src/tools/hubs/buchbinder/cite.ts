@@ -72,7 +72,7 @@ Context-dependent handoff using the \`question\` tool:
 - During review phase: "Citations validated. All \`[Source: key]\` markers resolved." — offer to run \`/buchbinder publish\`
 - Pre-publish: "Bibliography generated." — offer to run \`/buchbinder publish\`
 
-If the user selects a phase, call \`hubMenu\` with \`action: "route"\`, \`hub: "buchbinder"\`, \`subcommand: <chosen>\` and execute it immediately.
+If the user selects a phase, call \`buchbinder-router\` with \`action: "route"\`, \`subcommand: <chosen>\` and execute it immediately.
 
 ## Supplement Skills
 

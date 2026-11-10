@@ -273,11 +273,11 @@ After saving the critique round, offer to automatically continue. Use the \`ques
 
 Question: "Critique round [N] saved with [M] actionable items. Continue?"
 Options:
-- **Yes — Revise** → Run \`/buchbinder revise\` (call hubMenu route for \`revise\`)
-- **Yes — Critique next batch** → Run \`/buchbinder critique\` again (call hubMenu route for \`critique\`)
+- **Yes — Revise** → Run \`/buchbinder revise\` (call buchbinder-router route for \`revise\`)
+- **Yes — Critique next batch** → Run \`/buchbinder critique\` again (call buchbinder-router route for \`critique\`)
 - **No — I'll review the items first** → Stop
 
-If the user selects, call \`hubMenu\` with \`action: "route"\`, \`hub: "buchbinder"\`, \`subcommand: <chosen>\` and execute it immediately.
+If the user selects, call \`buchbinder-router\` with \`action: "route"\`, \`subcommand: <chosen>\` and execute it immediately.
 
 ### 9. Human-in-the-Loop Features
 

@@ -117,11 +117,11 @@ After saving the task dashboard, offer to automatically continue. Use the \`ques
 
 Question: "Task dashboard created. Ready to start drafting?"
 Options:
-- **Yes — Draft** → Run \`/buchbinder draft\` (call hubMenu route for \`draft\`)
-- **Yes — Cycle (draft→critique→revise→edit)** → Run \`/buchbinder cycle\` (call hubMenu route for \`cycle\`)
+- **Yes — Draft** → Run \`/buchbinder draft\` (call buchbinder-router route for \`draft\`)
+- **Yes — Cycle (draft→critique→revise→edit)** → Run \`/buchbinder cycle\` (call buchbinder-router route for \`cycle\`)
 - **No — I'll continue later** → Stop
 
-If the user selects, call \`hubMenu\` with \`action: "route"\`, \`hub: "buchbinder"\`, \`subcommand: <chosen>\` and execute it immediately.
+If the user selects, call \`buchbinder-router\` with \`action: "route"\`, \`subcommand: <chosen>\` and execute it immediately.
 
 ## Supplement Skills
 

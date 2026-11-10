@@ -769,6 +769,14 @@ Agentic AI · LLM orchestration · multi-agent systems · compound AI systems ·
 
 ## OpenCode v2 migration
 
+Buchbinder's TUI integration and command dispatch were migrated to the **OpenCode v2** plugin/command model and kept fully **self-contained** (project-local):
+
+- **Server hooks**: `src/hooks-plugin/` exports a v2 plugin (`id` + `setup(ctx)`) and is installed to `.opencode/plugins/hooks/`.
+- **TUI sidebar/menu**: `src/plugins/buchbinder-sidebar.tsx` uses `@opencode/plugin/tui` (`Plugin.define`, `setup`, `ui.router/dialog/toast/slot`, `keymap.layer`). `/buchbinder` opens the phase menu; `/buchbinder <phase> [details]` dispatches directly with optional details/notes.
+- **Session-aware dispatch**: if no session is active, the sidebar creates one and submits the prompt; prompts are sent via the v2 session prompt flow (`sessionID`, `text`, with delivery/resume where supported) and navigates to the session. No “open a session first” dead-end and no silent failures.
+- **Self-contained routing**: Buchbinder phases do **not** call `hubMenu` and do **not** route to global/user-scope OpenCode hubs. Routing/specs live in project tools (`src/tools/buchbinder-router.ts`, `src/tools/hubs/buchbinder/*.ts`) and dispatch instructs use of the project's installed `.opencode/` skills/commands/tools.
+- **Install/refresh**: `bin/lib/sync.mjs`, `install.mjs`, and `refresh.mjs` copy hooks+sidebar+skills+tools+commands+templates, register local plugins in `opencode.jsonc` (`plugins`) and project config, and `refresh --force` overwrites plugin-owned drift in one pass (idempotent manifest/state).
+
 Buchbinder's TUI integration and command dispatch were migrated to the **OpenCode v2** plugin/command model:
 
 - **TUI plugin spec (v2):** the sidebar is a `Plugin.define` module (`@opencode/plugin/tui`) with `setup(ctx)`. It registers UI via `ctx.ui.slot` (`sidebar.content` / `sidebar.footer`), commands via `ctx.keymap.layer` (global, palette + slash), and interaction via `ctx.ui.dialog.select` / `ctx.ui.dialog.prompt` and `ctx.ui.toast.show`. Project location comes from `ctx.location`; prompts are delivered into the active session with `ctx.client.session.prompt({ sessionID, text, resume: true, delivery: "steer" })` and a robust session-id resolver across v2 route shapes.

@@ -210,11 +210,11 @@ After reporting the verify results, hand off using the \`question\` tool (Rule A
 
 Question: "Verification complete. What next?"
 Options:
-- **Fix issues** → Run \`/buchbinder revise\` (call hubMenu route for \`revise\`) if revision-verify failed, or \`/buchbinder edit\` (call hubMenu route for \`edit\`) for line-level issues
-- **Review** → Run \`/buchbinder review\` (call hubMenu route for \`review\`)
+- **Fix issues** → Run \`/buchbinder revise\` (call buchbinder-router route for \`revise\`) if revision-verify failed, or \`/buchbinder edit\` (call buchbinder-router route for \`edit\`) for line-level issues
+- **Review** → Run \`/buchbinder review\` (call buchbinder-router route for \`review\`)
 - **Stop** → End turn
 
-If the user selects a phase, call \`hubMenu\` with \`action: "route"\`, \`subcommand: <chosen>\` and execute it immediately. Do NOT just tell them to type it — run it.
+If the user selects a phase, call \`buchbinder-router\` with \`action: "route"\`, \`subcommand: <chosen>\` and execute it immediately. Do NOT just tell them to type it — run it.
 
 ## Supplement Skills
 

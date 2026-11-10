@@ -181,11 +181,11 @@ After the batch edit completes, offer to automatically continue. Use the \`quest
 
 Question: "Batch edit complete. [N] chapters edited. Continue?"
 Options:
-- **Yes — Review** → Run \`/buchbinder review\` (call hubMenu route for \`review\`)
-- **Yes — Edit next batch** → Run \`/buchbinder edit\` again (call hubMenu route for \`edit\`)
+- **Yes — Review** → Run \`/buchbinder review\` (call buchbinder-router route for \`review\`)
+- **Yes — Edit next batch** → Run \`/buchbinder edit\` again (call buchbinder-router route for \`edit\`)
 - **No — I'll continue later** → Stop
 
-If the user selects, call \`hubMenu\` with \`action: "route"\`, \`hub: "buchbinder"\`, \`subcommand: <chosen>\` and execute it immediately.
+If the user selects, call \`buchbinder-router\` with \`action: "route"\`, \`subcommand: <chosen>\` and execute it immediately.
 
 ### 6. Human-in-the-Loop Features
 

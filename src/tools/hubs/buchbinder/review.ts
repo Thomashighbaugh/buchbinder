@@ -228,17 +228,17 @@ Based on the review verdict, offer to automatically continue. Use the \`question
 
 Question varies by verdict:
 - **Pass**: "Review passed. Continuity scan clean. Continue to publishing?"
-  - **Yes — Publish** → Run \`/buchbinder publish\` (call hubMenu route)
+  - **Yes — Publish** → Run \`/buchbinder publish\` (call buchbinder-router route)
   - **No — I'll continue later** → Stop
 - **Conditional**: "Review identified [N] items to address. Continue?"
-  - **Yes — Edit** (line fixes) → Run \`/buchbinder edit\` (call hubMenu route)
-  - **Yes — Revise** (substantive) → Run \`/buchbinder revise\` (call hubMenu route)
+  - **Yes — Edit** (line fixes) → Run \`/buchbinder edit\` (call buchbinder-router route)
+  - **Yes — Revise** (substantive) → Run \`/buchbinder revise\` (call buchbinder-router route)
   - **No — I'll review the items first** → Stop
 - **Fail**: "Review failed. [N] continuity contradictions must be resolved. Continue?"
-  - **Yes — Revise** → Run \`/buchbinder revise\` (call hubMenu route)
+  - **Yes — Revise** → Run \`/buchbinder revise\` (call buchbinder-router route)
   - **No — I'll address these manually** → Stop
 
-If the user selects, call \`hubMenu\` with \`action: "route"\`, \`hub: "buchbinder"\`, \`subcommand: <chosen>\` and execute it immediately.
+If the user selects, call \`buchbinder-router\` with \`action: "route"\`, \`subcommand: <chosen>\` and execute it immediately.
 
 ## Supplement Skills
 

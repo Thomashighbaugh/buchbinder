@@ -139,11 +139,11 @@ After saving the specification, offer to automatically continue. Use the \`quest
 
 Question: "Specification saved. Continue to the next phase?"
 Options:
-- **Yes — Clarify** → Run \`/buchbinder clarify\` (call hubMenu route for \`clarify\`)
-- **Yes — Research** → Run \`/buchbinder research\` (call hubMenu route for \`research\`)
+- **Yes — Clarify** → Run \`/buchbinder clarify\` (call buchbinder-router route for \`clarify\`)
+- **Yes — Research** → Run \`/buchbinder research\` (call buchbinder-router route for \`research\`)
 - **No — I'll continue later** → Stop
 
-If the user selects a phase, call \`hubMenu\` with \`action: "route"\`, \`hub: "buchbinder"\`, \`subcommand: <chosen>\` and execute it immediately.
+If the user selects a phase, call \`buchbinder-router\` with \`action: "route"\`, \`subcommand: <chosen>\` and execute it immediately.
 
 ## Supplement Skills
 

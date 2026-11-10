@@ -138,7 +138,7 @@ After presenting the roadmap, do NOT end with "type /buchbinder X". Hand off usi
   Question: "Which phase next?"
   Options: the recommended phase(s) + **Stop**
 
-When the user selects/confirms, call \`hubMenu\` with \`action: "route"\`, \`subcommand: <chosen>\` and execute that phase immediately. Do NOT tell them to type it — run it.
+When the user selects/confirms, call \`buchbinder-router\` with \`action: "route"\`, \`subcommand: <chosen>\` and execute that phase immediately. Do NOT tell them to type it — run it.
 
 ### 5. Manual Drafting Guidance
 

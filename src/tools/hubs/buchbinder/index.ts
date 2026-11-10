@@ -39,7 +39,7 @@ import series from "./series.js"
 import refreshIndex from "./refresh-index.js"
 import refresh from "./refresh.js"
 
-// All specs — full detail available via hubMenu 'route'
+// All specs — full detail available via buchbinder-router 'route'
 export const specs: HubSubcommandSpec[] = [
   guided,
   importPhase,

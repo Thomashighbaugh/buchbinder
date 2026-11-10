@@ -171,7 +171,7 @@ Based on the read-through result, offer to automatically continue. Use the \`que
 - **Conditional**: Offer \`/buchbinder revise\` (structural) or \`/buchbinder hook-review\` (engagement)
 - **Fail**: Offer \`/buchbinder revise\` (major revision needed)
 
-If the user selects, call \`hubMenu\` with \`action: "route"\`, \`hub: "buchbinder"\`, \`subcommand: <chosen>\` and execute it immediately.
+If the user selects, call \`buchbinder-router\` with \`action: "route"\`, \`subcommand: <chosen>\` and execute it immediately.
 
 ## Supplement Skills
 

@@ -65,11 +65,11 @@ After saving metadata, hand off using the \`question\` tool (Rule A — multiple
 
 Question: "Metadata saved. What next?"
 Options:
-- **Publish** → Run \`/buchbinder publish\` (call hubMenu route for \`publish\`)
-- **Review** → Run \`/buchbinder review\` (call hubMenu route for \`review\`)
+- **Publish** → Run \`/buchbinder publish\` (call buchbinder-router route for \`publish\`)
+- **Review** → Run \`/buchbinder review\` (call buchbinder-router route for \`review\`)
 - **Stop** → End turn
 
-If the user selects a phase, call \`hubMenu\` with \`action: "route"\`, \`subcommand: <chosen>\` and execute it immediately. Do NOT just tell them to type it — run it.`,
+If the user selects a phase, call \`buchbinder-router\` with \`action: "route"\`, \`subcommand: <chosen>\` and execute it immediately. Do NOT just tell them to type it — run it.`,
   tools: ["bash", "question"],
   relatedSkills: ["style-enforcer"],
   examples: [

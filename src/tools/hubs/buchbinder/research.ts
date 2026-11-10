@@ -99,10 +99,10 @@ After saving research notes, offer to automatically continue. Use the \`question
 
 Question: "Research notes saved. Continue to outlining?"
 Options:
-- **Yes — Outline** → Run \`/buchbinder outline\` (call hubMenu route for \`outline\`)
+- **Yes — Outline** → Run \`/buchbinder outline\` (call buchbinder-router route for \`outline\`)
 - **No — I'll continue later** → Stop
 
-If the user selects, call \`hubMenu\` with \`action: "route"\`, \`hub: "buchbinder"\`, \`subcommand: "outline"\` and execute it immediately.
+If the user selects, call \`buchbinder-router\` with \`action: "route"\`, \`subcommand: "outline"\` and execute it immediately.
 
 ## Supplement Skills
 

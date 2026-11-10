@@ -286,10 +286,10 @@ After the outline is saved and the gate passes, offer to automatically continue.
 
 Question: "Outline saved and gate passed. Continue to task breakdown?"
 Options:
-- **Yes — Task Manager** → Run \`/buchbinder task-manager\` (call hubMenu route for \`task-manager\`)
+- **Yes — Task Manager** → Run \`/buchbinder task-manager\` (call buchbinder-router route for \`task-manager\`)
 - **No — I'll continue later** → Stop
 
-If the user selects, call \`hubMenu\` with \`action: "route"\`, \`hub: "buchbinder"\`, \`subcommand: "task-manager"\` and execute it immediately.
+If the user selects, call \`buchbinder-router\` with \`action: "route"\`, \`subcommand: "task-manager"\` and execute it immediately.
 
 ## Gate Evidence
 

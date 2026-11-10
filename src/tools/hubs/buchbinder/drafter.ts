@@ -46,10 +46,10 @@ After saving the draft, offer to automatically continue. Use the \`question\` to
 
 Question: "Draft saved to ./book/drafts/. Ready for full prose expansion?"
 Options:
-- **Yes — Draft Chapter [N]** → Run \`/buchbinder draft [N]\` (call hubMenu route for \`draft\` with chapter arg)
+- **Yes — Draft Chapter [N]** → Run \`/buchbinder draft [N]\` (call buchbinder-router route for \`draft\` with chapter arg)
 - **No — I'll continue later** → Stop
 
-If the user selects, call \`hubMenu\` with \`action: "route"\`, \`hub: "buchbinder"\`, \`subcommand: "draft"\` and execute it immediately.`,
+If the user selects, call \`buchbinder-router\` with \`action: "route"\`, \`subcommand: "draft"\` and execute it immediately.`,
   tools: ["bash", "question"],
   relatedSkills: ["scene-structure", "dialogue-techniques"],
   examples: [

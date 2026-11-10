@@ -145,14 +145,14 @@ After the batch cycle completes, offer to automatically continue. Use the \`ques
 
 Question varies by result:
 - **All passed**: "Batch cycle complete. [N] chapters done. Continue?"
-  - **Yes — Cycle next batch** → Run \`/buchbinder cycle\` again (call hubMenu route)
-  - **Yes — Review** → Run \`/buchbinder review\` (call hubMenu route)
+  - **Yes — Cycle next batch** → Run \`/buchbinder cycle\` again (call buchbinder-router route)
+  - **Yes — Review** → Run \`/buchbinder review\` (call buchbinder-router route)
   - **No — I'll continue later** → Stop
 - **Partial**: "Batch stopped at chapter [N] due to [gate failure]. Continue?"
-  - **Yes — Re-run cycle from [N]** → Run \`/buchbinder cycle [N]\` (call hubMenu route)
+  - **Yes — Re-run cycle from [N]** → Run \`/buchbinder cycle [N]\` (call buchbinder-router route)
   - **No — I'll fix manually** → Stop
 
-If the user selects, call \`hubMenu\` with \`action: "route"\`, \`hub: "buchbinder"\`, \`subcommand: <chosen>\` and execute it immediately.
+If the user selects, call \`buchbinder-router\` with \`action: "route"\`, \`subcommand: <chosen>\` and execute it immediately.
 
 ## Supplement Skills
 

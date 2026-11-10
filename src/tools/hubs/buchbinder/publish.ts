@@ -166,11 +166,11 @@ This is the terminal phase. Hand off using the \`question\` tool (Rule A — mul
 
 Question: "Publish complete. What next?"
 Options:
-- **Edit** (if verification failures) → Run \`/buchbinder edit\` (call hubMenu route for \`edit\`) to fix failures
-- **Review** → Run \`/buchbinder review\` (call hubMenu route for \`review\`)
+- **Edit** (if verification failures) → Run \`/buchbinder edit\` (call buchbinder-router route for \`edit\`) to fix failures
+- **Review** → Run \`/buchbinder review\` (call buchbinder-router route for \`review\`)
 - **Stop** → End turn (congratulate the user — the manuscript is done)
 
-If the user selects a phase, call \`hubMenu\` with \`action: "route"\`, \`subcommand: <chosen>\` and execute it immediately. Do NOT just tell them to type it — run it.
+If the user selects a phase, call \`buchbinder-router\` with \`action: "route"\`, \`subcommand: <chosen>\` and execute it immediately. Do NOT just tell them to type it — run it.
 
 ## Supplement Skills
 

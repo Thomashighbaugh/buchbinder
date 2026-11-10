@@ -1,9 +1,15 @@
 /**
- * Buchbinder — Hub Menu Router Tool
+ * Buchbinder — Phase Router Tool
  *
- * Provides menu/route/list actions for the /buchbinder command system.
- * The TUI plugin handles interactive menu selection; this tool handles
- * spec resolution and retrieval for the agent.
+ * Project-local router for the Buchbinder workflow: menu/route/list actions
+ * for the /buchbinder command system. The TUI plugin handles interactive
+ * menu selection; this tool handles spec resolution and retrieval for the
+ * agent.
+ *
+ * Self-contained: resolves specs, rules, and skill metadata from inside this
+ * project's installed .opencode/ tree only. It never reads the user-scope
+ * OpenCode config, and it is the ONLY router an agent should use for
+ * Buchbinder phases — never the user-scope `hubMenu` tool.
  */
 
 import { tool } from "@opencode-ai/plugin"
@@ -16,7 +22,7 @@ import {
 const VALID_ACTIONS = ['menu', 'route', 'list'] as const
 
 export default tool({
-  description: "Buchbinder hub menu router. Use 'menu' to get subcommand options, 'route' to get full spec for a selected subcommand, 'list' to list all labels.",
+  description: "Buchbinder phase router — the project-local router for the Buchbinder workflow. Use 'route' to resolve a phase subcommand ('workflow-start', 'specify', 'outline', 'draft', 'critique', etc.) to its full spec, 'menu' for the phase menu, 'list' to list all phase labels. Do NOT use the user-scope hubMenu tool or any global hub routing for Buchbinder phases; this project-local buchbinder-router is the correct choice.",
   args: {
     action: tool.schema.string().describe(
       `Action: 'menu' returns menu JSON, 'route' returns full subcommand spec, 'list' lists all labels. Valid: ${VALID_ACTIONS.join(', ')}`

@@ -12,7 +12,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "peerDependencies": {
-    "@opencode-ai/plugin": "*",
+    "@opencode/plugin": ">=2.0.0",
     "@opentui/core": "*",
     "@opentui/solid": "*",
     "solid-js": ">=1.9.0",

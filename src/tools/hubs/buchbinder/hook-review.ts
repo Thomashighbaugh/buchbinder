@@ -136,7 +136,7 @@ Based on the hook review result, offer to automatically continue. Use the \`ques
 - **Conditional**: Offer \`/buchbinder revise\` (focus on opening/closing paragraphs)
 - **Fail**: Offer \`/buchbinder revise\` (mandatory — hooks missing)
 
-If the user selects, call \`hubMenu\` with \`action: "route"\`, \`hub: "buchbinder"\`, \`subcommand: <chosen>\` and execute it immediately.
+If the user selects, call \`buchbinder-router\` with \`action: "route"\`, \`subcommand: <chosen>\` and execute it immediately.
 
 ## Supplement Skills
 

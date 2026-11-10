@@ -116,7 +116,7 @@ Based on the pacing audit result, offer to automatically continue. Use the \`que
 - **Conditional**: Offer \`/buchbinder revise\` (structural) or \`/buchbinder edit\` (rhythm)
 - **Fail**: Offer \`/buchbinder outline\` (restructure pacing tags)
 
-If the user selects, call \`hubMenu\` with \`action: "route"\`, \`hub: "buchbinder"\`, \`subcommand: <chosen>\` and execute it immediately.
+If the user selects, call \`buchbinder-router\` with \`action: "route"\`, \`subcommand: <chosen>\` and execute it immediately.
 
 ## Supplement Skills
 

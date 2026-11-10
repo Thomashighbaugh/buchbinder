@@ -138,13 +138,46 @@ export default Plugin.define({
       // none of the menu phases have a dedicated /buchbinder-<id> today; extend here if added.
     }
 
-    // Submit text to the current session. Uses session.prompt (steer) so it runs now.
+    const createSessionID = async (): Promise<string | undefined> => {
+      const pickId = (v: any): string | undefined => {
+        if (!v || typeof v !== 'object') return typeof v === 'string' && /^ses/.test(v) ? v : undefined
+        const direct = v.id ?? v.sessionID ?? v.sessionId ?? v.session_id
+        if (typeof direct === 'string' && direct) return direct
+        const nested = v.data ?? v.session ?? v.info ?? v.result
+        if (nested && typeof nested === 'object') {
+          const n = nested.id ?? nested.sessionID ?? nested.sessionId ?? nested.session_id
+          if (typeof n === 'string' && n) return n
+        }
+        return undefined
+      }
+      const attempts: Array<() => Promise<any>> = []
+      if (client?.session?.create) attempts.push(() => client.session.create({ title: 'Buchbinder' }))
+      if (client?.session?.create) attempts.push(() => client.session.create({}))
+      if (client?.session?.new) attempts.push(() => client.session.new({ title: 'Buchbinder' }))
+      if (client?.tui?.createSession) attempts.push(() => client.tui.createSession({ title: 'Buchbinder' }))
+      for (const run of attempts) {
+        try {
+          const res = await run()
+          const id = pickId(res)
+          if (id) return id
+        } catch {
+          /* try next shape */
+        }
+      }
+      return undefined
+    }
+
+    // Submit text to the current session; create one if none exists (no-session context).
     const submitPrompt = async (text: string) => {
-      const sid = sessionID()
-      if (!sid) { toast('Open a session first (restart TUI if already in one)', 'warning'); return }
+      let sid = sessionID()
+      if (!sid) sid = await createSessionID()
+      if (!sid) { toast('Could not find or create a session to send the prompt to', 'warning'); return }
       try {
         if (client?.session?.prompt) {
           await client.session.prompt({ sessionID: sid, text, resume: true, delivery: 'steer' })
+          // Best-effort: focus/navigate to the (possibly new) session if a TUI API exists.
+          try { await client.tui?.openSession?.({ sessionID: sid }) } catch {}
+          try { await client.session?.navigate?.({ sessionID: sid }) } catch {}
           return
         }
       } catch (e) {

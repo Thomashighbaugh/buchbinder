@@ -26,7 +26,7 @@ Reference for the Buchbinder phase methodology. The process varies by track type
 | `specify` | 2 | Build story specification + premise stress-test (6 criteria, hard block) |
 | `clarify` | 3 | Resolve specification ambiguities |
 | `research` | 2/4 | Active research: sources, annotation, literature review |
-| `outline` | 4/5 | Fine-grained chapter structure with scene beats, setup/payoff chains, continuity anchors + quality gate (3 revision cycles) |
+| `outline` | 4/5 | Fine-grained chapter structure with scene beats, setup/payoff chains, continuity anchors + structural gate and continuity/fidelity review loop (≤3 cycles each) |
 | `task-manager` | 5/6 | Break outline into tracked tasks with per-chapter sub-status lifecycle |
 | `draft` | 6/7 | Batch XML drafting with awareness map, prose quality, echo detection, beat arc check |
 | \`critique\` | 7/8 | 8 modes: developmental, audience, domain, cultural, cold-read, comprehensive, adversarial, personas |

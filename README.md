@@ -101,7 +101,7 @@ All functionality is accessed through the `/buchbinder` hub command. `/buchbinde
 | 2 | `specify` | Build story specification | Premise stress-test (6 criteria, hard block) before specification |
 | 3 | `clarify` | Resolve specification ambiguities | Consistency checker, forgotten elements scan |
 | 4 | `research` | Active research | Sources, annotation, literature review, field notes, interviews |
-| 5 | `outline` | Fine-grained chapter structure | Scene beats (min 2/chapter), setup/payoff chains, continuity anchors, quality gate + 3 revision cycles |
+| 5 | `outline` | Fine-grained chapter structure | Scene beats (min 2/chapter), setup/payoff chains, continuity anchors, structural gate + continuity/fidelity review loop (≤3 cycles each) |
 | 6 | `task-manager` | Break outline into tracked tasks | Per-chapter sub-status lifecycle |
 | 7 | `draft` | Write chapters | Batch-first (up to 6), XML structure, awareness map, prose quality, echo detection, beat arc check |
 | 8 | `critique` | Structured critique | 8 modes: alpha, beta, peer, sensitivity, cold-read, comprehensive, adversarial, personas |
@@ -776,8 +776,6 @@ Buchbinder's TUI integration and command dispatch were migrated to the **OpenCod
 - **Session-aware dispatch**: if no session is active, the sidebar creates one and submits the prompt; prompts are sent via the v2 session prompt flow (`sessionID`, `text`, with delivery/resume where supported) and navigates to the session. No “open a session first” dead-end and no silent failures.
 - **Self-contained routing**: Buchbinder phases do **not** call `hubMenu` and do **not** route to global/user-scope OpenCode hubs. Routing/specs live in project tools (`src/tools/buchbinder-router.ts`, `src/tools/hubs/buchbinder/*.ts`) and dispatch instructs use of the project's installed `.opencode/` skills/commands/tools.
 - **Install/refresh**: `bin/lib/sync.mjs`, `install.mjs`, and `refresh.mjs` copy hooks+sidebar+skills+tools+commands+templates, register local plugins in `opencode.jsonc` (`plugins`) and project config, and `refresh --force` overwrites plugin-owned drift in one pass (idempotent manifest/state).
-
-Buchbinder's TUI integration and command dispatch were migrated to the **OpenCode v2** plugin/command model:
 
 - **TUI plugin spec (v2):** the sidebar is a `Plugin.define` module (`@opencode/plugin/tui`) with `setup(ctx)`. It registers UI via `ctx.ui.slot` (`sidebar.content` / `sidebar.footer`), commands via `ctx.keymap.layer` (global, palette + slash), and interaction via `ctx.ui.dialog.select` / `ctx.ui.dialog.prompt` and `ctx.ui.toast.show`. Project location comes from `ctx.location`; prompts are delivered into the active session with `ctx.client.session.prompt({ sessionID, text, resume: true, delivery: "steer" })` and a robust session-id resolver across v2 route shapes.
 - **Self-contained dispatch (no global hub routing):** selecting a phase submits a **project-local, guarded** prompt. The sidebar never calls `hubMenu` and never routes to global/user-scope OpenCode hubs — Buchbinder owns its own pipeline and executes through this project's installed skills, commands, and tools under `.opencode/`. This fixes misrouting where a bare `/buchbinder <phase>` token was treated as text and delegated to the global hubs menu.

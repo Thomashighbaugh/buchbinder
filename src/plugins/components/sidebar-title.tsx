@@ -10,9 +10,12 @@ export function SidebarTitle(props: { session_id: string; title: string; state: 
 
   return (
     <box flexDirection="column">
-      <text style={{ fg: c.header, attributes: BOLD }}>
-        {'Buchbinder'}
-      </text>
+      <box flexDirection="row" on:select={() => props.state.openMenu?.() ?? props.state.injectCommand('/buchbinder')}>
+        <text style={{ fg: c.header, attributes: BOLD }}>
+          {'Buchbinder'}
+        </text>
+        <text style={{ fg: c.cyan }}>{'  [open menu]'}</text>
+      </box>
       <Show when={project()} fallback={<text style={{ fg: c.textMuted }}>{'No project detected'}</text>}>
         <text style={{ fg: c.textBright }}>
           {`${phaseLabel(project()!.phase)} — ${stateLabel(project()!.state)}`}

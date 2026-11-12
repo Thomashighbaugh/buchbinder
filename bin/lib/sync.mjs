@@ -179,6 +179,30 @@ export function copySlashCommands(destDir, mode, manifestFiles = null) {
 
 // ─── Templates ──────────────────────────────────────────────────────────────
 
+// ─── Rules ──────────────────────────────────────────────────────────────────
+
+/**
+ * Copy src/rules/*.md into <destDir>/rules/.
+ */
+export function copyRules(destDir, mode, manifestFiles = null) {
+    const srcDir = path.join(SRC_DIR, 'rules')
+    const destDirRules = path.join(destDir, 'rules')
+    if (!fs.existsSync(srcDir)) return { copied: 0, skipped: 0 }
+    fs.ensureDirSync(destDirRules)
+    let copied = 0, skipped = 0
+    for (const file of fs.readdirSync(srcDir).filter(f => f.endsWith('.md'))) {
+        const result = smartCopyFile(
+            path.join(srcDir, file),
+            path.join(destDirRules, file),
+            mode,
+            manifestFiles ? manifestFiles.get(`rules/${file}`) : null,
+        )
+        if (result === 'copied') copied++
+        else skipped++
+    }
+    return { copied, skipped }
+}
+
 export function copyTemplates(destDir, track) {
     const baseTemplates = path.join(SRC_DIR, 'templates')
     const destTemplates = path.join(destDir, 'templates')
@@ -396,23 +420,36 @@ export function ensureProjectConfig(destDir) {
     const opencodeJsoncPath = path.join(destDir, 'opencode.jsonc')
     const pkgJsonPath = path.join(destDir, 'package.json')
 
-    // tui.json (v2: `plugins`, directory entries; migrate/normalize legacy `plugin`)
-    if (!fs.existsSync(tuiJsonPath)) {
-        const config = { $schema: 'https://opencode.ai/tui.json', plugins: [PLUGIN_ENTRY] }
-        fs.writeJsonSync(tuiJsonPath, config, { spaces: 2 })
-    } else {
+    // tui.json — v2 project-local plugin registration belongs in opencode.jsonc (`plugins`).
+    // Clean legacy/misplaced buchbinder plugin entries from tui.json; do not add them here.
+    if (fs.existsSync(tuiJsonPath)) {
         const config = parseJsonc(tuiJsonPath)
         if (config) {
-            const merged = Array.isArray(config.plugins) ? [...config.plugins] : []
-            if (Array.isArray(config.plugin)) for (const e of config.plugin) merged.push(e)
-            const normalized = normalizePluginList(merged, { wantSidebar: true, wantHooks: false })
-            const changed = !Array.isArray(config.plugins) || !sameStringArray(config.plugins, normalized) || Object.prototype.hasOwnProperty.call(config, 'plugin')
-            if (changed) {
-                config.plugins = normalized
-                delete config.plugin
-                fs.writeFileSync(tuiJsonPath, JSON.stringify(config, null, 2) + '\n', 'utf-8')
+            const hadPluginKey = Object.prototype.hasOwnProperty.call(config, 'plugin')
+            const hadPluginsArray = Array.isArray(config.plugins)
+            if (hadPluginKey || hadPluginsArray) {
+                const merged = hadPluginsArray ? [...config.plugins] : []
+                if (Array.isArray(config.plugin)) for (const e of config.plugin) merged.push(e)
+                const cleaned = merged.filter((entry) => {
+                    const value = typeof entry === 'string' ? entry : ''
+                    return !isSidebarEntry(value) && !isHooksEntry(value)
+                })
+                const changed =
+                    hadPluginKey ||
+                    (hadPluginsArray && !sameStringArray(config.plugins, cleaned)) ||
+                    (!hadPluginsArray && cleaned.length !== merged.length)
+                if (changed) {
+                    if (cleaned.length > 0) config.plugins = cleaned
+                    else delete config.plugins
+                    delete config.plugin
+                    fs.writeFileSync(tuiJsonPath, JSON.stringify(config, null, 2) + '\n', 'utf-8')
+                }
             }
         }
+    } else {
+        // Preserve a minimal TUI config file when absent; plugin registration is handled in opencode.jsonc.
+        const config = { $schema: 'https://opencode.ai/tui.json' }
+        fs.writeJsonSync(tuiJsonPath, config, { spaces: 2 })
     }
 
     // opencode.jsonc — register both plugins (v2: `plugins`, migrate/normalize legacy `plugin`)

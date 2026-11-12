@@ -2,19 +2,28 @@ import { HubSubcommandSpec } from "../../hub-data.js"
 
 const spec: HubSubcommandSpec = {
   label: "pacing-audit",
-  description: "Analyze pacing distribution across all chapters: scene density, dialogue-to-prose ratio, action-to-reflection ratio, word count distribution. Identify saggy or rushed sections.",
-  reminder: "Per-chapter editorial sub-phase: pacing analysis",
+  description: "Analyze pacing as an independent critique-revise cycle: identify pacing issues, apply revisions, and re-audit until pass (or max cycles). Post-edit, pre-publish phase.",
+  reminder: "Independent critique-revise cycle: pacing analysis and correction",
   phases: "7-11",
   detailedDescription: `# User Input: {userInput}
 
 ## Objective
 
-Analyze the pacing of the entire manuscript (or a chapter range) and identify sections that are saggy (too slow), rushed (too fast), or unevenly balanced. Pacing audit looks at structural rhythm, not prose quality.
+Analyze manuscript pacing as an **independent critique-revise cycle**. This phase runs after edit and before publish as its own loop: audit pacing (critique), revise to address pacing issues, and re-audit until the pacing verdict is Pass (or 3 cycles are exhausted).
 
 ## Prerequisites
 
 - At least 3 chapters must exist in \`./book/content/\`
 - \`./book/outline.md\` should exist (for pacing tag comparison)
+
+## Independent Critique-Revise Cycle (HARD REQUIREMENT)
+
+1. **Critique (Audit pass):** compute pacing metrics and produce findings with IDs, severity, evidence, and concrete recommendations.
+2. **Revise:** apply targeted revisions for Conditional/Fail findings (scene restructuring, compression/expansion, rhythm adjustments, outline-tag alignment as appropriate).
+3. **Re-audit:** re-run the same pacing analysis on the same scope.
+4. **Repeat** until **Pass** or **3 cycles**.
+
+Do not treat a single audit report as completion if issues remain fixable within scope. Report remaining blockers if not passing after 3 cycles.
 
 ## Execution Steps
 
@@ -24,112 +33,66 @@ Analyze the pacing of the entire manuscript (or a chapter range) and identify se
 - \`/buchbinder pacing-audit 5-10\` → chapters 5 through 10
 - \`/buchbinder pacing-audit all\` → all chapters
 
-### 2. Load Chapters and XML Versions
+### 2. Load Chapters and Context
 
-For each chapter in scope:
-- Read \`./book/content/chapter_NNNNN.md\` (clean prose)
-- Read \`./book/drafts/chapter_NNNNN.xml\` (if available — for scene-level analysis)
-- Read outline pacing tags for each chapter
+For each chapter in scope read \`./book/content/chapter_NNNNN.md\`, \`./book/drafts/chapter_NNNNN.xml\` if available (for scene-level analysis), and outline pacing tags.
 
-### 3. Compute Pacing Metrics
+### 3. Compute Pacing Metrics (Critique Pass)
 
-For each chapter, compute:
+Per chapter: word count, scene count, average scene length, dialogue-to-prose ratio, action-to-reflection ratio, sentence length distribution/variation, scene type distribution (\`action/dialogue/transition/revelation/resolution\`), and pacing-tag match vs outline.
 
-**Word count**: Total words.
+Cross-chapter: word-count distribution/outliers, pacing rhythm, saggy streaks (3+ slow), rushed streaks (3+ fast with no breathing room), plateaus (5+ identical), jarring transitions, and scene balance.
 
-**Scene count**: Number of scenes (from XML \`<scene>\` tags, or estimated from scene breaks in markdown).
-
-**Average scene length**: Word count / scene count.
-
-**Dialogue-to-prose ratio**: Percentage of text that is dialogue (from \`<dialogue>\` tags, or estimated from quoted text in markdown).
-
-**Action-to-reflection ratio**: Action beats (\`<action>\` tags) vs. interiority (\`<interiority>\` tags) or narrative reflection. High action = fast pacing; high reflection = slow pacing.
-
-**Sentence length distribution**: Average sentence length, variation (standard deviation). High variation = dynamic pacing; low variation = monotonous.
-
-**Scene type distribution**: From XML \`<scene type="...">\` attributes:
-- \`action\` / \`dialogue\` → fast
-- \`transition\` / \`revelation\` → medium
-- \`resolution\` → slow
-
-**Pacing tag match**: Does the chapter's actual pacing match the outline's assigned pacing tag? (e.g., outline says "fast" but chapter has 70% reflection)
-
-### 4. Cross-Chapter Analysis
-
-Compute across all chapters:
-
-**Word count distribution**: Are chapters consistently sized, or are there outliers (very short or very long chapters)?
-
-**Pacing rhythm**: Plot the pacing score per chapter. A good manuscript has variation — fast chapters followed by slower ones for breathing room. Identify:
-- **Saggy streaks**: 3+ consecutive slow chapters
-- **Rushed streaks**: 3+ consecutive fast chapters with no breathing room
-- **Plateaus**: 5+ chapters with identical pacing scores
-- **Jarring transitions**: Chapter N is very slow, chapter N+1 is very fast (or vice versa) with no narrative bridge
-
-**Scene balance**: Does the manuscript have too many dialogue scenes with no action, or too much action with no reflection?
-
-### 5. Pacing Report
+### 4. Pacing Report (Per Cycle)
 
 \`\`\`markdown
-## Pacing Audit Report
+## Pacing Audit Report — Cycle [N]
 
 **Scope**: Chapters [start]–[end] ([N] chapters)
-**Total word count**: [N] words
-**Average chapter length**: [N] words
+**Verdict**: [Pass / Conditional / Fail]
 
 ### Per-Chapter Pacing
-
 | Chapter | Words | Scenes | Avg Scene | Dialogue% | Action% | Reflection% | Pacing Tag | Match |
-|---------|-------|--------|-----------|-----------|---------|-------------|------------|-------|
-| 1 | 3200 | 4 | 800 | 40% | 30% | 30% | fast | ✓ |
-| 2 | 2800 | 3 | 933 | 35% | 20% | 45% | medium | ✓ |
-| 3 | 4500 | 6 | 750 | 55% | 10% | 35% | slow | ✗ TOO FAST |
 
-### Cross-Chapter Issues
+### Findings
+| ID | Severity | Chapter/Range | Issue | Evidence | Recommendation |
 
-#### Saggy Streaks
-- **Chapters 7-9**: All slow pacing (reflection > 50%). Consider adding action beats or compressing reflection.
-
-#### Rushed Streaks
-- **Chapters 12-14**: All fast pacing (action > 60%, dialogue > 50%). Reader fatigue risk — add a breathing chapter.
-
-#### Pacing Tag Mismatches
-- **Chapter 3**: Outline says "slow" but chapter has 55% dialogue. Revise to add reflection or update outline tag.
-
-#### Plateaus
-- **Chapters 5-9**: All medium pacing with identical scene counts. Vary the rhythm.
-
-### Recommendations
-
-1. [Specific recommendation based on findings]
-2. [Specific recommendation]
-
-## Verdict
-
-[Pass: pacing is well-distributed / Conditional: [N] issues to address / Fail: serious pacing problems — consider restructuring]
+### Cycle Decision
+[Issues to revise now; expected re-audit focus]
 \`\`\`
 
-### 6. Next Steps (Auto-Handoff)
+### 5. Revise
 
-Based on the pacing audit result, offer to automatically continue. Use the \`question\` tool:
-- **Pass**: Offer \`/buchbinder hook-review\` or \`/buchbinder read-through\`
-- **Conditional**: Offer \`/buchbinder revise\` (structural) or \`/buchbinder edit\` (rhythm)
-- **Fail**: Offer \`/buchbinder outline\` (restructure pacing tags)
+Apply revisions addressing the findings (restructure/compress/expand scenes, adjust rhythm, add breathing beats, align pacing to intent). Record changes against finding IDs.
 
-If the user selects, call \`buchbinder-router\` with \`action: "route"\`, \`subcommand: <chosen>\` and execute it immediately.
+### 6. Re-Audit and Loop
+
+Re-run steps 2-4 on the same scope until Pass or 3 cycles. Regenerate any derived pacing artifacts as needed.
+
+### 7. Final Report and Handoff
+
+Report all cycles, fixes applied, and final verdict. Use \`question\` for handoff:
+- **Pass**: offer \`/buchbinder hook-review\`, \`/buchbinder read-through\`, or \`/buchbinder review\`/publish path as appropriate.
+- **Not passing after 3 cycles**: report blockers; offer \`/buchbinder revise\`/\`/buchbinder outline\` or stop.
+
+If selected, call \`buchbinder-router\` with \`action: "route"\`, \`subcommand: <chosen>\` and execute immediately.
 
 ## Supplement Skills
 
 | Skill | File | Purpose |
 |-------|------|---------|
-| \`scene-structure\` | \`skills/fiction/writing-techniques/scene-structure/SKILL.md\` | Scene framework for pacing analysis |`,
+| \`scene-structure\` | \`skills/fiction/writing-techniques/scene-structure/SKILL.md\` | Scene framework for pacing analysis and revision |`,
   tools: ["bash", "question"],
   relatedSkills: ["scene-structure"],
   examples: [
-    { input: "/buchbinder pacing-audit", approach: "Analyzes pacing across all chapters" },
-    { input: "/buchbinder pacing-audit 5-10", approach: "Analyzes pacing for chapters 5 through 10" }
+    { input: "/buchbinder pacing-audit", approach: "Runs pacing analysis as an independent critique-revise cycle across all chapters until pass or max cycles" },
+    { input: "/buchbinder pacing-audit 5-10", approach: "Runs the pacing critique-revise cycle for chapters 5 through 10" }
   ],
-  warnings: ["Pacing audit requires at least 3 chapters to compute meaningful cross-chapter patterns", "XML versions in ./book/drafts/ provide more accurate scene-level analysis — without them, scene counts are estimated from markdown"]
+  warnings: [
+    "Independent critique-revise cycle: do not stop at a single audit if fixable pacing issues remain (up to 3 cycles)",
+    "Requires at least 3 chapters for meaningful cross-chapter pacing patterns",
+    "XML versions in ./book/drafts/ provide more accurate scene-level analysis — without them, scene counts are estimated from markdown"
+  ]
 }
 
 export default spec

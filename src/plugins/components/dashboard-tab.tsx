@@ -111,32 +111,37 @@ export function DashboardTab(props: { state: SidebarState }) {
       <box marginTop={1}>
         <text style={{ fg: c.header, attributes: BOLD }}>{'── Actions ──'}</text>
       </box>
-      <box flexDirection="row" on:select={() => props.state.injectCommand('/buchbinder draft')}>
+      <box flexDirection="row" on:select={() => props.state.openMenu?.() ?? props.state.injectCommand('/buchbinder')}>
+        <text style={{ fg: c.cyan, attributes: BOLD }}>{'☰ '}</text>
+        <text style={{ fg: c.blue }}>{'/buchbinder menu'}</text>
+        <text style={{ fg: c.textMuted }}>{'   open phase popup/menu (add details)'}</text>
+      </box>
+      <box flexDirection="row" on:select={() => props.state.runPhase?.('draft') ?? props.state.injectCommand('/buchbinder draft')}>
         <text style={{ fg: c.pass, attributes: BOLD }}>{'▶ '}</text>
         <text style={{ fg: c.blue }}>{'/buchbinder draft'}</text>
         <text style={{ fg: c.textMuted }}>{'   batch draft pending chapters'}</text>
       </box>
-      <box flexDirection="row" on:select={() => props.state.injectCommand('/buchbinder critique')}>
+      <box flexDirection="row" on:select={() => props.state.runPhase?.('critique') ?? props.state.injectCommand('/buchbinder critique')}>
         <text style={{ fg: c.pass, attributes: BOLD }}>{'▶ '}</text>
         <text style={{ fg: c.blue }}>{'/buchbinder critique'}</text>
         <text style={{ fg: c.textMuted }}>{'   batch critique with 95% score'}</text>
       </box>
-      <box flexDirection="row" on:select={() => props.state.injectCommand('/buchbinder revise')}>
+      <box flexDirection="row" on:select={() => props.state.runPhase?.('revise') ?? props.state.injectCommand('/buchbinder revise')}>
         <text style={{ fg: c.pass, attributes: BOLD }}>{'▶ '}</text>
         <text style={{ fg: c.blue }}>{'/buchbinder revise'}</text>
         <text style={{ fg: c.textMuted }}>{'   batch revise to 95%'}</text>
       </box>
-      <box flexDirection="row" on:select={() => props.state.injectCommand('/buchbinder edit')}>
+      <box flexDirection="row" on:select={() => props.state.runPhase?.('edit') ?? props.state.injectCommand('/buchbinder edit')}>
         <text style={{ fg: c.pass, attributes: BOLD }}>{'▶ '}</text>
         <text style={{ fg: c.blue }}>{'/buchbinder edit'}</text>
         <text style={{ fg: c.textMuted }}>{'   three-pass line/copy/proofread'}</text>
       </box>
-      <box flexDirection="row" on:select={() => props.state.injectCommand('/buchbinder verify')}>
+      <box flexDirection="row" on:select={() => props.state.runPhase?.('verify') ?? props.state.injectCommand('/buchbinder verify')}>
         <text style={{ fg: c.pass, attributes: BOLD }}>{'▶ '}</text>
         <text style={{ fg: c.blue }}>{'/buchbinder verify'}</text>
         <text style={{ fg: c.textMuted }}>{'   run all quality gates'}</text>
       </box>
-      <box flexDirection="row" on:select={() => props.state.injectCommand('/buchbinder status')}>
+      <box flexDirection="row" on:select={() => props.state.runPhase?.('status') ?? props.state.injectCommand('/buchbinder status')}>
         <text style={{ fg: c.pass, attributes: BOLD }}>{'▶ '}</text>
         <text style={{ fg: c.blue }}>{'/buchbinder status'}</text>
         <text style={{ fg: c.textMuted }}>{'   show project state'}</text>

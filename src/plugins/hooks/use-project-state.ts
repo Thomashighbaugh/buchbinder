@@ -34,6 +34,8 @@ export interface SidebarState {
   vizData: () => VizDataset | null
   refreshViz: () => void
   injectCommand: (cmd: string) => void
+  openMenu: () => void
+  runPhase: (phase: string, args?: string) => void
 }
 
 /** A single diff hunk with before/after lines and approval status. */
@@ -88,11 +90,21 @@ const [diffData, setDiffData] = createSignal<DiffData | null>(null)
 const [provenanceData, setProvenanceData] = createSignal<ProvenanceSummary | null>(null)
 const [vizData, setVizData] = createSignal<VizDataset | null>(null)
 
-// Reference to api.client.tui.appendPrompt — set by entry plugin
+// Callbacks wired by the entry plugin so sidebar UI can open the popup menu or dispatch phases.
 let injectFn: ((cmd: string) => void) | null = null
-/** Sets the command injection callback used by the sidebar to dispatch /buchbinder commands. */
+let openMenuFn: (() => void) | null = null
+let runPhaseFn: ((phase: string, args?: string) => void) | null = null
+/** Sets the command injection callback used by the sidebar to dispatch raw commands/prompts. */
 export function setInjector(fn: (cmd: string) => void) {
   injectFn = fn
+}
+/** Sets the popup menu opener (same flow as /buchbinder with no args). */
+export function setMenuOpener(fn: () => void) {
+  openMenuFn = fn
+}
+/** Sets the phase dispatcher (same popup/details flow as selecting a subcommand). */
+export function setPhaseDispatcher(fn: (phase: string, args?: string) => void) {
+  runPhaseFn = fn
 }
 
 const gateDefinitions = [
@@ -198,6 +210,16 @@ export function useProjectState(
     if (injectFn) injectFn(cmd)
   }
 
+  const openMenu = () => {
+    if (openMenuFn) openMenuFn()
+    else injectCommand('/buchbinder')
+  }
+
+  const runPhase = (phase: string, args?: string) => {
+    if (runPhaseFn) runPhaseFn(phase, args)
+    else injectCommand(`/buchbinder ${[phase, args].filter(Boolean).join(' ')}`.trim())
+  }
+
   onMount(() => {
     refreshProject()
   })
@@ -219,5 +241,7 @@ export function useProjectState(
     vizData,
     refreshViz,
     injectCommand,
+    openMenu,
+    runPhase,
   }
 }

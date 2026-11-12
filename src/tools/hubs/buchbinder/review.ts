@@ -2,207 +2,114 @@ import { HubSubcommandSpec } from "../../hub-data.js"
 
 const spec: HubSubcommandSpec = {
   label: "review",
-  description: "Broad project QA with automated continuity scan across all chapters. Modes: framework, content, final, factual. Continuity gate hard-blocks on contradictions.",
-  reminder: "Phase 11: Quality gate before publication with continuity scan",
+  description: "Broad project QA as an independent critique-revise cycle (framework, content, final, factual). Runs review analysis, applies revisions, and re-reviews until pass (or max cycles) before publish.",
+  reminder: "Phase 11: Independent critique-revise quality gate before publication",
   phases: "11",
   detailedDescription: `# User Input: {userInput}
 
 ## Objective
 
-Assess the project's overall health before marking chapters complete or proceeding to publication. Review is the final quality gate before the publish phase. **Includes an automated continuity scan across all chapters that hard-blocks on contradictions.**
+Assess project health before publication as an **independent critique-revise cycle**. Review is not a one-shot report: for each review run, produce findings (critique), apply required revisions, and re-run review until the gate passes (or the cycle is exhausted). Only a passing review may hand off to publish.
+
+This phase runs **after edit and before publish** and must complete its own critique-revise loop independently of other phases.
 
 ## Step 0 (REQUIRED) — Generate Visualizations First
 
-Before running any review mode, the visualization dataset must be regenerated and current. The pacing curve, thread matrix, cognitive load, and escalation data inform the review's findings.
+Before running any review mode (and before each re-review cycle), regenerate visualization data.
 
-1. Import the \`buildVizDataset\` function from \`./lib/viz-aggregator.ts\`
-2. Call it with the project root: \`buildVizDataset(projectRoot)\`
+1. Import \`buildVizDataset\` from \`./lib/viz-aggregator.ts\`
+2. Call \`buildVizDataset(projectRoot)\`
 3. Save to \`./book/visualizations/dataset.json\`
-4. Verify the dataset is fresh (within 5 minutes) and non-empty
+4. Verify dataset is fresh (within 5 minutes) and non-empty
 5. Report: "Visualization dataset regenerated: [N] chapters, [M] threads, [K] cognitive load points."
 
-**Do not proceed with framework, content, final, or factual analysis until the viz dataset is current.** The pacing curve reveals sagging chapters the prose-level review would miss; the thread matrix reveals dropped/orphaned threads; the cognitive load chart reveals overloaded chapters.
+**Do not proceed until the viz dataset is current.**
 
 ## Review Modes
 
 | Mode | When to Use | Scope |
 |------|-------------|-------|
-| Framework | Before writing begins | Validates manifest, specification, outline, tracking structure |
-| Content | During/after drafting | Validates written chapters against all reference documents |
-| Final | Before publish | Full project audit: all content, tracking, citations, metadata |
-| Factual (non-fiction) | Before publish | Validates all factual claims against sources |
+| Framework | Before writing begins | Manifest, specification, outline, tracking structure |
+| Content | During/after drafting/editing | Chapters against all reference documents |
+| Final | Before publish | Full project audit: content, tracking, citations, metadata, continuity |
+| Factual (non-fiction) | Before publish | Factual claims against sources |
+
+## Independent Critique-Revise Cycle (HARD REQUIREMENT)
+
+Treat each review invocation as its own cycle:
+
+1. **Critique (Review pass):** run the selected mode checks and produce a structured findings report with IDs, severities, evidence, and required fixes.
+2. **Revise:** for every Critical/Major/blocking finding (and any continuity contradiction), apply targeted revisions/fixes to the affected chapters or project files.
+3. **Re-review:** regenerate visualizations and re-run the same review mode on the same scope.
+4. **Repeat** until verdict is **Pass** (and continuity hard blocks clear), up to **3 cycles**.
+
+**Rules:**
+- Cycles are **independent** per review run/mode — do not assume a previous phase's cycle satisfies this phase.
+- Do not report "done" or hand off to publish while blocking issues remain.
+- If still not passing after 3 cycles, stop and report remaining blockers with specific evidence; do not mark ready for publish.
+- Minor/observation items may be deferred only with rationale, but never if they constitute a hard-block condition for the mode (e.g. continuity contradictions).
 
 ## Execution Steps
 
 ### 0. Visualization Pre-Generation (HARD BLOCK)
 
-Run step 0 above. Abort with clear error if \`buildVizDataset\` throws or the dataset is stale.
+Run step 0. Abort with clear error if \`buildVizDataset\` throws or dataset is stale/empty.
 
 ### 0a. Load Relevant Lore Context
 
-Before running any review mode, retrieve the most relevant lore context for this review:
+Retrieve lore most relevant to the review:
 
 \`\`\`bash
 bun .opencode/lib/scripts/lore-query.mjs \
-  --query "Review context for [book title] — continuity scan across all chapters, checking character profiles, world rules, timeline, glossary, and plot threads for consistency" \
+  --query "Review context for [book title] — continuity, character profiles, world rules, timeline, glossary, and plot threads for consistency" \
   --top 5 --rerank
 \`\`\`
 
-This retrieves the lore most relevant to continuity checking. If unavailable, read \`./series/lorebook/\` and \`./book/knowledge/\* manually.
+If unavailable, read \`./series/lorebook/\` and \`./book/knowledge/*\` manually.
 
 ### Lore as Canonical Truth (Doctrine)
 
-The lorebook — \`series/lorebook/*\`, \`book/knowledge/*\`, \`book/manifest.md\`, \`book/specification.md\`, and the project \`series/outline.md\` / \`book/outline.md\` — is the **absolute source of truth** for this project. A review that flags a chapter for contradicting the lorebook is a *flag about the chapter*, not about the lorebook. Only the human user can alter lore.
+\`series/lorebook/*\`, \`book/knowledge/*\`, \`book/manifest.md\`, \`book/specification.md\`, and outlines are the absolute source of truth. Flag draft contradictions as chapter-level issues — never change lore.
 
-**If you find lorebook contradictions in the draft, flag them as chapter-level issues, never as lore-level changes.**
+### 1. Framework Analysis (Critique Pass)
 
-### 1. Framework Analysis
+If no chapters are written yet (or mode is Framework), validate: manifest completeness/consistency, specification clarity (no unresolved \`[Needs Clarification]\`), outline coherence, knowledge quality, tracking initialization, voice profiles (if chapter > 3), and style sheet modules.
 
-If no chapters are written yet, run **Framework Analysis**:
+### 2. Content Analysis (Critique Pass)
 
-- Manifest completeness and internal consistency
-- Specification clarity (no unresolved \`[Needs Clarification]\` markers)
-- Outline coherence (pacing distribution, arc completeness)
-- Knowledge file quality (character profiles, world-setting, source notes)
-- Tracking structure initialised correctly
-- Voice profiles exist (if chapter > 3, \`./book/knowledge/voice-profiles.json\` should exist)
-- Style sheet modules exist (\`./book/metadata/\`)
-
-### 2. Content Analysis
-
-If chapters exist, run **Content Analysis**:
-
-For each written chapter, check against:
-- **Manifest**: Does the chapter respect the quality baseline and style principles?
-- **Specification**: Does the chapter follow the blueprint? Are established character voices, world rules, and plot constraints respected?
-- **Outline**: Does the chapter match its assigned pacing tag and purpose?
-- **Knowledge**: Are characters consistent with their profiles? Are locations accurate?
-- **Tracking**: Are character states, plot progress, timeline events, and relationships updated correctly?
-- **Style sheet**: Are all style sheet decisions respected? (terminology, formatting, character voices, timeline, emotional register)
-- **Non-fiction**: Are all claims sourced? Are citations correctly formatted? Is the argument progression sound?
+If chapters exist, check each chapter against manifest, specification, outline, knowledge, tracking, style sheet, and (non-fiction) sourcing/citations/argument progression.
 
 ### 3. Automated Continuity Scan (HARD BLOCK)
 
-Run the continuity check gate across all chapters. This is an automated cross-chapter scan that hard-blocks on contradictions.
+Run cross-chapter continuity checks: character state, timeline, plot threads (including forgotten/dormant 5+ chapters), location, relationships, objects/props, knowledge state, and voice continuity/drift.
 
-**What the scan checks:**
+- **Contradictions:** HARD BLOCK — must be resolved within the critique-revise cycle.
+- **Forgotten threads / voice drift:** warnings unless they create contradictions or mode requires resolution.
 
-1. **Character state continuity**: A character's state in chapter N+1 must be consistent with their state at the end of chapter N. Example: if character X is "injured" at end of chapter 3, they can't be "running" at start of chapter 4 without explanation.
+Produce a continuity scan report with evidence for every finding.
 
-2. **Timeline continuity**: Events must occur in chronological order. If chapter 3 is "Spring 1247" and chapter 4 is "Winter 1246", that's a contradiction unless it's an explicit flashback.
+### 3b. Structural Analyses (HARD BLOCK where applicable)
 
-3. **Plot thread tracking**: Every plot thread introduced must be either:
-   - Advanced in a later chapter, or
-   - Explicitly marked as "dormant" in the tracking files
-   - **Dormant threads with no mention for 5+ chapters: flag as "forgotten thread"**
-
-4. **Location continuity**: Characters present in location A at end of chapter N must travel to location B before appearing there in chapter N+1 (unless time skip is explicit).
-
-5. **Relationship continuity**: Relationship states (allies, enemies, romantic) must evolve consistently. A sudden shift from "enemies" to "allies" without narrative explanation is a contradiction.
-
-6. **Object/prop continuity**: Important objects (weapons, keys, documents) must be tracked. If a character loses their sword in chapter 3, they can't have it in chapter 5 without recovery.
-
-7. **Knowledge continuity**: Characters should not know things they haven't learned yet. If a secret is revealed in chapter 6, characters can't reference it in chapter 4 (unless non-linear timeline).
-
-8. **Voice continuity**: Character dialogue should remain consistent with voice profiles. Run voice drift check across all chapters.
-
-**Continuity scan report:**
-
-\`\`\`markdown
-## Continuity Scan Report
-
-### Contradictions (HARD BLOCK)
-| # | Type | Chapters | Contradiction | Evidence |
-|---|------|----------|---------------|----------|
-| 1 | Character state | 3→4 | X is injured at end of 3, running at start of 4 | Ch3: "X clutched their wound"; Ch4: "X sprinted" |
-
-### Forgotten Threads (Warning)
-| # | Thread | Introduced | Last mentioned | Chapters dormant |
-|---|--------|------------|----------------|-----------------|
-| 1 | The missing heir | Ch2 | Ch5 | 6 chapters |
-
-### Voice Drift (Warning)
-| # | Character | Chapters | Drift indicator |
-|---|-----------|----------|-----------------|
-| 1 | X | 3, 7 | Sentence length increased 40% in ch7 |
-
-**Gate Result**: FAIL — [N] contradictions must be resolved before publication.
-\`\`\`
-
-**If contradictions found: BLOCK. Report all contradictions with evidence. Do not proceed to publication until resolved.** Forgotten threads and voice drift are warnings, not blocks.
-
-### 3b. Structural Analyses (HARD BLOCK)
-
-Run the following cross-chapter structural analyses:
-
-1. **Reverse outline comparison** — for each chapter, generate an outline of what was actually written and compare to the planned outline. Flag missing beats (hard block) and added beats (warning). Uses \`src/lib/reverse-outline.ts\`.
-
-2. **Character arc verification** — per-character check that each arc has introduction, escalation, crisis, transformation, resolution. Incomplete arcs with 2+ stages are flagged. Uses \`src/lib/character-arc.ts\`.
-
-3. **Question/answer accounting** — track every narrative question (mystery, goal, implicit) through to resolution. Unanswered questions are flagged. Uses \`src/lib/qa-accounting.ts\`.
-
-4. **Promise keeping audit** — verify genre, tone, structural, and thematic promises declared in the manifest and opening chapter are fulfilled by the book's end. Broken promises block. Uses \`src/lib/promise-audit.ts\`.
-
-5. **Escalation curve verification** — verify stakes/intensity increase from act to act. Plateaus (3+ chapters at same intensity) and descending stretches are flagged. Uses \`src/lib/escalation-curve.ts\`.
-
-6. **Cognitive load analysis** — per-chapter count of active named characters, plot threads, and open questions. Chapters exceeding thresholds (7 chars, 5 threads, 3 questions) are flagged. Uses \`src/lib/cognitive-load.ts\`.
-
-7. **Knowledge state matrix** — per-chapter tracking of what each character knows vs. what the reader knows. Detects dramatic irony opportunities and knowledge violations. Uses \`src/lib/knowledge-state.ts\`.
-
-8. **AI-writing tell density** — project-wide scan using the AI-writing catalog (\`skills/quality-assurance/ai-writing-audit/SKILL.md\` + \`references/patterns.md\`; rule \`rules/ai-writing-patterns.md\`). Count Tier 1A markers, Tier 2 clusters, Tier 3 density violations, structural tells, and signature slop per chapter. **Any P0 (credibility killer) pattern blocks.** A chapter exceeding >3 tell instances is flagged. Report the pattern, location, and tier — **signals, not proof**; do not assert machine authorship. Fiction carve-outs apply.
-
-**If any structural analysis produces a hard block (missing beats, broken promises, knowledge violations): STOP. Report specific failures.**
+Run: reverse outline comparison, character arc verification, question/answer accounting, promise keeping audit, escalation curve verification, cognitive load analysis, knowledge state matrix, and AI-writing tell density (project-wide; P0 blocks). Hard-block findings must be fixed in the revise step and cleared on re-review.
 
 ### 3c. Structural Visualization Outputs
 
-Generate the following visualization outputs alongside the review report:
-
-1. **Thread tracking matrix** — tabular view of plot threads across chapters (\`src/lib/thread-matrix.ts\`). Save to \`./book/review/thread-matrix.md\`.
-2. **Chapter dependency graph** — directed graph of setup→payoff dependencies (\`src/lib/dependency-graph.ts\`). Save to \`./book/review/dependency-graph.md\`.
-
-These visualizations reveal gaps, over-concentration, dropped threads, and revision impact at a glance.
+Generate/save: \`./book/review/thread-matrix.md\` and \`./book/review/dependency-graph.md\` (refresh each cycle as needed).
 
 ### 4. Factual Verification (Non-Fiction Only)
 
-For non-fiction and mixed tracks, run a separate factual verification pass:
-- Identify all factual claims in each chapter
-- Cross-reference against source notes
-- Flag unsupported claims as \`[CitationNeeded]\`
-- Flag contradictory sources as \`[Disputed]\`
+Identify factual claims, cross-reference sources, flag \`[CitationNeeded]\` / \`[Disputed]\`. Unresolved critical factual issues block Final/Factual pass.
 
-### 5. Final Readiness Assessment
+### 5. Critique Report (Per Cycle)
 
-When the user requests a final review:
-
-Checklist:
-1. All tasks marked \`[X]\` (Done) or \`[ED]\` (Edited)
-2. All \`[CitationNeeded]\` markers resolved
-3. All tracking files up to date
-4. No \`[Needs Clarification]\` markers remain in specification
-5. Manifest followed throughout
-6. Knowledge files comprehensive and consistent
-7. Critical/Critique feedback addressed in revision log
-8. Metadata recorded (\`./book/meta.json\`)
-9. All chapters present and sequentially numbered
-10. Word count meets target range
-11. **Continuity scan passed** (no contradictions)
-12. **Voice profiles up to date** (drift checked across all chapters)
-13. **Style sheet enforced** (no violations in any chapter)
-14. **AI-writing tell scan passed** (no P0 patterns; per-chapter tell density within threshold)
-15. **Theme audit passed** (fiction — verdict \`theme-holds\`; no \`theme-broken\` findings; motifs paid off)
-
-### 6. Review Report
-
-Produce a structured report:
+Produce a structured report for the current cycle:
 
 \`\`\`markdown
-# Review Report
+# Review Report — Cycle [N]
 
 **Mode**: [Framework / Content / Final / Factual]
 **Date**: [date]
-
-## Summary
-[Overall assessment: Pass / Conditional / Fail]
+**Verdict**: [Pass / Conditional / Fail]
 
 ## Continuity Scan
 - Contradictions: [N] (HARD BLOCK if > 0)
@@ -210,35 +117,42 @@ Produce a structured report:
 - Voice drift: [K] (warning)
 
 ## Issues Found
-| ID | Severity | Chapter | Issue | Recommendation |
-|----|----------|---------|-------|----------------|
-| 1 | Major | 3 | [Issue] | [Action] |
+| ID | Severity | Chapter/Area | Issue | Evidence | Required fix |
+|----|----------|--------------|-------|----------|--------------|
 
-## Recommendations
-- [Action item 1]
-- [Action item 2]
-
-## Verdict
-[Pass: proceed to next phase / Conditional: address issues first / Fail: restructure needed]
+## Cycle Decision
+[What must be revised now; what remains; pass/fail rationale]
 \`\`\`
 
-### 7. Next Steps (Auto-Handoff)
+### 6. Revise (Within This Phase's Cycle)
 
-Based on the review verdict, offer to automatically continue. Use the \`question\` tool:
+Apply fixes for all blocking/required findings:
+- Continuity contradictions, hard-block structural failures, and mode-critical issues: **must fix**.
+- For each fix, record what changed and which issue ID it addresses.
+- Re-run affected checks locally as needed, then proceed to re-review.
 
-Question varies by verdict:
-- **Pass**: "Review passed. Continuity scan clean. Continue to publishing?"
-  - **Yes — Publish** → Run \`/buchbinder publish\` (call buchbinder-router route)
-  - **No — I'll continue later** → Stop
-- **Conditional**: "Review identified [N] items to address. Continue?"
-  - **Yes — Edit** (line fixes) → Run \`/buchbinder edit\` (call buchbinder-router route)
-  - **Yes — Revise** (substantive) → Run \`/buchbinder revise\` (call buchbinder-router route)
-  - **No — I'll review the items first** → Stop
-- **Fail**: "Review failed. [N] continuity contradictions must be resolved. Continue?"
-  - **Yes — Revise** → Run \`/buchbinder revise\` (call buchbinder-router route)
-  - **No — I'll address these manually** → Stop
+**Do not defer fixes that keep the verdict non-passing.**
 
-If the user selects, call \`buchbinder-router\` with \`action: "route"\`, \`subcommand: <chosen>\` and execute it immediately.
+### 7. Re-Review and Loop
+
+After revisions, regenerate visualizations and re-run the same review mode. Repeat critique→revise→re-review until **Pass** or **3 cycles** reached.
+
+### 8. Final Readiness Assessment (Final mode, must pass)
+
+Checklist (all required for Final pass): tasks \`[X]/[ED]\`, resolved \`[CitationNeeded]\`, tracking up to date, no unresolved \`[Needs Clarification]\`, manifest followed, knowledge consistent, critique/revision feedback addressed, metadata recorded, chapters present/sequential, word count in range, continuity scan clean of contradictions, voice profiles checked, style sheet enforced, AI-writing tell scan passed (no P0; within threshold), and (fiction) theme audit passed (\`theme-holds\`).
+
+### 9. Final Report (Cycle Summary)
+
+Report all cycles run, issues found/fixed per cycle, remaining items (if any), and final verdict. Include continuity scan summary and evidence of pass.
+
+### 10. Next Steps (Auto-Handoff)
+
+Only after a **passing** independent review cycle (or explicit user decision when non-final modes allow continuation), offer handoff via \`question\`:
+- **Pass (Final)**: "Review cycle complete and passing. Continue to publishing?" → \`/buchbinder publish\` or stop.
+- **Pass (non-final)**: offer appropriate next phase or stop.
+- **Not passing after 3 cycles**: report blockers; offer targeted \`/buchbinder revise\` / \`/buchbinder edit\` or stop for manual intervention. **Do not offer publish.**
+
+If selected, call \`buchbinder-router\` with \`action: "route"\`, \`subcommand: <chosen>\` and execute immediately.
 
 ## Supplement Skills
 
@@ -250,9 +164,9 @@ If the user selects, call \`buchbinder-router\` with \`action: "route"\`, \`subc
 | \`citation-validator\` | \`skills/quality-assurance/citation-validator/SKILL.md\` | Citation correctness (non-fiction) |
 | \`style-enforcer\` | \`skills/quality-assurance/style-enforcer/SKILL.md\` | Style consistency |
 | \`ai-writing-audit\` | \`skills/quality-assurance/ai-writing-audit/SKILL.md\` | Project-wide AI-writing tell density scan |
-| \`theme-craft\` | \`skills/fiction/writing-techniques/theme-craft/SKILL.md\` | Theme audit — value-question, consequence vs. commentary, motif payoff, premise vs. counter-premise (fiction) |
+| \`theme-craft\` | \`skills/fiction/writing-techniques/theme-craft/SKILL.md\` | Theme audit (fiction) |
 | \`reverse-outline\` | \`src/lib/reverse-outline.ts\` | Draft vs planned outline comparison |
-| \`character-arc\` | \`src/lib/character-arc.ts\` | Character arc completeness verification |
+| \`character-arc\` | \`src/lib/character-arc.ts\` | Character arc completeness |
 | \`qa-accounting\` | \`src/lib/qa-accounting.ts\` | Question/answer tracking |
 | \`promise-audit\` | \`src/lib/promise-audit.ts\` | Promise keeping audit |
 | \`escalation-curve\` | \`src/lib/escalation-curve.ts\` | Escalation curve verification |
@@ -262,8 +176,17 @@ If the user selects, call \`buchbinder-router\` with \`action: "route"\`, \`subc
 | \`dependency-graph\` | \`src/lib/dependency-graph.ts\` | Chapter dependency graph |`,
   tools: ["loadSkill", "bash", "question"],
   relatedSkills: ["continuity-auditor", "forgotten-elements", "fact-checker", "citation-validator", "style-enforcer", "ai-writing-audit", "theme-craft"],
-  examples: [{ input: "/buchbinder review final", approach: "Runs final readiness assessment with continuity scan before publication" }],
-  warnings: ["Continuity scan is a HARD BLOCK — contradictions between chapters (character state, timeline, plot threads, location, relationships, objects, knowledge, voice) must be resolved before publication", "AI-writing tell density scan runs project-wide — any P0 pattern blocks; report pattern, location, and tier (signals, not proof)", "Forgotten threads (dormant for 5+ chapters) and voice drift are warnings, not blocks"]
+  examples: [
+    { input: "/buchbinder review final", approach: "Runs final review as an independent critique-revise cycle (critique → revise → re-review) until pass or max cycles before publish" },
+    { input: "/buchbinder review content", approach: "Runs content review as an independent critique-revise cycle and fixes blocking findings before completion" }
+  ],
+  warnings: [
+    "Review is an INDEPENDENT critique-revise cycle — run critique, apply revisions, and re-review until pass (up to 3 cycles); do not one-shot report and stop",
+    "Continuity scan contradictions are HARD BLOCKS and must be resolved before pass/publish",
+    "Do not hand off to publish unless the review cycle passes",
+    "AI-writing tell density scan runs project-wide — any P0 pattern blocks; report pattern, location, and tier (signals, not proof)",
+    "Forgotten threads (dormant 5+ chapters) and voice drift are warnings unless they create contradictions or block the selected mode"
+  ]
 }
 
 export default spec

@@ -17,7 +17,7 @@ import { onMount } from 'solid-js'
 import { SidebarTitle } from './components/sidebar-title'
 import { SidebarContent } from './components/sidebar-content'
 import { SidebarFooter } from './components/sidebar-footer'
-import { useProjectState, setInjector } from './hooks/use-project-state'
+import { useProjectState, setInjector, setMenuOpener, setPhaseDispatcher } from './hooks/use-project-state'
 
 type PhaseEntry = { label: string; description: string }
 type MenuCategory = { key: string; title: string; description: string; phases: PhaseEntry[] }
@@ -129,30 +129,44 @@ export default Plugin.define({
     }
 
     const resolveSessionID = (): string | undefined => {
-      const dig = (o: any, depth = 0): string | undefined => {
-        if (!o || typeof o !== 'object' || depth > 4) return undefined
+      const dig = (o: any, depth = 0, seen = new Set<any>()): string | undefined => {
+        if (!o || typeof o !== 'object' || depth > 5 || seen.has(o)) return undefined
+        seen.add(o)
         const direct = pickSessionID(o)
         if (direct) return direct
-        for (const k of ['params', 'route', 'session', 'data', 'value', 'info', 'state', 'location', 'current']) {
-          const r = dig(o[k], depth + 1)
-          if (r) return r
+        for (const k of ['params', 'route', 'session', 'data', 'value', 'info', 'state', 'location', 'current', 'active', 'view']) {
+          if (k in o) {
+            const r = dig((o as any)[k], depth + 1, seen)
+            if (r) return r
+          }
         }
         return undefined
       }
       try {
-        const current = router?.current?.() ?? router?.route
+        const current = typeof router?.current === 'function' ? router.current() : router?.current ?? router?.route
         if (current) {
           // v2 Route: { type: 'session', sessionID }
-          if (current.type === 'session' && isSessionID(current.sessionID)) return current.sessionID
-          if (current.name === 'session' && isSessionID(current.sessionID)) return current.sessionID
+          if ((current as any).type === 'session' && isSessionID((current as any).sessionID)) return (current as any).sessionID
+          if ((current as any).name === 'session') {
+            const id = pickSessionID((current as any).params) ?? pickSessionID(current)
+            if (id) return id
+          }
           const fromRoute = dig(current)
           if (fromRoute) return fromRoute
         }
       } catch {}
       try {
+        const fromRouterState = dig(router)
+        if (fromRouterState) return fromRouterState
+      } catch {}
+      try {
         const loc = ctx.location ?? location
-        const fromLoc = dig(loc) ?? (isSessionID(loc?.sessionID) ? loc.sessionID : undefined)
+        const fromLoc = dig(loc) ?? (isSessionID((loc as any)?.sessionID) ? (loc as any).sessionID : undefined)
         if (fromLoc) return fromLoc
+      } catch {}
+      try {
+        const fromCtx = dig(ctx)
+        if (fromCtx) return fromCtx
       } catch {}
       return undefined
     }
@@ -170,11 +184,12 @@ export default Plugin.define({
       if (client?.session?.create) {
         attempts.push(() => client.session.create({ directory: dir, title: 'Buchbinder' }))
         attempts.push(() => client.session.create({ title: 'Buchbinder' }))
-        attempts.push(() => client.session.create({ directory: dir }))
         attempts.push(() => client.session.create({}))
       }
       if (client?.session?.new) attempts.push(() => client.session.new({ title: 'Buchbinder', directory: dir }))
+      if (client?.tui?.createSession) attempts.push(() => client.tui.createSession({ title: 'Buchbinder', directory: dir }))
       if (client?.tui?.createSession) attempts.push(() => client.tui.createSession({ title: 'Buchbinder' }))
+      if (client?.tui?.newSession) attempts.push(() => client.tui.newSession({ title: 'Buchbinder' }))
 
       let lastErr: unknown
       for (const run of attempts) {
@@ -215,33 +230,29 @@ export default Plugin.define({
       }
 
       let lastErr: unknown
-      const tryPrompt = async (payload: any) => {
-        const res = await client.session.prompt(payload)
-        unwrap(res)
-        return res
+      const promptApis: Array<{ name: string; call: () => Promise<any> }> = []
+      if (client?.session?.prompt) {
+        promptApis.push({ name: 'session.prompt(text,steer,resume)', call: () => client.session.prompt({ sessionID, text, delivery: 'steer', resume: true }) })
+        promptApis.push({ name: 'session.prompt(text)', call: () => client.session.prompt({ sessionID, text }) })
+        promptApis.push({ name: 'session.prompt(parts)', call: () => client.session.prompt({ sessionID, parts: [{ type: 'text', text }] }) })
+      }
+      if (client?.session?.promptAsync) {
+        promptApis.push({ name: 'session.promptAsync', call: () => client.session.promptAsync({ sessionID, text, delivery: 'steer', resume: true }) })
+      }
+      if (client?.tui?.submitPrompt) {
+        promptApis.push({ name: 'tui.submitPrompt', call: () => client.tui.submitPrompt({ text }) })
       }
 
-      if (client?.session?.prompt) {
-        // v2-preferred prompt shape (OpenCode client): { sessionID, text, delivery?, resume? }
+      for (const api of promptApis) {
         try {
-          await tryPrompt({ sessionID, text, delivery: 'steer', resume: true })
+          const res = await api.call()
+          // Some clients return { error } envelopes instead of throwing.
+          if (res && typeof res === 'object' && 'error' in res && (res as any).error) throw (res as any).error
           await navigateToSession(sessionID)
           return
-        } catch (e) { lastErr = e }
-
-        // Fallback: without delivery/resume flags
-        try {
-          await tryPrompt({ sessionID, text })
-          await navigateToSession(sessionID)
-          return
-        } catch (e) { lastErr = e ?? lastErr }
-
-        // Legacy/alternate fallback
-        try {
-          await tryPrompt({ sessionID, parts: [{ type: 'text', text }] })
-          await navigateToSession(sessionID)
-          return
-        } catch (e) { lastErr = e ?? lastErr }
+        } catch (e) {
+          lastErr = e
+        }
       }
 
       // Last resort: stage in prompt input (may require user submit) instead of silent failure.
@@ -254,13 +265,11 @@ export default Plugin.define({
         } catch (e) { lastErr = e ?? lastErr }
       }
 
-      toast(
-        `Could not submit prompt: ${lastErr instanceof Error ? lastErr.message : String(lastErr ?? 'no prompt API available')}`,
-        'error',
-      )
+      const msg = lastErr instanceof Error ? lastErr.message : (typeof lastErr === 'string' ? lastErr : (lastErr ? JSON.stringify(lastErr) : 'no prompt API available'))
+      toast(`Could not submit prompt: ${msg}`, 'error')
     }
 
-    // Self-contained dispatch: never routes via global hubMenu/user-scope hubs.
+    // Self-contained dispatch: no hubMenu and no global/user-scope hub routing.
     const dispatchPhase = async (label: string, args = '') => {
       const phase = ALL_PHASES.find((p) => p.label === label)
       if (!phase) return
@@ -273,6 +282,7 @@ export default Plugin.define({
       const prompt =
         `Buchbinder (self-contained project workflow): execute phase \`${phase.label}\`${suffix ? ` with args: ${suffix}` : ''}.\n\n` +
         `IMPORTANT: This is a project-local Buchbinder pipeline. Do NOT call \`hubMenu\` and do NOT route to global/user-scope OpenCode hubs. ` +
+        `Use project-installed skills/commands/tools and the bundled buchbinder-router specs under .opencode/ only. ` +
         `Use this project's installed Buchbinder skills, commands, and tools under .opencode/ (including the project-local buchbinder-router/tooling where appropriate) to perform the phase. ` +
         `Do not ask to open a session or require a global hub menu. Report results and suggest the next phase.`
       await submitPrompt(prompt)
@@ -297,9 +307,6 @@ export default Plugin.define({
       }
       await dispatchPhase(label)
     }
-
-    // Wire command injector so sidebar buttons can dispatch.
-    setInjector((cmd: string) => { void submitPrompt(cmd) })
 
     // Single sidebar state — no tab switching.
     const noopSet = () => {}
@@ -342,6 +349,15 @@ export default Plugin.define({
         // dialog closed/cancelled or unavailable
       }
     }
+
+    // Wire UI callbacks so sidebar clicks open the same popup/menu/details flow.
+    setInjector((cmd: string) => { void submitPrompt(cmd) })
+    setMenuOpener(() => { void openMenu() })
+    setPhaseDispatcher((phase: string, args?: string) => {
+      const raw = (args ?? '').trim()
+      if (raw) void dispatchPhase(phase, raw)
+      else void askAndDispatch(phase)
+    })
 
     // Sole /buchbinder handler (arg-aware): bare -> menu; `<phase> [args]` -> run.
     ctx.keymap?.layer?.(() => ({

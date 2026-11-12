@@ -27,6 +27,7 @@ import {
     copyTemplates as syncCopyTemplates,
     copySidebarPlugin as syncCopySidebarPlugin,
     copyHooksPlugin as syncCopyHooksPlugin,
+    copyRules as syncCopyRules,
     ensureProjectConfig as syncEnsureProjectConfig,
     initProjectStructure as syncInitProjectStructure,
     PACKAGE_ROOT as PKG_ROOT,
@@ -97,17 +98,9 @@ async function printPerProjectAck() {
 }
 
 // ─── Rules ──────────────────────────────────────────────────────────────────
-function copyRules() {
-    const srcDir = path.join(SRC_DIR, 'rules');
-    const destDir = path.join(DEST_DIR, 'rules');
-    if (!fs.existsSync(srcDir)) return;
-    fs.ensureDirSync(destDir);
-    let copied = 0;
-    for (const file of fs.readdirSync(srcDir).filter(f => f.endsWith('.md'))) {
-        fs.copySync(path.join(srcDir, file), path.join(destDir, file), { overwrite: true });
-        copied++;
-    }
-    success(`${copied} rules synchronized`);
+function copyRules(mode = 'overwrite') {
+    const r = syncCopyRules(DEST_DIR, mode);
+    success(`${r.copied} rules synchronized${r.skipped ? ` (${r.skipped} unchanged)` : ''}`);
 }
 
 // ─── Project Init ───────────────────────────────────────────────────────────
@@ -463,7 +456,7 @@ async function main() {
     const toolsR = syncCopyToolsAndLib(DEST_DIR, syncMode);
     const cmdsR = syncCopySlashCommands(DEST_DIR, syncMode);
     syncCopyTemplates(DEST_DIR, track);
-    copyRules();
+    copyRules(syncMode);
     const pluginR = syncCopySidebarPlugin(DEST_DIR, syncMode);
     const hooksR = syncCopyHooksPlugin(DEST_DIR, syncMode);
     syncEnsureProjectConfig(DEST_DIR);

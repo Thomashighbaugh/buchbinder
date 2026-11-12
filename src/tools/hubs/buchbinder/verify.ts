@@ -2,129 +2,92 @@ import { HubSubcommandSpec } from "../../hub-data.js"
 
 const spec: HubSubcommandSpec = {
   label: "verify",
-  description: "Run quality gates independently: voice-init (generate voice profiles from existing chapters), voice-check (check drift against profiles), continuity (cross-chapter scan), style (style sheet enforcement), gates (run any single gate on demand).",
-  reminder: "On-demand quality gate runner — voice profiles, continuity, style, gate checks",
+  description: "Run quality gates independently as critique-revise cycles where applicable: voice-init (generate profiles), voice-check/continuity/style/gates (check → fix → re-check until pass or max cycles).",
+  reminder: "On-demand quality gate runner with independent critique-revise cycles for fixable findings",
   phases: "7-11",
   detailedDescription: `# User Input: {userInput}
 
 ## Objective
 
-Run quality gates independently of the drafting pipeline. Use this when you want to:
+Run quality gates independently of the drafting pipeline. After edit and before publish, verification checks that produce actionable findings must operate as **independent critique-revise cycles**: run the check (critique), apply fixes/revisions, and re-run the same check until it passes or 3 cycles are exhausted.
+
+Use this to:
 - Initialize voice profiles from existing chapters
-- Check voice drift on a drafted chapter
-- Run a continuity scan across chapters
-- Enforce style sheet on a chapter
-- Run any specific gate on demand
+- Check and correct voice drift
+- Run and resolve continuity issues
+- Enforce and fix style sheet violations
+- Run specific gates and close fixable failures
 
 ## Step 0 (REQUIRED) — Generate Visualizations First
 
-Before running ANY verify subcommand, the visualization data must be regenerated. The pacing, thread, cognitive-load, and escalation datasets inform what the gates look for.
+Before running ANY verify subcommand (and before each re-check cycle for analysis/gate runs), regenerate visualization data.
 
-1. Import the \`buildVizDataset\` function from \`./lib/viz-aggregator.ts\`
-2. Call it with the project root: \`buildVizDataset(projectRoot)\`
-3. Save the result to \`./book/visualizations/dataset.json\` (overwriting the previous one)
-4. Report: "Visualization dataset regenerated: [N] chapters, [M] threads, [K] cognitive load points."
+1. Import \`buildVizDataset\` from \`./lib/viz-aggregator.ts\`
+2. Call \`buildVizDataset(projectRoot)\`
+3. Save to \`./book/visualizations/dataset.json\`
+4. Verify dataset is fresh (within 5 minutes) and \`chapters > 0\` when chapters exist
+5. Report: "Visualization dataset regenerated: [N] chapters, [M] threads, [K] cognitive load points."
 
-**Do not run gates until the viz dataset is fresh.** Running continuity without first regenerating viz will miss thread dropouts and pacing regressions that the viz data would have surfaced.
+**Do not run gates/checks until the viz dataset is current** (except when no chapters exist and the requested subcommand is not chapter-dependent).
 
-## Step 0b — Verify the dataset is current
+## Independent Critique-Revise Cycle (HARD REQUIREMENT for Fixable Checks)
 
-After regenerating, check that:
-- \`./book/visualizations/dataset.json\` exists
-- \`generatedAt\` timestamp is within the last 5 minutes
-- \`chapters > 0\` (otherwise there is nothing to verify)
+For subcommands that evaluate quality and can produce fixable findings (\`voice-check\`, \`continuity\`, \`style\`, and \`gates\` runs with actionable failures/warnings that must be resolved):
 
-If any check fails, abort with: "Visualization dataset is stale or missing — run step 0 first."
+1. **Critique (Check pass):** run the check and produce a structured report with IDs, severity, evidence, and required fixes.
+2. **Revise/Fix:** apply corrections to affected chapters/files (voice alignment, continuity fixes, style-sheet corrections, gate-driven revisions).
+3. **Re-check:** regenerate visualizations as needed and re-run the exact same check on the same scope.
+4. **Repeat** until **Pass** (no blocking findings remain for that check) or **3 cycles**.
+
+**Rules:**
+- Each verify invocation is an **independent** cycle — do not assume another phase satisfied this check.
+- \`voice-init\` is a generation/setup action, not a critique-revise cycle; after init you may run \`voice-check\` (which follows the cycle if drift is found).
+- If issues are found, do not stop at the first report — fix and re-check (up to 3 cycles) unless the user explicitly halts.
+- Continuity **contradictions** and other hard-block failures must be resolved before reporting pass. Report remaining blockers if not passing after 3 cycles.
 
 ## Sub-Commands
 
 ### \`/buchbinder verify voice-init\`
 
-Generate voice profiles from existing chapters.
+Generate voice profiles from existing chapters (setup action).
 
-**Prerequisites:**
-- At least 3 chapters must exist in \`./book/content/\` (need enough data to fingerprint)
-- XML versions should exist in \`./book/drafts/\` (for accurate extraction)
-- **Visualization dataset must be current (step 0)**
+**Prerequisites:** at least 3 chapters in \`./book/content/\`; XML in \`./book/drafts/\` preferred; current viz dataset.
 
-**Process:**
-1. Read all chapters and their XML versions
-2. For each character that appears in dialogue:
-   - Extract all \`<dialogue speaker="X">\` blocks across all chapters
-   - Generate fingerprint: speech pattern, dialogue length, emotional range, verbal tics, register, subtext frequency, contractions, sentence openers, sample lines
-3. For narration:
-   - Extract all \`<narration register="Y">\` blocks across all chapters
-   - Generate fingerprint: register, sentence length distribution, sensory density, dialogue-to-prose ratio, emotional register, common patterns, atmosphere, sample passages
-4. Save to \`./book/knowledge/voice-profiles.json\`
-5. Report: "[N] character profiles and [1] narration profile generated from [M] chapters."
-
-**When to use:**
-- After chapter 3 is drafted (first time)
-- After major revisions that change character voices
-- After adding new characters with significant dialogue
+**Process:** read chapters/XML, extract dialogue per speaker and narration registers, generate fingerprints, save to \`./book/knowledge/voice-profiles.json\`, and report counts. No critique-revise loop required for generation itself.
 
 ### \`/buchbinder verify voice-check [chapter]\`
 
-Check voice drift on a specific chapter against existing voice profiles.
+Check and correct voice drift as an independent critique-revise cycle.
 
-**Prerequisites:**
-- Voice profiles must exist (\`./book/knowledge/voice-profiles.json\`)
-- Target chapter must exist with XML version in \`./book/drafts/\`
+**Prerequisites:** voice profiles exist; target chapter/XML exists.
 
-**Process:**
-1. Load voice profiles
-2. Read target chapter's XML version
-3. For each \`<dialogue speaker="X">\` block:
-   - Compare against X's voice profile
-   - Check: sentence length, contraction rate, register, emotional range, verbal tics
-4. For each \`<narration register="Y">\` block:
-   - Compare against narration voice profile
-5. Report drift indicators:
-   - Sentence length shift > 30%: flag
-   - Contraction rate change > 20%: flag
-   - Register mismatch: flag
-   - New verbal tics not in profile: flag
-   - Missing established tics: flag
+**Cycle:** compare dialogue and narration against profiles (sentence length, contraction rate, register, emotional range, verbal tics, missing/added tics, sensory/dialogue metrics). If drift indicators found, revise the chapter to align with established profiles (or update profiles only if the change is intentional and explicitly requested), then re-check until pass or 3 cycles.
 
-**Output:**
-\`\`\`markdown
-## Voice Check Report: Chapter [N]
-
-### Character: [Name]
-| Metric | Profile | Chapter | Drift | Status |
-|--------|---------|---------|-------|--------|
-| Avg sentence length | 12 words | 18 words | +50% | ⚠ DRIFT |
-| Contraction rate | 40% | 25% | -15% | ⚠ DRIFT |
-| Register | informal | formal | mismatch | ⚠ DRIFT |
-
-### Narration
-| Metric | Profile | Chapter | Drift | Status |
-|--------|---------|---------|-------|--------|
-| Sensory density | 3.2/sentence | 3.1/sentence | -3% | ✓ OK |
-| Dialogue ratio | 30% | 35% | +5% | ✓ OK |
-
-**Result**: [N] drift indicators found. [Pass/Fail]
-\`\`\`
+**Output (per cycle):** structured drift report with metrics, evidence, fixes applied, and pass/fail.
 
 ### \`/buchbinder verify continuity [range]\`
 
-Run continuity scan across a range of chapters (or all chapters if no range specified).
+Run continuity scan as an independent critique-revise cycle.
 
-**Process:** Same as the continuity check in the review phase — character state, timeline, plot threads, location, relationships, objects, knowledge, voice.
+**Process:** check character state, timeline, plot threads, location, relationships, objects/props, knowledge, and voice continuity across the range (or all chapters).
 
-**Output:** Continuity scan report with contradictions (hard block), forgotten threads (warning), voice drift (warning).
+**Cycle:** contradictions are hard blocks — fix them and re-scan until clean (or 3 cycles). Forgotten threads and voice drift are warnings unless they create contradictions; address or explicitly document remaining warnings.
+
+**Output:** continuity report per cycle with contradictions, forgotten threads, voice drift, fixes applied, and gate result.
 
 ### \`/buchbinder verify style [chapter]\`
 
-Run style sheet enforcement on a specific chapter.
+Run style sheet enforcement as an independent critique-revise cycle.
 
-**Process:** Same as the style sheet check in the edit phase — checks all 5 modules (terminology, character-voices, formatting, timeline, emotional-register) against the chapter text.
+**Process:** check terminology, character-voices, formatting, timeline, and emotional-register modules against the chapter.
 
-**Output:** Style violation report with module, decision, violation, and location for each violation.
+**Cycle:** violations must be corrected (auto-fix where safe, otherwise targeted revision) and re-checked until no violations remain (or 3 cycles).
 
-### \`/buchbinder verify gates [gate-name] [chapter]\`
+**Output:** style violation report per cycle with module, decision, violation, location, fix, and result.
 
-Run a specific quality gate on demand:
+### \`/buchbinder verify gates [gate-name] [chapter|round|scope]\`
+
+Run a specific quality gate as an independent critique-revise cycle when findings require fixes.
 
 | Gate Name | What It Checks |
 |-----------|----------------|
@@ -133,88 +96,49 @@ Run a specific quality gate on demand:
 | \`post-draft\` | XML structure, metadata, scenes, tracking, voice, awareness map |
 | \`prose-quality\` | Filter words, adverbs, passive voice, info-dumps, tense/POV drift |
 | \`echo-detection\` | Word echo, structural echo, beat echo, crutch word frequency |
-| \`beat-arc\` | Emotional beat trajectory from <beatchange> tags — flat/repetitive arcs |
+| \`beat-arc\` | Emotional beat trajectory from <beatchange> tags |
 | \`revision-verify\` | Critique items cross-referenced against revision log |
 | \`continuity\` | Cross-chapter contradictions |
 | \`style\` | Style sheet violations |
 | \`subtext\` | On-the-nose dialogue detection |
 | \`purple-prose\` | Overwriting, excessive modifiers, metaphor overload |
 | \`cliche\` | Clichéd phrases and genre-trope overuse |
-| \`ai-slop\` | AI-writing catalog — word tiers (1A/1B/2/3), structural tells, signature slop (ozone, stock sensory clichés), never-inject guardrails |
+| \`ai-slop\` | AI-writing catalog (word tiers, structural tells, signature slop); signals, not proof |
 | \`rhythm\` | Sentence length variety, monotony detection |
 | \`immersion\` | Anachronisms, authorial intrusion, meta-references, logic breaks |
 | \`trust\` | Coincidences, deus ex machina, plot armor, stupid-for-plot |
-| \`reverse-outline\` | Draft vs planned outline comparison — missing/added beats |
-| \`thread-matrix\` | Plot thread tracking matrix — dropped/orphaned/over-concentrated |
-| \`dependency-graph\` | Chapter dependency graph from outline setup/payoff chains |
-| \`character-arc\` | Per-character arc completeness (intro→escalation→crisis→transformation→resolution) |
-| \`qa-accounting\` | Narrative question tracking — unanswered questions flagged |
-| \`promise-audit\` | Genre/tone/thematic promises kept by book end |
-| \`escalation-curve\` | Stakes escalation from act to act, plateau detection |
+| \`reverse-outline\` | Draft vs planned outline comparison |
+| \`thread-matrix\` | Plot thread tracking matrix |
+| \`dependency-graph\` | Chapter dependency graph |
+| \`character-arc\` | Per-character arc completeness |
+| \`qa-accounting\` | Narrative question tracking |
+| \`promise-audit\` | Genre/tone/thematic promises kept |
+| \`escalation-curve\` | Stakes escalation and plateau detection |
 | \`cognitive-load\` | Per-chapter character/thread/question count |
-| \`knowledge-state\` | Who knows what when — dramatic irony, knowledge violations |
-| \`opening-closing\` | Book-level first/last 500 words strength audit |
-| \`non-negotiables\` | Creative constraints (author's red lines) — plot, character, tone, content, structure, world |
+| \`knowledge-state\` | Who knows what when; knowledge violations |
+| \`opening-closing\` | Book-level first/last 500 words strength |
+| \`non-negotiables\` | Creative constraints (author's red lines) |
 
-**Usage:**
-- \`/buchbinder verify gates pre-draft Chapter 5\` — run pre-draft gate for chapter 5
-- \`/buchbinder verify gates post-draft Chapter 3\` — run post-draft gate on chapter 3's XML
-- \`/buchbinder verify gates prose-quality Chapter 3\` — run prose quality scorecard on chapter 3
-- \`/buchbinder verify gates echo-detection Chapter 3\` — run echo detection on chapter 3
-- \`/buchbinder verify gates beat-arc Chapter 3\` — run beat arc analysis on chapter 3
-- \`/buchbinder verify gates revision-verify 1\` — run revision-verify gate on critique round 1
-- \`/buchbinder verify gates thread-matrix\` — generate thread tracking matrix
-- \`/buchbinder verify gates dependency-graph\` — generate chapter dependency graph
-- \`/buchbinder verify gates ai-slop Chapter 3\` — run the AI-writing catalog over chapter 3 (word tiers, structural tells, signature slop; reports pattern, location, tier — signals, not proof)
+**Cycle behavior by gate:** if a gate reports fixable/blocking failures, apply required revisions/fixes and re-run the gate until pass or 3 cycles. Gates that are purely diagnostic/visualization outputs (e.g. matrix/graph generation) should still be regenerated after fixes and reported, but do not force a revision loop when no actionable failure exists.
 
-### NLI evidence step (runs inside \`post-draft\` · \`revision-verify\`)
-
-Two gates gain a local NLI evidence step — chosen because NLI is decisive exactly when a *delivered artifact* must entail a *claimed property* of it. It is **not** a separate subcommand; it runs *inside* the gate process, after the structural checks, and appends evidence:
-
-| Gate | Question the classifier answers |
-|------|---------------------------------|
-| \`post-draft\` | Does the drafted **prose** (delivered) entail the awareness-map claims the draft makes about itself (payoff-from / sets-up / anchor — the claims)? |
-| \`revision-verify\` | Does the **revision entry** (delivered) entail the critique item's **recommendation** (the claim) — i.e. actually address it? |
-
-Gates whose relation is *correspondence* rather than entailment (e.g. an outline's setup↔payoff pairing) are deliberately **not** run through NLI — the classifier scores those unreliably, and a noisy step erodes gate trust.
-
-**Run it alongside the gate:**
-\`\`\`bash
-node .opencode/lib/nli-gates.mjs --gate post-draft . --chapter 3
-node .opencode/lib/nli-gates.mjs --gate revision-verify . --round 1
-\`\`\`
-
-Or programmatically: \`runGateWithNli(gateType, projectRoot, options)\` in \`./lib/quality-gates.ts\` runs the structural gate and appends this evidence (a no-op if the classifier is unavailable).
-
-**Output discipline — surgical by design.** Only the most suspicious findings surface, lowest entailment first, capped, plus a one-line pass/fail summary. Full findings are persisted for later access:
-
-- \`.opencode/cache/nli-evidence/<gate>.json\` — every scored finding
-- \`.opencode/cache/nli-evidence/<gate>.md\` — the exact block to inject into gate evidence
-
-Env: \`NLI_MAX_SCAN\` (pairs scored, default 12), \`NLI_MAX_PAIRS\` (findings surfaced, default 6), \`NLI_WARN_THRESHOLD\` (default 0.5).
-
-**Rule:** append the NLI block to the gate's evidence and let it *inform*. A low entailment score must never hard-block on its own — pair it with a concrete, human-readable reason or treat it as a warning.
+**NLI evidence step (inside \`post-draft\`, \`revision-verify\`):** run the local NLI evidence script alongside the gate as specified, append evidence to inform (never hard-block on NLI score alone), and persist full findings under \`.opencode/cache/nli-evidence/\`.
 
 ## Execution
 
-For all verify sub-commands:
-1. Parse the sub-command from user input
-2. Load the relevant library (voice-profile, quality-gates, metadata, checkpoints)
-3. Run the check
-4. Report results in structured format
-5. Do NOT modify any files unless explicitly requested (voice-init generates profiles, but other checks are read-only)
+1. Parse sub-command and scope.
+2. Run Step 0 visualization pre-generation (and refresh before re-checks as needed).
+3. Load relevant libraries/skills (\`voice-profile\`, \`quality-gates\`, \`metadata\`, \`checkpoints\`, etc.).
+4. **Critique pass:** run the requested check/gate.
+5. **If actionable findings exist:** revise/fix, then re-check (repeat up to 3 cycles). \`voice-init\` is exempt as a setup action.
+6. Report all cycles, fixes applied, remaining blockers, and final result in structured format.
 
 ## Next Steps (Auto-Handoff)
 
-After reporting the verify results, hand off using the \`question\` tool (Rule A — multiple candidates):
+After the verify cycle completes, hand off via \`question\`:
+- **Pass:** offer \`/buchbinder review\`, next relevant phase, or stop.
+- **Not passing after 3 cycles / blockers remain:** offer \`/buchbinder revise\`, \`/buchbinder edit\`, targeted re-run, or stop. Do not claim the gate passed.
 
-Question: "Verification complete. What next?"
-Options:
-- **Fix issues** → Run \`/buchbinder revise\` (call buchbinder-router route for \`revise\`) if revision-verify failed, or \`/buchbinder edit\` (call buchbinder-router route for \`edit\`) for line-level issues
-- **Review** → Run \`/buchbinder review\` (call buchbinder-router route for \`review\`)
-- **Stop** → End turn
-
-If the user selects a phase, call \`buchbinder-router\` with \`action: "route"\`, \`subcommand: <chosen>\` and execute it immediately. Do NOT just tell them to type it — run it.
+If selected, call \`buchbinder-router\` with \`action: "route"\`, \`subcommand: <chosen>\` and execute immediately.
 
 ## Supplement Skills
 
@@ -228,45 +152,24 @@ If the user selects a phase, call \`buchbinder-router\` with \`action: "route"\`
 | \`citation-validator\` | \`skills/quality-assurance/citation-validator/SKILL.md\` | Citation verification (non-fiction) |
 | \`voice-profile\` | \`src/lib/voice-profile.ts\` | Voice fingerprinting engine |
 | \`quality-gates\` | \`src/lib/quality-gates.ts\` | Gate runner |
-| \`nli-gates\` | \`src/lib/nli-gates.mjs\` | Local NLI gate evidence (outline / post-draft / revision-verify) |
+| \`nli-gates\` | \`src/lib/nli-gates.mjs\` | Local NLI gate evidence |
 | \`metadata\` | \`src/lib/metadata.ts\` | Style sheet enforcement |
-| \`checkpoints\` | \`src/lib/checkpoints.ts\` | Checkpoint system |
-| \`prose-quality\` | \`src/lib/prose-quality.ts\` | Prose quality scorecard |
-| \`echo-detection\` | \`src/lib/echo-detection.ts\` | Echo & repetition detection |
-| \`beat-arc\` | \`src/lib/beat-arc.ts\` | Emotional beat arc tracking |
-| \`thread-matrix\` | \`src/lib/thread-matrix.ts\` | Thread tracking matrix |
-| \`dependency-graph\` | \`src/lib/dependency-graph.ts\` | Chapter dependency graph |
-| \`subtext-analysis\` | \`src/lib/subtext-analysis.ts\` | On-the-nose dialogue detection |
-| \`purple-prose\` | \`src/lib/purple-prose.ts\` | Overwriting detection |
-| \`cliche-detection\` | \`src/lib/cliche-detection.ts\` | Cliché and trope overuse |
-| \`sentence-rhythm\` | \`src/lib/sentence-rhythm.ts\` | Sentence length variety |
-| \`immersion-audit\` | \`src/lib/immersion-audit.ts\` | Immersion break detection |
-| \`trust-audit\` | \`src/lib/trust-audit.ts\` | Trust accounting (convenience/deus ex machina) |
-| \`reverse-outline\` | \`src/lib/reverse-outline.ts\` | Draft vs planned outline comparison |
-| \`character-arc\` | \`src/lib/character-arc.ts\` | Character arc verification |
-| \`qa-accounting\` | \`src/lib/qa-accounting.ts\` | Question/answer tracking |
-| \`promise-audit\` | \`src/lib/promise-audit.ts\` | Promise keeping audit |
-| \`escalation-curve\` | \`src/lib/escalation-curve.ts\` | Escalation curve verification |
-| \`cognitive-load\` | \`src/lib/cognitive-load.ts\` | Cognitive load management |
-| \`knowledge-state\` | \`src/lib/knowledge-state.ts\` | Knowledge state matrix |
-| \`opening-closing\` | \`src/lib/opening-closing.ts\` | Book opening/closing strength |
-| \`creative-constraints\` | \`src/lib/creative-constraints.ts\` | Non-negotiables gate check |
-| \`diff-approval\` | \`src/lib/diff-approval.ts\` | Diff-based approval gates |
-| \`authorial-intent\` | \`src/lib/authorial-intent.ts\` | Authorial intent capture and verification |
-| \`severity-tiers\` | \`src/lib/severity-tiers.ts\` | Suggestion severity tiers |
-| \`veto-system\` | \`src/lib/veto-system.ts\` | Veto system (\`|\` key) |
-| \`feedback-memory\` | \`src/lib/feedback-memory.ts\` | Rejection reason memory |
-| \`provenance\` | \`src/lib/provenance.ts\` | Change provenance tracking |
-| \`phase-preview\` | \`src/lib/phase-preview.ts\` | Phase pre-execution confirmation |`,
+| \`checkpoints\` | \`src/lib/checkpoints.ts\` | Checkpoint system |`,
   tools: ["bash", "question"],
   relatedSkills: ["pre-draft-checklist", "continuity-auditor", "forgotten-elements", "style-enforcer", "fact-checker", "citation-validator"],
   examples: [
-    { input: "/buchbinder verify voice-init", approach: "Generates voice profiles from all existing chapters" },
-    { input: "/buchbinder verify voice-check Chapter 5", approach: "Checks voice drift on chapter 5 against profiles" },
-    { input: "/buchbinder verify continuity all", approach: "Runs continuity scan across all chapters" },
-    { input: "/buchbinder verify style Chapter 3", approach: "Runs style sheet enforcement on chapter 3" }
+    { input: "/buchbinder verify voice-init", approach: "Generates voice profiles from existing chapters (setup action)" },
+    { input: "/buchbinder verify voice-check Chapter 5", approach: "Runs voice-drift check as an independent critique-revise cycle: detect drift, fix, re-check until pass or max cycles" },
+    { input: "/buchbinder verify continuity all", approach: "Runs continuity scan as an independent critique-revise cycle: fix contradictions/issues, re-scan until pass or max cycles" },
+    { input: "/buchbinder verify style Chapter 3", approach: "Runs style enforcement as an independent critique-revise cycle: fix violations, re-check until clean or max cycles" },
+    { input: "/buchbinder verify gates prose-quality Chapter 3", approach: "Runs the gate as an independent critique-revise cycle when actionable findings exist" }
   ],
-  warnings: ["Voice-init requires at least 3 chapters to generate meaningful profiles", "Verify commands are read-only (except voice-init which generates profiles)", "Voice-check requires XML version in ./book/drafts/ for accurate extraction"]
+  warnings: [
+    "For fixable checks/gates, run as an independent critique-revise cycle (check → fix → re-check, up to 3 cycles); do not stop at the first failing report",
+    "voice-init is a setup/generation action, not a critique-revise cycle",
+    "Continuity contradictions and hard-block gate failures must be resolved before reporting pass",
+    "Voice-init requires at least 3 chapters for meaningful profiles; voice-check requires XML in ./book/drafts/ for accurate extraction"
+  ]
 }
 
 export default spec

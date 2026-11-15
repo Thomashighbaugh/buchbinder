@@ -175,9 +175,9 @@ A missing ledger file means review has not run — the pipeline treats it as out
 
 ### 10. Next Steps (Auto-Handoff)
 
-Only after a **passing** independent review cycle (or explicit user decision when non-final modes allow continuation), offer handoff via \`question\`:
-- **Pass (Final)**: "Review cycle complete and passing. Continue to publishing?" → \`/buchbinder publish\` or stop.
-- **Pass (non-final)**: offer appropriate next phase or stop.
+Only after a **passing** independent review cycle (or explicit user decision when non-final modes allow continuation), offer handoff via \`question\`. Before offering publish, call \`pipeline-ledger({ action: "status" })\` to confirm all mandatory passes are \`Pass\`.
+- **Pass (Final)**: "Review cycle complete and passing. Continue to publishing?" → offer \`/buchbinder publish\` **only** when the review ledger is \`Pass\` and all mandatory post-edit ledgers are \`Pass\`; otherwise offer \`/buchbinder cycle\` to complete outstanding passes. Always allow stop.
+- **Pass (non-final)**: offer the appropriate next phase (or \`/buchbinder review final\` when ready) or stop. Do not present the manuscript as publish-ready.
 - **Not passing after 3 cycles**: report blockers; offer targeted \`/buchbinder revise\` / \`/buchbinder edit\` or stop for manual intervention. **Do not offer publish.**
 
 If selected, call \`buchbinder-router\` with \`action: "route"\`, \`subcommand: <chosen>\` and execute immediately.

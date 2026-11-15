@@ -71,8 +71,8 @@ export const MANDATORY_PASSES: MandatoryPassDef[] = [
     id: 'proofread-verification',
     label: 'Proofread verification',
     ledgerFile: 'proofread-verification.md',
-    command: '/buchbinder edit',
-    checks: 'Typos, orphan/widow lines, spacing, scene-break and numbering consistency',
+    command: '/buchbinder cycle',
+    checks: 'Typos, orphan/widow lines, spacing, scene-break and numbering consistency (post-edit cycle — run via /buchbinder cycle, resumes at post-edit step)',
   },
   {
     id: 'continuity',

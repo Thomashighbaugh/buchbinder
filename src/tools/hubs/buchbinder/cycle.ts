@@ -159,22 +159,23 @@ Update task status to \`[ED]\`.
 
 ### 7. Post-Edit Critique–Revise Cycles (MANDATORY — before Done)
 
-After editing, run **each** of the following as its own **independent critique–revise cycle** (critique → revise → re-check) over the batch, up to 3 cycles each, exactly as specified in the corresponding phase:
+After editing, run **each** of the following as its own **independent critique–revise cycle** (critique → revise → re-check) over the batch, up to 3 cycles each, exactly as specified in the corresponding phase. **Run them in this canonical order** so handoffs and ledgers stay wired to the same sequence.
 
-| Pass | Source phase | What it checks |
-|------|--------------|----------------|
-| **Proofread verification** | \`/buchbinder edit\` Pass 3 | Re-scan the *edited* text: typos, orphan/widow lines, spacing, scene-break and numbering consistency, name/place/term spelling |
-| **Continuity** | \`/buchbinder verify continuity\` | Character state, timeline, plot threads, location, relationships, props, knowledge state, voice continuity across the batch and adjacent chapters |
-| **Pacing** | \`/buchbinder pacing-audit\` | Pace curve, plateau detection, beat rhythm |
-| **Hooks and transitions** | \`/buchbinder hook-review\` | Weak or missing hooks between chapters/scenes, momentum drops |
-| **Read-through** | \`/buchbinder read-through\` | Belief breaks, immersion breaks, trust failures, deus ex machina, plot armour |
+| Order | Pass | Source phase / command | Ledger id | What it checks |
+|------:|------|------------------------|-----------|----------------|
+| 1 | **Proofread verification** | Edit Pass 3 criteria (performed by this cycle) | \`proofread-verification\` | Re-scan the *edited* text: typos, orphan/widow lines, spacing, scene-break and numbering consistency, name/place/term spelling |
+| 2 | **Continuity** | \`/buchbinder verify continuity\` | \`continuity\` | Character state, timeline, plot threads, location, relationships, props, knowledge state, voice continuity across the batch and adjacent chapters |
+| 3 | **Pacing** | \`/buchbinder pacing-audit\` | \`pacing\` | Pace curve, plateau detection, beat rhythm |
+| 4 | **Hooks and transitions** | \`/buchbinder hook-review\` | \`hooks\` | Weak or missing hooks between chapters/scenes, momentum drops |
+| 5 | **Read-through** | \`/buchbinder read-through\` | \`read-through\` | Belief breaks, immersion breaks, trust failures, deus ex machina, plot armour |
 
 **Rules for this step:**
+- **Resume-aware:** before running, call \`pipeline-ledger({ action: "status" })\` and read which post-edit ledgers already record verdict \`Pass\` for the relevant scope. Skip any pass whose ledger already passes; run only the outstanding passes (in order). Do not mark a skipped pass complete without a passing ledger on disk.
+- **Proofread verification** is the post-edit re-scan of the edited text (Edit Pass 3 criteria). It is performed and recorded by this cycle — the edit phase does **not** write \`./book/pipeline/proofread-verification.md\`.
 - Each pass runs to its own verdict (**Pass**) before the cycle continues to the next pass. A failing pass is fixed and re-checked — never skipped because another pass "covered" it.
 - Contradictions and hard-block failures are **hard blocks**: fix them before proceeding.
-- Subagents may run these passes in parallel (swarm) or one after another (sequential); each pass must still return its own verdict.
+- Subagents may run these passes in parallel (swarm) or one after another (sequential); each pass must still return its own verdict and its own ledger write. If run in parallel, treat the batch as passing only when every pass's ledger shows \`Pass\`.
 - **Record every passing pass in the ledger** with \`pipeline-ledger({ action: "write", pass: "<pass-id>", ... })\` — proofread verification → \`proofread-verification\`, continuity → \`continuity\`, pacing → \`pacing\`, hooks → \`hooks\`, read-through → \`read-through\`.
-- The proofread verification ledger file (\`./book/pipeline/proofread-verification.md\`) is written by this step only — the edit phase must not write it.
 - If a pass is still failing after 3 cycles, **stop** and report the remaining blockers with evidence. Do not mark chapters Done.
 
 \`\`\`markdown
@@ -254,17 +255,17 @@ Only when every stage above has passed for every chapter in the batch **and** th
 After the batch cycle completes, offer to automatically continue. Use the \`question\` tool:
 
 Question varies by result:
-- **All passed**: "Batch cycle complete. [N] chapters done. Continue?"
-  - **Yes — Cycle next batch** → Run \`/buchbinder cycle\` again (call buchbinder-router route)
-  - **Yes — Review** → Run \`/buchbinder review\` (call buchbinder-router route)
+- **All passed** (every mandatory stage and ledger for this batch is \`Pass\`): "Batch cycle complete. [N] chapters done. Continue?"
+  - **Yes — Cycle next batch** → Run \`/buchbinder cycle\` again (call buchbinder-router route) when pending chapters remain
+  - **Yes — Review** → Run \`/buchbinder review\` (call buchbinder-router route) — only when all mandatory post-edit ledgers are \`Pass\` and no pending batch work remains in scope
   - **No — I'll continue later** → Stop
-- **Partial**: "Batch stopped at chapter [N] due to [gate failure]. Continue?"
-  - **Yes — Re-run cycle from [N]** → Run \`/buchbinder cycle [N]\` (call buchbinder-router route)
+- **Partial**: "Batch stopped at chapter [N] due to [gate failure/outstanding pass]. Continue?"
+  - **Yes — Re-run cycle** → Run \`/buchbinder cycle\` / \`/buchbinder cycle [N]\` (call buchbinder-router route) to resume at the outstanding pass
   - **No — I'll fix manually** → Stop
 
 If the user selects, call \`buchbinder-router\` with \`action: "route"\`, \`subcommand: <chosen>\` and execute it immediately.
 
-**Do not offer "proofread pass", "compile/export", or other cleanup steps as free-floating next steps** — proofread and the post-edit passes are part of this pipeline and have already run (or the cycle is blocked on them). The only legitimate next steps are the next batch, the review phase, or stopping.
+**Sequence awareness:** do not offer \`/buchbinder review\` or \`/buchbinder publish\` while any mandatory pass is outstanding; do not offer \`/buchbinder publish\` directly after cycle (publish follows a passing review). **Do not offer "proofread pass", "compile/export", or other cleanup steps as free-floating next steps** — proofread and the post-edit passes are part of this pipeline and have already run (or the cycle is blocked on them). The only legitimate next steps are the next batch, the review phase (when eligible), or stopping.
 
 ## Supplement Skills
 

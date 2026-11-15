@@ -112,9 +112,9 @@ pipeline-ledger({ action: "write", pass: "read-through", verdict: "Pass", cycles
 
 A missing ledger file means this pass has not run — the pipeline will treat read-through as outstanding.
 
-Report cycles, fixes, and final verdict. Use \`question\`:
-- **Pass**: offer \`/buchbinder review\` and/or \`/buchbinder publish\` as appropriate.
-- **Not passing after 3 cycles**: report remaining blockers (especially belief/immersion/trust); offer \`/buchbinder revise\` or stop. **Do not offer publish if blocking reader-experience failures remain.**
+Report cycles, fixes, and final verdict. **Sequence-aware handoff** (canonical post-edit order: proofread-verification → continuity → pacing → hooks → read-through → review): call \`pipeline-ledger({ action: "status" })\` and use \`question\`:
+- **Pass**: if all mandatory post-edit ledgers (\`proofread-verification\`, \`continuity\`, \`pacing\`, \`hooks\`, \`read-through\`) are \`Pass\`, offer \`/buchbinder review\` (next in pipeline). If any other mandatory post-edit pass is still outstanding, offer \`/buchbinder cycle\` to resume remaining passes instead of review. **Do not** offer \`/buchbinder publish\` directly here — publish follows a passing review and is guarded by ledger status.
+- **Not passing after 3 cycles**: report remaining blockers (especially belief/immersion/trust); offer \`/buchbinder revise\` or stop. **Do not advance while blocking reader-experience failures remain.**
 
 If selected, call \`buchbinder-router\` with \`action: "route"\`, \`subcommand: <chosen>\` and execute immediately.
 

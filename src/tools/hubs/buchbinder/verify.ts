@@ -161,10 +161,11 @@ Run a specific quality gate as an independent critique-revise cycle when finding
 ## Next Steps (Auto-Handoff)
 
 After the verify cycle completes, hand off via \`question\`:
-- **Pass:** offer \`/buchbinder review\`, next relevant phase, or stop.
-- **Not passing after 3 cycles / blockers remain:** offer \`/buchbinder revise\`, \`/buchbinder edit\`, targeted re-run, or stop. Do not claim the gate passed.
+- **Pass (general checks/gates):** offer \`/buchbinder review\`, the next relevant phase, or stop — but do not offer \`/buchbinder publish\` directly (publish follows a passing review and requires all mandatory ledgers to pass).
+- **Pass (\`continuity\`, mandatory post-edit pass):** \`verify continuity\` writes the continuity ledger. Call \`pipeline-ledger({ action: "status" })\` and be **sequence-aware** (canonical post-edit order: proofread-verification → continuity → pacing → hooks → read-through → review). Offer \`/buchbinder cycle\` to resume remaining mandatory post-edit passes (recommended) and/or the next outstanding pass in order (e.g. \`/buchbinder pacing-audit\`). Offer \`/buchbinder review\` **only** when all mandatory post-edit ledgers are \`Pass\`. Do not offer \`/buchbinder publish\` here.
+- **Not passing after 3 cycles / blockers remain:** offer \`/buchbinder revise\`, \`/buchbinder edit\`, targeted re-run, or stop. Do not claim the gate passed and do not advance the pipeline past a blocking/contradiction failure.
 
-If selected, call \`buchbinder-router\` with \`action: "route"\`, \`subcommand: <chosen>\` and execute immediately.
+If selected, call \`buchbinder-router\` with \`action: "route"\`, \`subcommand: <chosen>\` and execute immediately. If resuming the full mandatory pipeline, prefer \`/buchbinder cycle\`.
 
 ## Supplement Skills
 

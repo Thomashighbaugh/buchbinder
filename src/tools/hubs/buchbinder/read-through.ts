@@ -81,6 +81,37 @@ Re-run the read-through/audits on the same scope until Pass or 3 cycles.
 
 ### 8. Final Report and Handoff
 
+**Write the ledger file** (required — the pipeline reads it back to decide whether this pass is done):
+
+Write \`./book/pipeline/read-through.md\`:
+
+\`\`\`markdown
+# Read-Through — Pipeline Ledger
+
+**Pass**: read-through
+**Verdict**: [Pass / Conditional / Fail]
+**Cycles**: [N]
+**Scope**: Chapters [start]–[end] ([N] chapters)
+
+## Findings Summary
+| ID | Severity | Chapter/Range | Issue | Resolution |
+|---|---|---|---|---|
+
+## Immersion / Trust Breaks
+[none remaining, or the unresolved breaks]
+
+## Remaining Blockers
+[none, or the unresolved findings after the final cycle]
+\`\`\`
+
+Record it with the \`pipeline-ledger\` tool:
+
+\`\`\`
+pipeline-ledger({ action: "write", pass: "read-through", verdict: "Pass", cycles: [N], scope: "Chapters [start]-[end] ([N] chapters)", summary: "<findings table>" })
+\`\`\`
+
+A missing ledger file means this pass has not run — the pipeline will treat read-through as outstanding.
+
 Report cycles, fixes, and final verdict. Use \`question\`:
 - **Pass**: offer \`/buchbinder review\` and/or \`/buchbinder publish\` as appropriate.
 - **Not passing after 3 cycles**: report remaining blockers (especially belief/immersion/trust); offer \`/buchbinder revise\` or stop. **Do not offer publish if blocking reader-experience failures remain.**

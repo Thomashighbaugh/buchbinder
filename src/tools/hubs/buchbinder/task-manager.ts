@@ -2,14 +2,14 @@ import { HubSubcommandSpec } from "../../hub-data.js"
 
 const spec: HubSubcommandSpec = {
   label: "task-manager",
-  description: "Break outline into dependency-tracked tasks with per-chapter sub-status lifecycle: draft → critique → revise → edit → done. Supports per-chapter editorial cycles.",
+  description: "Break outline into dependency-tracked tasks with per-chapter sub-status lifecycle: draft → critique → revise → edit → post-edit cycles → done. Supports per-chapter editorial cycles.",
   reminder: "Phase 6: Convert outline into tracked writing tasks with per-chapter lifecycle",
   phases: "6",
   detailedDescription: `# User Input: {userInput}
 
 ## Objective
 
-Convert the chapter or section outline into tracked writing tasks. Each chapter has its own sub-status lifecycle tracking progress through the editorial cycle: draft → critique → revise → edit → done.
+Convert the chapter or section outline into tracked writing tasks. Each chapter has its own sub-status lifecycle tracking progress through the editorial cycle: draft → critique → revise → edit → post-edit cycles → done.
 
 ## Prerequisites
 
@@ -27,7 +27,7 @@ For each chapter/section in the outline, create a task entry with per-chapter su
 
 \`\`\`
 [ ] [Priority] [Dep:N] [Phase] Chapter N: [Title]
-    Draft: [ ] | Critique: [ ] | Revise: [ ] | Edit: [ ] | Done: [ ]
+    Draft: [ ] | Critique: [ ] | Revise: [ ] | Edit: [ ] | Post-Edit: [ ] | Done: [ ]
 \`\`\`
 
 - \`[ ]\` → main status placeholder
@@ -40,11 +40,11 @@ For each chapter/section in the outline, create a task entry with per-chapter su
 **Example:**
 \`\`\`
 [ ] [High] [P] [Draft] Chapter 1: The Summons
-    Draft: [ ] | Critique: [ ] | Revise: [ ] | Edit: [ ] | Done: [ ]
+    Draft: [ ] | Critique: [ ] | Revise: [ ] | Edit: [ ] | Post-Edit: [ ] | Done: [ ]
 [ ] [High] [Dep:1] [Draft] Chapter 2: The Threshold
-    Draft: [ ] | Critique: [ ] | Revise: [ ] | Edit: [ ] | Done: [ ]
+    Draft: [ ] | Critique: [ ] | Revise: [ ] | Edit: [ ] | Post-Edit: [ ] | Done: [ ]
 [ ] [Medium] [P] [Draft] Interlude: The Advisor's Tale
-    Draft: [ ] | Critique: [ ] | Revise: [ ] | Edit: [ ] | Done: [ ]
+    Draft: [ ] | Critique: [ ] | Revise: [ ] | Edit: [ ] | Post-Edit: [ ] | Done: [ ]
 \`\`\`
 
 ### 3. Main Status Lifecycle
@@ -58,9 +58,12 @@ Each task moves through these main statuses:
   → [CR] (In Critique)
   → [RV] (Revision Planned)
   → [R] (Revised — changes applied)
-  → [ED] (Edited — line pass complete)
+  → [ED] (Edited — line, copy, and proofread passes applied)
+  → [PE] (Post-Edit Checks — mandatory critique–revise cycles in flight)
   → [X] (Done — approved)
 \`\`\`
+
+**[X] (Done) is only reachable after the post-edit cycles pass.** A chapter that is drafted, critiqued, revised, and edited but has not run the post-edit cycles is \`[ED]\` — not done.
 
 ### 4. Per-Chapter Sub-Status Lifecycle
 
@@ -71,6 +74,7 @@ Draft: [ ] → [/] → [X]
 Critique: [ ] → [/] → [X]
 Revise: [ ] → [/] → [X]
 Edit: [ ] → [/] → [X]
+Post-Edit: [ ] → [/] → [X]
 Done: [ ] → [X]
 \`\`\`
 
@@ -79,10 +83,11 @@ Done: [ ] → [X]
 | Sub-status | Marked [/] when | Marked [X] when |
 |------------|-----------------|-----------------|
 | Draft | Pre-draft gate passes, drafting begins | Post-draft gate passes, chapter saved |
-| Critique | Critique mode selected | Specificity gate passes, critique saved |
+| Critique | Critique mode selected | Specificity gate passes **and every required reader/pass has reported** (coverage checklist complete) |
 | Revise | Revision plan created | Revision-verify gate passes |
-| Edit | Style sheet check passes | Edit suggestions resolved |
-| Done | All sub-statuses [X] | Continuity check passes |
+| Edit | Style sheet check passes | All three edit passes (line-edit, copy-edit, proofread) applied |
+| Post-Edit | Post-edit critique–revise cycles begin | Proofread verification, continuity, pacing, hooks, and read-through each return a passing verdict |
+| Done | All sub-statuses [X] | Batch-wide continuity confirmation passes |
 
 **The \`/buchbinder cycle\` command automates this lifecycle.** When using \`/buchbinder cycle Chapter N\`, the cycle updates sub-status checkboxes as it progresses through each phase.
 
@@ -104,7 +109,7 @@ At the bottom of \`tasks.md\`, include an Editorial Cycle Log for tracking \`/bu
 
 | Date | Chapter | Phases Completed | Duration | Notes |
 |------|---------|-------------------|----------|-------|
-| 2026-07-06 | 5 | Draft→Edit | 45m | All gates passed |
+| 2026-07-06 | 5 | Draft→Edit→Post-Edit | 45m | All gates passed |
 \`\`\`
 
 ### 7. Save Task Dashboard
@@ -118,7 +123,7 @@ After saving the task dashboard, offer to automatically continue. Use the \`ques
 Question: "Task dashboard created. Ready to start drafting?"
 Options:
 - **Yes — Draft** → Run \`/buchbinder draft\` (call buchbinder-router route for \`draft\`)
-- **Yes — Cycle (draft→critique→revise→edit)** → Run \`/buchbinder cycle\` (call buchbinder-router route for \`cycle\`)
+- **Yes — Cycle (draft→critique→revise→edit→post-edit)** → Run \`/buchbinder cycle\` (call buchbinder-router route for \`cycle\`)
 - **No — I'll continue later** → Stop
 
 If the user selects, call \`buchbinder-router\` with \`action: "route"\`, \`subcommand: <chosen>\` and execute it immediately.
@@ -132,7 +137,7 @@ None specific to this phase.`,
     { input: "/buchbinder task-manager", approach: "Breaks outline into tracked tasks with per-chapter sub-status" },
     { input: "/buchbinder cycle Chapter 5", approach: "Runs full editorial cycle — task sub-statuses update automatically" }
   ],
-  warnings: ["Per-chapter sub-status is updated by the /buchbinder cycle command as it progresses through phases", "Sub-status checkboxes use [ ] → [/] → [X] notation matching main task status"]
+  warnings: ["Per-chapter sub-status is updated by the /buchbinder cycle command as it progresses through phases", "Sub-status checkboxes use [ ] → [/] → [X] notation matching main task status", "A chapter is [X] Done only after the mandatory post-edit critique–revise cycles pass — edited-but-unverified chapters stay [ED]/[PE]"]
 }
 
 export default spec

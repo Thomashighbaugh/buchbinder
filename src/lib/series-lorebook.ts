@@ -362,10 +362,43 @@ export function seriesContinuityScan(
   const meta = loadSeriesMeta(projectRoot);
   if (!meta) return findings;
 
-  // Load all book directories
+  // Load all book directories. A registered book's path IS its directory —
+  // there is no nested `book/` inside it.
   const bookPaths = meta.books
-    .filter(b => fs.existsSync(path.join(projectRoot, b.path, 'book', 'content')))
-    .map(b => ({ ...b, fullPath: path.join(projectRoot, b.path, 'book') }));
+    .filter(b => fs.existsSync(path.join(projectRoot, b.path)))
+    .map(b => ({ ...b, fullPath: path.join(projectRoot, b.path) }));
+
+  /**
+   * Knowledge files to check, in priority order.
+   *
+   * Series projects keep one consolidated knowledge set (series/knowledge/),
+   * with each entry recording the books it belongs to in an "**Appears in:**"
+   * line. Older layouts kept a knowledge file inside each book directory;
+   * fall back to those when there is no consolidated set.
+   */
+  const knowledgeFiles = (): Array<{ file: string; bookNumber?: number }> => {
+    const consolidated = path.join(projectRoot, 'series', 'knowledge');
+    const out: Array<{ file: string; bookNumber?: number }> = [];
+    for (const name of ['character-profiles.md', 'locations.md']) {
+      const p = path.join(consolidated, name);
+      if (fs.existsSync(p)) out.push({ file: p });
+    }
+    if (out.length > 0) return out;
+    for (const book of bookPaths) {
+      for (const name of ['character-profiles.md', 'locations.md']) {
+        const p = path.join(book.fullPath, 'knowledge', name);
+        if (fs.existsSync(p)) out.push({ file: p, bookNumber: book.bookNumber });
+      }
+    }
+    return out;
+  };
+
+  /** Which books an entry belongs to, from its "**Appears in:**" line. */
+  const booksForEntry = (block: string, fallback?: number): number[] => {
+    const m = block.match(/^\*\*Appears in:\*\*\s*(.+)$/m);
+    if (!m) return fallback !== undefined ? [fallback] : [];
+    return [...m[1].matchAll(/Book\s+(\d+)/gi)].map(x => parseInt(x[1], 10));
+  };
 
   // ─── Character continuity across books ───
   const lorebookCharsPath = path.join(getLorebookDir(projectRoot), 'characters.md');
@@ -373,21 +406,20 @@ export function seriesContinuityScan(
     const lorebookChars = fs.readFileSync(lorebookCharsPath, 'utf-8');
     const charNames = (lorebookChars.match(/^## (.+)$/gm) || []).map(m => m.replace(/^## /, ''));
 
-    for (const book of bookPaths) {
-      const bookCharPath = path.join(book.fullPath, 'knowledge', 'character-profiles.md');
-      if (!fs.existsSync(bookCharPath)) continue;
-      const bookChars = fs.readFileSync(bookCharPath, 'utf-8');
-      const bookCharNames = (bookChars.match(/^## (.+)$/gm) || []).map(m => m.replace(/^## /, ''));
-
-      // Check for characters in book but not in lorebook
-      const missingFromLorebook = bookCharNames.filter(n => !charNames.includes(n));
-      for (const name of missingFromLorebook) {
+    for (const kf of knowledgeFiles()) {
+      if (!kf.file.endsWith('character-profiles.md')) continue;
+      const bookChars = fs.readFileSync(kf.file, 'utf-8');
+      for (const block of bookChars.split(/^## /m).slice(1)) {
+        const name = block.split('\n')[0].trim();
+        if (!name || name.startsWith('[')) continue;
+        // Check for characters in the knowledge set but not in lorebook
+        if (charNames.includes(name)) continue;
         findings.push({
           type: 'character',
           severity: 'minor',
-          books: [book.bookNumber],
-          finding: `Character "${name}" appears in book ${book.bookNumber} but not in series lorebook`,
-          evidence: `Book ${book.bookNumber} character-profiles.md has "## ${name}"`,
+          books: booksForEntry(block, kf.bookNumber),
+          finding: `Character "${name}" appears in the series knowledge but not in series lorebook`,
+          evidence: `knowledge/character-profiles.md has "## ${name}"`,
         });
       }
     }
@@ -418,23 +450,39 @@ export function seriesContinuityScan(
     }
   }
 
-  // Check timeline ordering across books
-  const sortedEntries = [...timeline.entries].sort((a, b) => {
-    if (a.date && b.date) return a.date.localeCompare(b.date);
-    return a.bookNumber - b.bookNumber;
-  });
+  // Check timeline ordering across books.
+  //
+  // Compare the date range each book narrates, not adjacent sorted entries.
+  // A later book narrating an earlier date is a backfill — normal, and often
+  // deliberate. What is a defect is an EARLIER book narrating a date after a
+  // later book's range: the reader meets the future before the book that owns
+  // it. Dates are compared as strings, so the format must sort correctly.
+  const ranges = new Map<number, { min: string; max: string }>();
+  for (const entry of timeline.entries) {
+    if (!entry.date) continue;
+    const date = String(entry.date);
+    const range = ranges.get(entry.bookNumber);
+    if (!range) {
+      ranges.set(entry.bookNumber, { min: date, max: date });
+      continue;
+    }
+    if (date < range.min) range.min = date;
+    if (date > range.max) range.max = date;
+  }
 
-  for (let i = 1; i < sortedEntries.length; i++) {
-    const prev = sortedEntries[i - 1];
-    const curr = sortedEntries[i];
-    if (prev.date && curr.date && prev.bookNumber > curr.bookNumber && prev.date < curr.date) {
-      findings.push({
-        type: 'timeline',
-        severity: 'major',
-        books: [prev.bookNumber, curr.bookNumber],
-        finding: `Timeline ordering issue: book ${prev.bookNumber} event ("${prev.event}") is dated before book ${curr.bookNumber} event ("${curr.event}") but book ${prev.bookNumber} is later`,
-        evidence: `Date ${prev.date} (book ${prev.bookNumber}) < Date ${curr.date} (book ${curr.bookNumber})`,
-      });
+  for (const [bookNumber, range] of ranges) {
+    for (const [otherNumber, otherRange] of ranges) {
+      if (otherNumber >= bookNumber) continue;
+      // An earlier book reaches past the later book's latest date.
+      if (otherRange.max > range.max) {
+        findings.push({
+          type: 'timeline',
+          severity: 'major',
+          books: [otherNumber, bookNumber],
+          finding: `Book ${otherNumber} narrates events dated as late as ${otherRange.max}, after book ${bookNumber} ends (${range.max})`,
+          evidence: `Book ${otherNumber} reaches ${otherRange.max}; book ${bookNumber} ends at ${range.max}`,
+        });
+      }
     }
   }
 
@@ -445,21 +493,20 @@ export function seriesContinuityScan(
     // Extract world facts (## headings)
     const worldFacts = (lorebookWorld.match(/^## (.+)$/gm) || []).map(m => m.replace(/^## /, ''));
 
-    for (const book of bookPaths) {
-      const bookLocPath = path.join(book.fullPath, 'knowledge', 'locations.md');
-      if (!fs.existsSync(bookLocPath)) continue;
-      const bookLocs = fs.readFileSync(bookLocPath, 'utf-8');
-      const bookLocNames = (bookLocs.match(/^## (.+)$/gm) || []).map(m => m.replace(/^## /, ''));
-
-      // Check for locations in book but not in lorebook
-      const missingFromLorebook = bookLocNames.filter(n => !worldFacts.includes(n));
-      for (const name of missingFromLorebook) {
+    for (const kf of knowledgeFiles()) {
+      if (!kf.file.endsWith('locations.md')) continue;
+      const bookLocs = fs.readFileSync(kf.file, 'utf-8');
+      for (const block of bookLocs.split(/^## /m).slice(1)) {
+        const name = block.split('\n')[0].trim();
+        if (!name || name.startsWith('[')) continue;
+        // Check for locations in the knowledge set but not in lorebook
+        if (worldFacts.includes(name)) continue;
         findings.push({
           type: 'world',
           severity: 'minor',
-          books: [book.bookNumber],
-          finding: `Location "${name}" appears in book ${book.bookNumber} but not in series world lorebook`,
-          evidence: `Book ${book.bookNumber} locations.md has "## ${name}"`,
+          books: booksForEntry(block, kf.bookNumber),
+          finding: `Location "${name}" appears in the series knowledge but not in series world lorebook`,
+          evidence: `knowledge/locations.md has "## ${name}"`,
         });
       }
     }

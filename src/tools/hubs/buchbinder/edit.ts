@@ -25,6 +25,7 @@ Improve prose quality at the line level through three distinct passes, each with
 
 - Target chapters must be revised (task status \`[R]\` or beyond)
 - Metadata modules should exist in \`./book/metadata/\`
+- **Critique coverage must be complete (HARD):** the pre-edit critique round for these chapters must contain every reader/pass required by the selected mode — one \`./book/critique/round-N/readers/<reader>.md\` per required reader plus a coverage checklist in \`./book/critique/round-N/summary.md\` marking each reader \`complete\`. If coverage is incomplete, **run the missing readers first** (the critique step of the cycle) — never edit from a partial critique, and never ask whether to run the remaining readers; the selected mode already fixed the reader set.
 
 ## Execution Steps
 
@@ -120,9 +121,13 @@ Focus ONLY on grammar, punctuation, hyphenation, capitalization consistency, num
 
 **Copy edit suggestions use the same format but category is always [Mechanics].**
 
-#### Pass 3: Proofread (typos)
+#### Pass 3: Proofread (typos) — MANDATORY
 
 Focus ONLY on typo detection, orphan words, consistent spacing, formatting glitches. The last line of defense.
+
+**This pass is mandatory and part of this phase.** Proofreading is never deferred to an optional "proofread pass" after the pipeline — no such follow-up step exists. If the proofread pass is skipped, the edit phase has not completed and the chapters must not be reported as edited.
+
+**Post-edit proofread verification (independent critique–revise cycle):** after the proofread pass is applied, re-scan the *edited* text as its own critique → fix → re-check cycle (up to 3 cycles): typos introduced by the line-edit/copy-edit passes, orphaned or widow lines, spacing, and scene-break/chapter-numbering consistency. Report the verdict with the edit batch report.
 
 **Check:**
 1. Typos — misspelled words, transposed letters, autocorrect errors
@@ -175,17 +180,54 @@ Apply all approved edits to chapter files. Update task status to \`[ED]\` (Edite
 **Remaining**: [K] chapters with status [R]. Run \`/buchbinder edit\` again for the next batch.
 \`\`\`
 
+### 4b. Write the Ledger File (REQUIRED)
+
+The pipeline reads this file back to decide whether the edit phase is done. A missing ledger file means the pass has not run — do not report the edit phase as complete without it.
+
+Write \`./book/pipeline/edit.md\`:
+
+\`\`\`markdown
+# Edit — Pipeline Ledger
+
+**Pass**: edit
+**Verdict**: [Pass / Conditional / Fail]
+**Cycles**: [N]
+**Scope**: Chapters [start]–[end] ([N] chapters)
+
+## Passes Applied
+| Pass | Applied | Skipped | Notes |
+|------|---------|---------|-------|
+| Line edit | [N] | [N] | |
+| Copy edit | [N] | [N] | |
+| Proofread | [N] | [N] | |
+
+## Remaining Blockers
+[none, or the unresolved gate failures after the final cycle]
+\`\`\`
+
+Record it with the \`pipeline-ledger\` tool:
+
+\`\`\`
+pipeline-ledger({ action: "write", pass: "edit", verdict: "Pass", cycles: 1, scope: "Chapters [start]-[end] ([N] chapters)", summary: "<passes-applied table>" })
+\`\`\`
+
+**Do not write \`./book/pipeline/proofread-verification.md\` here.** Proofread verification is a *post-edit* cycle — it re-scans the edited text after all three passes are applied, and it writes its own ledger file when that cycle passes. Writing it now would mark an unrun pass as complete.
+
 ### 5. Next Steps (Auto-Handoff)
 
 After the batch edit completes, offer to automatically continue. Use the \`question\` tool:
 
-Question: "Batch edit complete. [N] chapters edited. Continue?"
+Question: "Batch edit complete. [N] chapters edited (line-edit, copy-edit, proofread applied). Continue?"
 Options:
-- **Yes — Review** → Run \`/buchbinder review\` (call buchbinder-router route for \`review\`)
+- **Yes — Run post-edit cycles** → Run \`/buchbinder cycle\` (call buchbinder-router route for \`cycle\`); it resumes at the mandatory post-edit critique–revise cycles for these \`[ED]\` chapters (proofread verification, continuity, pacing, hooks, read-through)
 - **Yes — Edit next batch** → Run \`/buchbinder edit\` again (call buchbinder-router route for \`edit\`)
 - **No — I'll continue later** → Stop
 
 If the user selects, call \`buchbinder-router\` with \`action: "route"\`, \`subcommand: <chosen>\` and execute it immediately.
+
+**Do not offer proofread, compile/export, or other cleanup steps as free-floating optional next steps.** Proofread already ran inside this phase; the post-edit critique–revise cycles (proofread verification, continuity, pacing, hooks, read-through) are mandatory and run inside the cycle.
+
+**Do not offer \`review\` at this point.** The edit phase ends at \`[ED]\`; the mandatory post-edit cycles have not run yet. \`review\` becomes a legitimate next step only after every post-edit cycle has returned a passing verdict.
 
 ### 6. Human-in-the-Loop Features
 
@@ -239,7 +281,16 @@ The edit phase integrates these HITL features:
     { input: "/buchbinder edit 3-8", approach: "Edits chapters 3 through 8" },
     { input: "/buchbinder edit Chapter 3", approach: "Single-chapter override — edits only chapter 3" }
   ],
-  warnings: ["Batch mode is the DEFAULT — single-chapter requires explicit chapter number", "Three-pass editing: line-edit (craft) → copy-edit (mechanics) → proofread (typos)", "Style sheet enforcement is a HARD BLOCK — violations must be corrected before editing proceeds", "Linguistic analyses (subtext, purple prose, cliché, rhythm) run as hard-block gates before line-edit suggestions", "AI-writing audit is a HARD BLOCK — word-tier violations, structural tells, and signature slop patterns; never-inject guardrails bind every suggestion", "Style sheet and shared context are loaded ONCE for the entire batch"]
+  warnings: [
+    "Batch mode is the DEFAULT — single-chapter requires explicit chapter number",
+    "Three-pass editing: line-edit (craft) → copy-edit (mechanics) → proofread (typos). All three passes are mandatory — proofread is never deferred to an optional follow-up step",
+    "Pre-edit critique coverage is a HARD BLOCK — if any required reader/pass report is missing, run the missing readers before editing",
+    "Post-edit proofread verification runs as an independent critique–revise cycle (up to 3 cycles) after the edits are applied",
+    "Style sheet enforcement is a HARD BLOCK — violations must be corrected before editing proceeds",
+    "Linguistic analyses (subtext, purple prose, cliché, rhythm) run as hard-block gates before line-edit suggestions",
+    "AI-writing audit is a HARD BLOCK — word-tier violations, structural tells, and signature slop patterns; never-inject guardrails bind every suggestion",
+    "Style sheet and shared context are loaded ONCE for the entire batch"
+  ]
 }
 
 export default spec

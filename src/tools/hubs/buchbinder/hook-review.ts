@@ -78,6 +78,34 @@ Re-run steps 2-5 until Pass or 3 cycles.
 
 ### 8. Final Report and Handoff
 
+**Write the ledger file** (required — the pipeline reads it back to decide whether this pass is done):
+
+Write \`./book/pipeline/hooks.md\`:
+
+\`\`\`markdown
+# Hook Review — Pipeline Ledger
+
+**Pass**: hooks
+**Verdict**: [Pass / Conditional / Fail]
+**Cycles**: [N]
+**Scope**: Chapters [start]–[end] ([N] chapters)
+
+## Findings Summary
+| ID | Severity | Chapter/Range | Issue | Resolution |
+|---|---|---|---|---|
+
+## Remaining Blockers
+[none, or the unresolved findings after the final cycle]
+\`\`\`
+
+Record it with the \`pipeline-ledger\` tool:
+
+\`\`\`
+pipeline-ledger({ action: "write", pass: "hooks", verdict: "Pass", cycles: [N], scope: "Chapters [start]-[end] ([N] chapters)", summary: "<findings table>" })
+\`\`\`
+
+A missing ledger file means this pass has not run — the pipeline will treat hooks as outstanding.
+
 Report cycles, fixes, and final verdict. Use \`question\`:
 - **Pass**: offer \`/buchbinder read-through\`, \`/buchbinder pacing-audit\`, or \`/buchbinder review\`.
 - **Not passing after 3 cycles**: report remaining weak/missing hooks; offer \`/buchbinder revise\` or stop.

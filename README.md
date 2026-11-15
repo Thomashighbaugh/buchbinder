@@ -57,12 +57,12 @@ After installation, type `/buchbinder` in OpenCode to open the workflow menu, or
 ## What It Is
 
 Buchbinder is not a prompt pack and not one chat loop. It drives a deterministic,
-twelve-phase writing workflow on top of OpenCode — constitute → specify → clarify
+twelve-phase writing workflow on top of OpenCode — manifest → specify → clarify
 → research → outline → draft → critique → revise → edit → review → publish —
 where each phase has its own agents, context budget, and exit criteria, and every
 transition is checked against evidence-based, hard-block gates. Four tracks
 (fiction, non-fiction, mixed, series) recombine the same core for the project at
-hand.
+hand. For series, pre-book work follows an ordered pipeline before per-book phases: series-level metadata → individual book metadata → series-wide knowledge/lorebook/tracking → series outline → break into individual book pipelines.
 
 It is engineered for output **quality, not volume**: a manuscript that is
 internally consistent, voice-stable, and structurally sound — and, for
@@ -97,7 +97,7 @@ All functionality is accessed through the `/buchbinder` hub command. `/buchbinde
 
 | # | Subcommand | Purpose | Key Features |
 |---|------------|---------|--------------|
-| 1 | `constitute` | Establish creative/intellectual principles | Thematic statement (required, hard block), series lorebook inheritance |
+| 1 | `manifest` | Establish creative/intellectual principles | Thematic statement (required, hard block), series-aware context and lorebook inheritance |
 | 2 | `specify` | Build story specification | Premise stress-test (6 criteria, hard block) before specification |
 | 3 | `clarify` | Resolve specification ambiguities | Consistency checker, forgotten elements scan |
 | 4 | `research` | Active research | Sources, annotation, literature review, field notes, interviews |
@@ -170,7 +170,7 @@ Run `/buchbinder verify` to run any gate on demand. Run `/buchbinder verify --al
 | **Fiction** | Constitute → Specify → Clarify → (Research) → Outline (gate) → Tasks → Draft → Critique → Revise → Edit (3-pass) → Review → Read-Through → Publish | Novels, short stories, serials, creative non-fiction |
 | **Non-Fiction** | Constitute → Research → (Cite) → Outline → Tasks → Draft → Fact Check → Cite → Revise → Edit (3-pass) → Review → Publish | Academic works, journalism, biography, technical books |
 | **Mixed** | Constitute → Specify + Research → Clarify → Outline → Tasks → Draft → Fact Check → Cite → Critique → Revise → Edit → Review → Read-Through → Publish | Creative non-fiction, memoir with research, narrative journalism |
-| **Series** | Series Lorebook Init → Constitute (inherit) → Specify → Outline → [per-book cycle] → Series Audit → Sync Lorebook | Multi-book series with shared world/characters |
+| **Series** | (1) Series-level metadata → (2) Individual book metadata → (3) Series-wide knowledge/lorebook/tracking → (4) Series outline → (5) Break into individual book pipelines → [per-book: manifest/specify/outline/tasks/draft cycle, inheriting series context] → Series Audit/Sync | Multi-book series with shared canon, cross-book outline, and per-book pipelines |
 
 ---
 
@@ -269,25 +269,41 @@ Run during `/buchbinder review` — 14 dedicated analysis libraries:
 
 ---
 
-## Series Lorebook Infrastructure
+## Series Infrastructure (Pre-book Pipeline)
 
-For multi-book series, Buchbinder provides a shared knowledge base:
+For multi-book series, Buchbinder uses a **series-first, ordered pre-book pipeline** before entering individual book pipelines:
+
+1. **Series-level metadata** — `./series/meta.json` (series identity, explicit non-dubious author, scope/plan)
+2. **Individual book metadata** — registered books in `./series/meta.json` plus per-book `book/meta.json` / `book/track.json` (`seriesId`, `bookNumber`, credited author/title/path/status)
+3. **Series-wide knowledge, lorebook, and tracking** — `./series/lorebook/*` (characters, world, glossary, `timeline.json`, threads) and series-level tracking/canon anchors (including imported lore)
+4. **Series outline** — `./series/outline.md` (cross-book arc, per-book responsibilities, setups/payoffs, thread/timeline handoffs)
+5. **Break into individual book pipelines** — derive per-book briefs/handoffs from the series outline and run each book through its own pipeline (manifest/specify/outline/tasks/draft/…), inheriting series context
+
+Shared knowledge base (series lorebook):
 
 ```
-book/series/lorebook/
-├── characters.md    # Cross-book character profiles
-├── glossary.md       # Shared terminology
-├── threads.md        # Active plot threads across books
-├── timeline.json     # Master timeline (all books)
-└── world.md          # World-building canon
+series/
+├── meta.json        # Series + per-book metadata
+├── outline.md       # Cross-book series outline (Stage 4)
+└── lorebook/        # Series-wide canon/knowledge/tracking anchors
+    ├── characters.md
+    ├── glossary.md
+    ├── threads.md
+    ├── timeline.json
+    └── world.md
 ```
 
-- `/buchbinder series init` — Initialize series lorebook
-- `/buchbinder series sync` — Sync book-level knowledge to lorebook
-- `/buchbinder series audit` — Audit lorebook for inconsistencies
-- `/buchbinder series register` — Register a new book in the series
-- `/buchbinder series status` — Show series status and per-book progress
+- `/buchbinder series pipeline` — Detect/resume the ordered pre-book stages (1–5)
+- `/buchbinder series init` — Bootstrap series metadata/lorebook scaffolding (Stage 1 seed)
+- `/buchbinder series books` — Define/register individual book metadata (Stage 2)
+- `/buchbinder series lorebook` — Build series-wide knowledge/lorebook/tracking (Stage 3)
+- `/buchbinder series outline` — Create/revise `./series/outline.md` (Stage 4)
+- `/buchbinder series split` — Break series outline into per-book pipelines/handoffs (Stage 5)
 - `/buchbinder series import` — Import external lorebook (SillyTavern, JanitorAI, CharacterAI)
+- `/buchbinder series sync` — Sync book-level knowledge to series lorebook (after per-book milestones)
+- `/buchbinder series audit` — Cross-book continuity audit against series lorebook/outline
+- `/buchbinder series register` — Register/link a specific book in the series
+- `/buchbinder series status` — Show pre-book pipeline progress and per-book status
 
 ### Semantic Lore Injection
 
@@ -332,7 +348,7 @@ The index is built once and reused on every phase invocation. Without the index,
 | `series/lorebook/*` | Markdown headings | characters, world, glossary, timeline.json, threads |
 | `series/outline.md` | Markdown headings | Cross-book condensed outline (series-level beats) |
 | `book/knowledge/*` | Markdown headings | character-profiles, voice-profiles, locations, world-rules, character-voices |
-| `book/constitution.md` | Markdown headings | Project canon — highest priority |
+| `book/constitution.md` or `book/manifest.md` | Markdown headings | Project canon/principles — highest priority |
 | `book/specification.md` | Markdown headings | Book specification |
 | `book/outline.md`, `book/outline/chapter_*.md` | Markdown headings / one-per-file | Whole-book + per-chapter outline |
 | `book/drafts/chapter_*.xml` | **XML chunker** (see below) | Drafted chapters |
@@ -669,7 +685,7 @@ project/
 │   └── templates/           # Track + series templates
 ├── book/                    # All book content
 │   ├── track.json           # Track selection: fiction | non-fiction | mixed
-│   ├── constitution.md      # Core rules + thematic statement
+│   ├── manifest.md          # Core principles/rules + thematic statement (constitution artifact, where used)
 │   ├── specification.md     # Story spec (with premise stress-test)
 │   ├── outline/             # Fine-grained chapter structure
 │   ├── content/             # Clean prose (tags stripped)

@@ -75,6 +75,32 @@ Run continuity scan as an independent critique-revise cycle.
 
 **Output:** continuity report per cycle with contradictions, forgotten threads, voice drift, fixes applied, and gate result.
 
+**Ledger (required):** write \`./book/pipeline/continuity.md\` when the cycle ends so the pipeline can verify this pass ran:
+
+\`\`\`markdown
+# Continuity — Pipeline Ledger
+
+**Pass**: continuity
+**Verdict**: [Pass / Conditional / Fail]
+**Cycles**: [N]
+**Scope**: Chapters [start]–[end] ([N] chapters)
+
+## Findings Summary
+| ID | Severity | Chapter/Range | Issue | Resolution |
+|---|---|---|---|---|
+
+## Remaining Blockers
+[none, or the unresolved contradictions after the final cycle]
+\`\`\`
+
+Record it with the \`pipeline-ledger\` tool:
+
+\`\`\`
+pipeline-ledger({ action: "write", pass: "continuity", verdict: "Pass", cycles: [N], scope: "Chapters [start]-[end] ([N] chapters)", summary: "<findings table>" })
+\`\`\`
+
+A missing ledger file means continuity has not run — the pipeline treats it as outstanding.
+
 ### \`/buchbinder verify style [chapter]\`
 
 Run style sheet enforcement as an independent critique-revise cycle.

@@ -56,10 +56,16 @@ const SOURCE_PATTERNS = [
     { pattern: 'series/lorebook/timeline.json', kind: 'lore' },
     { pattern: 'series/lorebook/threads.md', kind: 'lore' },
 
+    // Series-level knowledge — consolidated across every book in the series.
+    { pattern: 'series/knowledge/character-profiles.md', kind: 'lore' },
+    { pattern: 'series/knowledge/character-voices.md', kind: 'lore' },
+    { pattern: 'series/knowledge/locations.md', kind: 'lore' },
+    { pattern: 'series/knowledge/world-setting.md', kind: 'lore' },
+
     // Series outline (condensed, cross-book)
     { pattern: 'series/outline.md', kind: 'outline' },
 
-    // Per-book knowledge
+    // Per-book knowledge (the active book)
     { pattern: 'book/knowledge/character-profiles.md', kind: 'lore' },
     { pattern: 'book/knowledge/voice-profiles.json', kind: 'lore' },
     { pattern: 'book/knowledge/locations.md', kind: 'lore' },
@@ -79,7 +85,94 @@ const SOURCE_PATTERNS = [
     { pattern: 'book/drafts/', kind: 'draft', recursive: true, ext: '.xml', pinnable: true, chapterNumberFromFilename: true },
 ]
 
+/**
+ * Per-book source patterns, relative to a book directory.
+ *
+ * A multi-book project keeps its books as siblings (`book/`, `book-2/`,
+ * `book-3/`), so the fixed `book/...` patterns above index only the first
+ * book. Every book directory registered in `series/meta.json` gets the same
+ * treatment.
+ */
+const BOOK_SOURCE_PATTERNS = [
+    { pattern: 'knowledge/character-profiles.md', kind: 'lore' },
+    { pattern: 'knowledge/voice-profiles.json', kind: 'lore' },
+    { pattern: 'knowledge/locations.md', kind: 'lore' },
+    { pattern: 'knowledge/world-rules.md', kind: 'lore' },
+    { pattern: 'knowledge/world-setting.md', kind: 'lore' },
+    { pattern: 'knowledge/character-voices.md', kind: 'lore' },
+
+    { pattern: 'manifest.md', kind: 'canon', priority: 'high' },
+    { pattern: 'constitution.md', kind: 'canon', priority: 'high' },
+
+    { pattern: 'specification.md', kind: 'spec', priority: 'high' },
+    { pattern: 'specification.json', kind: 'spec', priority: 'high' },
+
+    { pattern: 'outline.md', kind: 'outline' },
+    { pattern: 'outline/', kind: 'outline', recursive: true, ext: '.md' },
+
+    { pattern: 'drafts/', kind: 'draft', recursive: true, ext: '.xml', pinnable: true, chapterNumberFromFilename: true },
+]
+
+/**
+ * Book directories registered in `series/meta.json`, in book-number order.
+ *
+ * `books[]` entries may carry the directory as `path`, `dir`, or `slug`. A
+ * registered path of `book` is the active book, already covered by the fixed
+ * patterns above, so it is skipped. Returns [] when the project is not a
+ * series or the registry is unreadable.
+ */
+function registeredBookDirs(projectRoot) {
+    const metaPath = join(projectRoot, 'series', 'meta.json')
+    if (!existsSync(metaPath)) return []
+    let meta
+    try {
+        meta = JSON.parse(readFileSync(metaPath, 'utf-8'))
+    } catch {
+        return []
+    }
+    if (!Array.isArray(meta?.books)) return []
+    return meta.books
+        .map((b, index) => {
+            const dir = [b?.path, b?.dir, b?.slug].find((v) => typeof v === 'string' && v)
+            const number = Number(b?.number ?? b?.bookNumber ?? index + 1)
+            return { dir, number: Number.isFinite(number) ? number : index + 1 }
+        })
+        .filter((entry) => entry.dir && entry.dir !== 'book')
+        .sort((a, b) => a.number - b.number)
+        .map((entry) => entry.dir)
+}
+
 // ─── Source scanning ────────────────────────────────────────────────────────
+
+/**
+ * Collect the source entries a single pattern yields, relative to
+ * `projectRoot`. `rel` is the pattern's path relative to the project root.
+ */
+function collectPattern(pattern, rel, projectRoot, sources) {
+    const fullPath = join(projectRoot, rel)
+    if (!existsSync(fullPath)) return
+
+    if (pattern.recursive) {
+        for (const file of walkDir(fullPath, pattern.ext)) {
+            const fileRel = file.slice(projectRoot.length + 1)
+            const src = { path: fileRel, kind: pattern.kind }
+            if (pattern.chapterNumberFromFilename) {
+                const m = fileRel.match(/chapter_(\d+)\.xml$/)
+                if (m) src.chapterNumber = parseInt(m[1], 10)
+            }
+            if (pattern.priority) src.priority = pattern.priority
+            if (pattern.pinnable) src.pinnable = pattern.pinnable
+            sources.push(src)
+        }
+        return
+    }
+
+    if (!statSync(fullPath).isFile()) return
+    const src = { path: rel, kind: pattern.kind }
+    if (pattern.priority) src.priority = pattern.priority
+    if (pattern.pinnable) src.pinnable = pattern.pinnable
+    sources.push(src)
+}
 
 /**
  * Scan the project for all source files matching SOURCE_PATTERNS.
@@ -90,38 +183,14 @@ const SOURCE_PATTERNS = [
 export function scanSources(projectRoot) {
     const sources = []
     for (const pattern of SOURCE_PATTERNS) {
-        const fullPath = join(projectRoot, pattern.pattern)
-        if (!existsSync(fullPath)) continue
+        collectPattern(pattern, pattern.pattern, projectRoot, sources)
+    }
 
-        if (pattern.recursive) {
-            // Directory: walk and pick files with the right extension
-            const files = walkDir(fullPath, pattern.ext)
-            for (const f of files) {
-                const rel = f.slice(projectRoot.length + 1)
-                const src = {
-                    path: rel,
-                    kind: pattern.kind,
-                }
-                if (pattern.chapterNumberFromFilename) {
-                    const m = rel.match(/chapter_(\d+)\.xml$/)
-                    if (m) src.chapterNumber = parseInt(m[1], 10)
-                }
-                if (pattern.priority) src.priority = pattern.priority
-                if (pattern.pinnable) src.pinnable = pattern.pinnable
-                sources.push(src)
-            }
-        } else {
-            // Single file
-            const stat = existsSync(fullPath) ? statSync(fullPath) : null
-            if (!stat || !stat.isFile()) continue
-            const rel = pattern.pattern
-            const src = {
-                path: rel,
-                kind: pattern.kind,
-            }
-            if (pattern.priority) src.priority = pattern.priority
-            if (pattern.pinnable) src.pinnable = pattern.pinnable
-            sources.push(src)
+    // Additional books registered in series/meta.json. The fixed patterns
+    // above already covered `book/`; these are the rest of the series.
+    for (const bookDir of registeredBookDirs(projectRoot)) {
+        for (const pattern of BOOK_SOURCE_PATTERNS) {
+            collectPattern(pattern, `${bookDir}/${pattern.pattern}`, projectRoot, sources)
         }
     }
     return sources

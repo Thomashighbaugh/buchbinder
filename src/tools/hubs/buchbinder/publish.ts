@@ -13,9 +13,11 @@ Compile the completed, reviewed manuscript into one or more output formats suita
 
 ## Prerequisites
 
-- All chapters written and marked \`[ED]\` or \`[X]\` in task tracking
+- All chapters written and marked \`[X]\` (Done) in task tracking — \`[ED]\` alone is not enough: the mandatory post-edit critique–revise cycles (proofread verification, continuity, pacing, hooks, read-through) must have passed
 - Review passed (Final mode) or user confirms readiness
 - Metadata recorded (see \`/buchbinder meta\`)
+
+**Mandatory-pass guard (HARD BLOCK):** before exporting, call \`pipeline-ledger({ action: "status" })\` and read the result from disk. Every mandatory pass must be present with verdict \`Pass\`: \`edit\`, \`proofread-verification\`, \`continuity\`, \`pacing\`, \`hooks\`, \`read-through\`, and \`review\`. If any is missing or failing, **do not offer export as a "next step"** — route to \`/buchbinder cycle\` (post-edit cycles) or \`/buchbinder review\` first, and report exactly which passes are outstanding. Exporting an unverified manuscript is a separate, explicit user decision, not a default pipeline step.
 
 ## Execution Steps
 

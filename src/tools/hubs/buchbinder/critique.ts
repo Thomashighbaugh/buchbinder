@@ -75,6 +75,8 @@ Parse \`{userInput}\`:
 
 If mode is auto-selected as \`comprehensive\` for a pre-edit pass, state the reader set you will run before starting.
 
+**Never ask the user to choose the mode before a pre-edit critique.** When no mode is given and the chapters are headed for revise/edit, auto-select \`comprehensive\` and run the whole reader set. Asking "which critique mode?" and then stopping after one reader is the failure this section exists to prevent. Only an explicitly typed single-reader mode (\`/buchbinder critique alpha\`) narrows the set — and even then, that one reader runs to completion before any handoff.
+
 ### 2. Load Context (once per batch)
 
 Load shared context ONCE for the entire batch (except \`cold-read\`, which loads none of this):
@@ -102,6 +104,23 @@ Build the reader/pass queue from the selected mode and iterate through it **in f
 - \`adversarial\`: run defender, challenger, and synthesis.
 - \`swarm\`: dispatch/run all 4 analysts and complete consolidation + verification.
 - Single-reader modes (\`alpha\`, \`beta\`, \`peer\`, \`sensitivity\`, \`cold-read\`): run that reader fully (one pass is the full required set).
+
+**The reader set is decided by the mode — it is never a question for the user.** Do not ask "should I also run the beta reader?" or "want a proofread pass next?" when the selected mode already requires those readers. Run the full set; the coverage gate enforces it.
+
+### 3c. Execution Model (Swarm or Sequential)
+
+Run the reader queue either way. Both models must produce identical artifacts.
+
+| Model | Dispatch | Contract |
+|-------|----------|----------|
+| **Swarm (parallel subagents)** | Dispatch one subagent per reader/pass with the \`task\` tool, in parallel | Each subagent returns that reader's findings for the whole batch; the orchestrator writes \`readers/<reader>.md\` from the returned report and checks it is non-empty and scoped to the batch |
+| **Sequential (subagent per reader, in order)** | Run the readers one after another with the \`task\` tool, waiting for each report before starting the next | Same per-reader reports and same coverage checklist; no reader is skipped because an earlier reader's findings looked sufficient |
+
+**Artifacts required from either model:**
+- \`./book/critique/round-N/readers/<reader>.md\` — one file per required reader/pass
+- \`./book/critique/round-N/summary.md\` — coverage checklist (every required reader marked \`complete\` with item count) + consolidated report
+
+**A reader whose report is missing, empty, or truncated counts as NOT RUN.** The round is incomplete, the coverage gate fails, and consolidation must not proceed. Never consolidate a partial round, and never treat one reader's report as the round.
 
 ### 3a. Generate Critique Items (with Specificity Gate)
 
@@ -335,6 +354,8 @@ If the user selects, call \`buchbinder-router\` with \`action: "route"\`, \`subc
   ],
   warnings: [
     'All required readers/passes must complete before consolidation or handoff to `/buchbinder revise`; no single-reader shortcut and no partial reader set is sufficient for comprehensive/final/pre-edit critique. Coverage checklist and per-reader outputs/consolidated report gate required for full/final/pre-edit critique.',
+    "The reader set comes from the selected mode — never ask the user whether to run the remaining required readers",
+    "Reader queue may run as parallel subagents (swarm) or sequential subagents with collected reports; both must produce one file per required reader plus the coverage checklist, and a missing/empty reader report means the round is incomplete",
     "Batch mode is the DEFAULT — single-chapter requires an explicit chapter number",
     "HARD REQUIREMENT: run every reader/pass required by the selected mode before saving or handing off; never stop after one reader",
     "Comprehensive/all-readers is the default pre-edit pass and must include all applicable standard readers (alpha, beta, peer, sensitivity)",

@@ -166,9 +166,10 @@ export function readConfig(bookDir: string): PublishConfig {
     ? fs.readJsonSync(trackPath)
     : {};
 
+  const author = typeof meta.author === 'string' ? meta.author.trim() : '';
   return {
     title: meta.title || 'Untitled',
-    author: meta.author || 'Unknown Author',
+    author, // must be determined explicitly in metadata/guided workflow; never default to a dubious placeholder
     language: meta.language || 'en',
     license: meta.license || 'All Rights Reserved',
     isbn: meta.isbn,

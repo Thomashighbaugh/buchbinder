@@ -205,13 +205,28 @@ export default Plugin.define({
       return undefined
     }
 
+    const tick = () => new Promise<void>((r) => setTimeout(r, 0))
+
     const navigateToSession = async (sessionID: string) => {
-      // Prefer v2 Route shape: { type: 'session', sessionID }
-      try { router?.navigate?.({ type: 'session', sessionID }) } catch {}
-      try { router?.navigate?.({ name: 'session', params: { sessionID } }) } catch {}
+      const tabs: any = ctx.ui?.tabs
+      const go = () => {
+        try { router?.navigate?.({ type: 'session', sessionID }) } catch {}
+      }
+
+      // Focus/open the session tab when the TUI tab system is available so the
+      // session view is actually selected (not just present as a selectable tab).
+      try { tabs?.open?.(sessionID) } catch {}
+      try { tabs?.focus?.(sessionID) } catch {}
+      go()
       try { await client?.tui?.openSession?.({ sessionID }) } catch {}
       try { await client?.tui?.selectSession?.({ sessionID }) } catch {}
       try { await client?.session?.navigate?.({ sessionID }) } catch {}
+
+      // Let dialog teardown/route transitions settle, then enforce focus once more.
+      await tick()
+      try { tabs?.focus?.(sessionID) } catch {}
+      go()
+      await tick()
     }
 
     const submitPrompt = async (text: string) => {
@@ -228,6 +243,11 @@ export default Plugin.define({
         toast('Could not find or create a session to send the prompt to', 'error')
         return
       }
+
+      // Bring the target session into view before/around prompt submission so
+      // menu/dialog dispatch does not leave the UI on a blank/home screen while
+      // the session tab is merely selectable.
+      await navigateToSession(sessionID)
 
       let lastErr: unknown
       const promptApis: Array<{ name: string; call: () => Promise<any> }> = []
@@ -267,6 +287,7 @@ export default Plugin.define({
 
       const msg = lastErr instanceof Error ? lastErr.message : (typeof lastErr === 'string' ? lastErr : (lastErr ? JSON.stringify(lastErr) : 'no prompt API available'))
       toast(`Could not submit prompt: ${msg}`, 'error')
+      await navigateToSession(sessionID)
     }
 
     // Self-contained dispatch: no hubMenu and no global/user-scope hub routing.
@@ -299,12 +320,16 @@ export default Plugin.define({
             placeholder: 'Details / instructions (Enter to run, Esc to cancel)',
           })
           if (details === undefined || details === null) return
+          // Allow dialog overlay to fully close before dispatch/navigation so the
+          // session view can take focus instead of landing on a blank screen.
+          await tick()
           await dispatchPhase(label, typeof details === 'string' ? details : String(details ?? ''))
           return
         } catch {
           // Fall through to direct dispatch on dialog errors/cancel quirks.
         }
       }
+      await tick()
       await dispatchPhase(label)
     }
 
@@ -344,7 +369,12 @@ export default Plugin.define({
               : choice && typeof choice === 'object' && typeof (choice as any).label === 'string'
                 ? (choice as any).label
                 : undefined
-        if (label) await askAndDispatch(label)
+        if (label) {
+          // Let select dialog dismiss before opening the details prompt to avoid
+          // stacked-dialog focus issues that can leave the UI on a blank screen.
+          await tick()
+          await askAndDispatch(label)
+        }
       } catch {
         // dialog closed/cancelled or unavailable
       }

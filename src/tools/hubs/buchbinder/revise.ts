@@ -43,8 +43,26 @@ If the script produces no output (no lore files or the embedder unavailable), re
 
 - At least one critique round must exist in \`./book/critique/round-N/\`
 - Critique items must have unique IDs (e.g., C1-A-001)
+- **Critique reader coverage must be complete (HARD):** see Step 0
 
 ## Execution Steps
+
+### 0. Verify Critique Reader Coverage (REQUIRED — HARD BLOCK)
+
+A revision built from one reader's findings leaves the other readers' findings unaddressed. That is a partial edit, not a revision. Confirm the full reader set ran **before** categorising or planning anything.
+
+1. Read the latest critique round's \`./book/critique/round-N/summary.md\` for the mode and its required reader/pass list.
+2. Confirm one non-empty \`./book/critique/round-N/readers/<reader>.md\` exists per required reader, and the coverage checklist marks each one \`complete\`.
+3. Read the machine-checked state: \`pipeline-ledger({ action: "coverage" })\`.
+
+**If any required reader is missing or empty, run the missing readers now** — do not ask, do not narrow the mode, do not defer to the edit phase:
+
+- **Swarm:** dispatch one \`task\` subagent per missing reader in parallel; each returns that reader's findings for the whole batch; write \`readers/<reader>.md\` from the returned report and confirm it is non-empty and scoped to the batch.
+- **Sequential:** run one \`task\` subagent per missing reader in order, collecting each report before starting the next.
+
+Both models must produce the same per-reader files and the same coverage checklist. Re-check coverage afterwards.
+
+**Never proceed to revision with a partial reader set.** If a required reader cannot be run (tooling failure), stop and name the missing reader — do not silently revise from a narrower set. **Never ask the user whether to run the remaining readers**; the mode already fixed the reader set.
 
 ### 1. Load Critique Round (once per batch)
 
@@ -297,6 +315,8 @@ Options:
 
 If the user selects, call \`buchbinder-router\` with \`action: "route"\`, \`subcommand: "edit"\` and execute it immediately.
 
+**Do not offer proofread, compile/export, or review as free-floating next steps.** Proofread runs inside the edit phase; the post-edit critique–revise cycles (proofread verification, continuity, pacing, hooks, read-through) run inside \`/buchbinder cycle\` after editing. The edit phase also re-checks critique coverage, so a partial reader set is caught there — but it must never be reached in the first place.
+
 ### 9. Human-in-the-Loop Features
 
 The revise phase integrates these HITL features:
@@ -333,7 +353,7 @@ The revise phase integrates these HITL features:
     "Whenever the user makes a decision that alters narrative context, metanarrative, formatting, or tracking states, you MUST proactively update the relevant files in ./book/metadata/ and ./book/tracking/ before completing the turn.",
     "Apply the AI-writing pattern catalog (rules/ai-writing-patterns.md; skills/quality-assurance/ai-writing-audit/) during revision: eliminate flagged slop and do not introduce new tells. Never-inject guardrails bind — subtract and sharpen, never add a manufactured stake, fragment run, or invented specific."
   ],
-  tools: ["bash", "question"],
+  tools: ["bash", "question", "task"],
   relatedSkills: ["ai-writing-audit", "theme-craft", "continuity-auditor", "forgotten-elements", "style-enforcer", "phase-preview", "authorial-intent", "diff-approval", "creative-constraints", "provenance"],
   examples: [
     { input: "/buchbinder revise", approach: "Loads latest critique round, revises all affected chapters (up to 6), runs revision-verify gate" },
@@ -343,6 +363,7 @@ The revise phase integrates these HITL features:
   ],
   warnings: [
     "Batch mode is the DEFAULT — single-chapter requires explicit chapter number",
+    "Critique reader coverage is a HARD BLOCK — if any required reader/pass is missing from the round, run it (swarm or sequential) before planning revisions; never revise from a partial reader set and never ask whether to run the remaining readers",
     "Revision-verify gate is a HARD BLOCK — unaddressed Critical items or unverified applied revisions block completion",
     "Every revision log entry must cross-reference the critique item ID",
     "Declined items must have documented rationale",

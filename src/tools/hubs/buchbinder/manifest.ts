@@ -58,6 +58,7 @@ Continue directly to step 1.
 - Check \`./book/track.json\` for track selection.
 - Check \`./book/track.json\` for \`seriesId\` and \`bookNumber\` fields. If present, this book is part of a series.
 - Check \`./series/meta.json\` — if it exists, this is a series project.
+- **Series pre-book pipeline guard:** if this is a series project being composed/set up and pre-book stages are incomplete, recommend \`/buchbinder series pipeline\` to complete them in order before per-book manifest work: (1) series-level metadata, (2) individual book metadata, (3) series-wide knowledge/lorebook/tracking, (4) series outline, (5) break into individual book pipelines. (Book 2+ manifest inheritance is valid once the active book is handed off from Stage 5.)
 - Check \`./series/lorebook/\` — if it exists (from step 0 import), load the lorebook files for context.
 - Check \`./imported-lorebook.json\` AND \`./imported-lorebook-*.json\` — if any exist, these were copied during install. Auto-select the "Yes — Lorebook" option from step 0 and process them immediately (don't ask, just do it). Import ALL matching files.
 - Check \`./premise.md\` AND \`./premise-*.md\` — if any exist, these were copied during install. Auto-select the "Yes — Premise document" option from step 0 and process them immediately (don't ask, just do it). Read ALL matching files.
@@ -251,11 +252,12 @@ Question: "Manifest saved. Continue to the next phase?"
 Options:
 - **Yes — Specify** (Fiction/Mixed) → Run \`/buchbinder specify\` (call buchbinder-router route for \`specify\`)
 - **Yes — Research** (Non-Fiction/Mixed) → Run \`/buchbinder research\` (call buchbinder-router route for \`research\`)
+- **Yes — Series pipeline** (Series pre-book setup incomplete) → Run \`/buchbinder series pipeline\` (call buchbinder-router route for \`series\`) to complete ordered pre-book stages before per-book work
 - **No — I'll continue later** → Stop
 
 If the user selects a phase, call \`buchbinder-router\` with \`action: "route"\`, \`subcommand: <chosen>\` and execute it immediately. Do NOT just tell them to type it — run it.
 
-For Mixed track, offer both options in the question.
+For Mixed track, offer both specify/research options in the question. For series projects, prefer offering the series pipeline when pre-book stages 1–5 are not yet complete.
 
 ## Supplement Skills
 

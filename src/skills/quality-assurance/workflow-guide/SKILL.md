@@ -11,11 +11,26 @@ Reference for the Buchbinder phase methodology. The process varies by track type
 
 | Track Type | Phase Sequence |
 |------------|----------------|
-| **Fiction** | Context Setup → Outline (gate) → Draft → Critique → Revise → Edit (3-pass) → Review (structural) → Read-Through → Publish |
-| **Non-Fiction** | Research → Source Notes → Outline → Draft → Fact Check → Cite → Revise → Edit (3-pass) → Review → Publish |
-| **Hybrid** | Context Setup → Research → Outline → Draft → Fact Check → Cite → Critique → Revise → Edit → Review → Read-Through → Publish |
-| **Rewrite** | Load Original → Gap Analysis → Rewrite Spec → Draft → Compare → Critique → Revise → Edit → Review → Publish |
-| **Series** | Series Lorebook Init → Manifest (inherit) → Specify → Outline → [per-book cycle] → Series Audit → Sync Lorebook |
+| **Fiction** | Context Setup → Outline (gate) → Draft → Critique (all required readers) → Revise → Edit (3-pass) → **Post-edit cycles (proofread verification, continuity, pacing, hooks, read-through)** → Review (structural) → Publish |
+| **Non-Fiction** | Research → Source Notes → Outline → Draft → Fact Check → Cite → Revise → Edit (3-pass) → **Post-edit cycles** → Review → Publish |
+| **Hybrid** | Context Setup → Research → Outline → Draft → Fact Check → Cite → Critique → Revise → Edit → **Post-edit cycles** → Review → Publish |
+| **Rewrite** | Load Original → Gap Analysis → Rewrite Spec → Draft → Compare → Critique → Revise → Edit → **Post-edit cycles** → Review → Publish |
+| **Series** | (1) Series-level metadata → (2) Individual book metadata → (3) Series-wide knowledge/lorebook/tracking → (4) Series outline → (5) Break into individual book pipelines → [per-book: manifest/specify/outline/tasks/draft cycle, inheriting series context] → Series Audit/Sync |
+
+**Post-edit cycles are mandatory.** A manuscript is not "ready for review" or "ready to publish" while any of them is outstanding. There is no optional leftover proofread step — proofreading happens inside the edit phase, and its verification is one of the post-edit cycles. Never report a pipeline as complete while a mandatory pass is outstanding; name it and route to the command that runs it.
+
+## Mandatory Pipeline Contract
+
+| Stage | Command | Completion evidence |
+|-------|---------|---------------------|
+| Draft | `/buchbinder draft` | Chapter prose saved; post-draft gates pass |
+| Critique | `/buchbinder critique` | Every reader/pass the mode requires has a report under `book/critique/round-N/readers/` and a coverage checklist in `summary.md` |
+| Revise | `/buchbinder revise` | Every Critical/Major item addressed; revision-verify passes (score ≥ 95) |
+| Edit | `/buchbinder edit` | All three passes applied: line-edit, copy-edit, proofread |
+| Post-edit cycles | `/buchbinder cycle` (resumes at post-edit step) | Proofread verification, continuity, pacing, hooks, read-through each returned Pass (≤3 cycles each) |
+| Review | `/buchbinder review` | Review cycle passed |
+
+Multi-reader stages run **either** as parallel subagents (swarm) **or** as sequential subagents with collected reports. Both produce the same per-reader files and the same coverage checklist; a missing or empty reader report means the stage did not run.
 
 ## Subcommand Reference
 
@@ -41,11 +56,11 @@ Reference for the Buchbinder phase methodology. The process varies by track type
 | `drafter` | Utility | Loose draft jumpstart from raw ideas |
 | `verify` | Utility | On-demand quality gate runner — 25 gates |
 | `resume` | Utility | JSON checkpoint resume with file diff |
-| `cycle` | Utility | Full draft→critique→revise→edit cycle for all chapters |
+| `cycle` | Utility | Full mandatory pipeline: draft → critique (every required reader) → revise → edit (line/copy/proofread) → post-edit critique–revise cycles → continuity → done |
 | `pacing-audit` | Utility | Cross-chapter pacing analysis |
 | `hook-review` | Utility | Opening/closing hook audit + book-level opening/closing strength |
 | `read-through` | Utility | Full reader experience audit + immersion + trust accounting |
-| `series` | Utility | Series lorebook operations (init, sync, audit, register, status, import) |
+| `series` | Utility | Series-first pipeline: series metadata → book metadata → series knowledge/lorebook/tracking → series outline → break into book pipelines, plus sync/audit/register/import/status |
 
 ## Conventions
 

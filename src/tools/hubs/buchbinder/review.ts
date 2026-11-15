@@ -145,6 +145,34 @@ Checklist (all required for Final pass): tasks \`[X]/[ED]\`, resolved \`[Citatio
 
 Report all cycles run, issues found/fixed per cycle, remaining items (if any), and final verdict. Include continuity scan summary and evidence of pass.
 
+**Write the ledger file** (required — the pipeline reads it back to decide whether review is done):
+
+Write \`./book/pipeline/review.md\`:
+
+\`\`\`markdown
+# Review — Pipeline Ledger
+
+**Pass**: review
+**Verdict**: [Pass / Conditional / Fail]
+**Cycles**: [N]
+**Mode**: [final / framework / content / factual]
+
+## Findings Summary
+| ID | Severity | Area | Issue | Resolution |
+|---|---|---|---|---|
+
+## Remaining Blockers
+[none, or the unresolved findings after the final cycle]
+\`\`\`
+
+Record it with the \`pipeline-ledger\` tool:
+
+\`\`\`
+pipeline-ledger({ action: "write", pass: "review", verdict: "Pass", cycles: [N], scope: "Chapters [start]-[end] ([N] chapters)", summary: "<findings table>" })
+\`\`\`
+
+A missing ledger file means review has not run — the pipeline treats it as outstanding and will not report the manuscript as publishable.
+
 ### 10. Next Steps (Auto-Handoff)
 
 Only after a **passing** independent review cycle (or explicit user decision when non-final modes allow continuation), offer handoff via \`question\`:

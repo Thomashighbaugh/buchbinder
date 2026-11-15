@@ -440,6 +440,14 @@ export function preDraftGate(
   }
 
   for (const item of REQUIRED_CONTEXT_ITEMS) {
+    // Chapter 1 has no previous chapter. The [prev] placeholder clamps to
+    // chapter 1, which would demand the chapter being drafted already
+    // exist — a dead end on a fresh book. Skip the check instead.
+    if (item.id === 'previous-chapter' && chapterNumber <= 1) {
+      evidence.push(`✓ ${item.description}: not applicable to chapter 1`);
+      continue;
+    }
+
     let resolvedPath = item.path;
     resolvedPath = resolvedPath.replace('[prev]', String(Math.max(1, chapterNumber - 1)).padStart(5, '0'));
     resolvedPath = resolvedPath.replace('[current]', String(chapterNumber).padStart(5, '0'));

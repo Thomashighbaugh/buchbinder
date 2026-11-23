@@ -624,7 +624,6 @@ async function main() {
         const manifest = buildManifest(DEST_DIR, {
             packageVersion,
             packageCommit,
-            packageRoot: PKG_ROOT,
             pluginOwnedSubtrees: [], // informational; refresh.mjs uses plugin-tree.mjs
             loreIndex: { lastBuildAt: null, needsRebuild: true },
         })

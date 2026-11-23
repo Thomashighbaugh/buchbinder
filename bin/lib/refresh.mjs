@@ -274,7 +274,6 @@ async function main() {
     const finalManifest = buildManifest(destDir, {
         packageVersion: readPackageVersion(),
         packageCommit: readPackageCommit(),
-        packageRoot: PACKAGE_ROOT,
         pluginOwnedSubtrees: [],
         loreIndex: {
             lastBuildAt: indexResult ? new Date().toISOString() : existingManifest.loreIndex?.lastBuildAt,

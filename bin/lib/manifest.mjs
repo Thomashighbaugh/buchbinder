@@ -15,7 +15,6 @@
  *   "installedAt": "2026-07-13T...Z",
  *   "packageVersion": "0.2.1",
  *   "packageCommit": "63e9f8c",
- *   "packageRoot": "/path/to/buchbinder",
  *   "files": [
  *     { "rel": "skills/fiction/genre-knowledge/SKILL.md", "sha256": "..." },
  *     ...
@@ -121,7 +120,7 @@ export function writeManifest(destDir, manifest) {
  * Build a fresh manifest object with the current installed-file state.
  *
  * @param {string} destDir The .opencode/ directory
- * @param {object} meta { packageVersion, packageCommit, packageRoot, pluginOwnedSubtrees, loreIndex? }
+ * @param {object} meta { packageVersion, packageCommit, pluginOwnedSubtrees, loreIndex? }
  * @returns {object} The manifest object (not yet written)
  */
 export function buildManifest(destDir, meta) {
@@ -134,7 +133,6 @@ export function buildManifest(destDir, meta) {
         installedAt: new Date().toISOString(),
         packageVersion: meta.packageVersion ?? 'unknown',
         packageCommit: meta.packageCommit ?? 'unknown',
-        packageRoot: meta.packageRoot ?? 'unknown',
         files: computeFileEntries(destDir),
         pluginOwnedSubtrees: meta.pluginOwnedSubtrees ?? [],
         loreIndex,

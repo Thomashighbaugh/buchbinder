@@ -88,7 +88,9 @@ Check for the presence and status of phase output documents. The detection follo
 
 **Fiction track detection order:**
 0. \`./book/ideation/\` has artifacts? → Past Phase 0 (ideation)
-1. \`./book/manifest.md\` exists? → Past Phase 1
+1. \`./book/manifest.md\` exists **and is populated with real content**? → Past Phase 1
+   - Read \`./book/manifest.md\`. If any section still contains placeholder brackets (e.g. `[Your central thesis, theme, or purpose]`, `[Your non-negotiable standards]`, `[Register, tone, conventions]`, `[Structure, evidence, narrative norms]`, `[Audience expectations, content notes]`, `[How revision decisions are made]`) or is empty/whitespace-only, treat Phase 1 as **NOT complete** — the manifest was created but never filled out. Route to \`/buchbinder manifest\`.
+   - Only count as past Phase 1 if every section has substantive, non-placeholder content.
 2. \`./book/specification.md\` or \`./book/specification/\` exists? → Past Phase 2
 3. \`./book/specification/\` has \`[Needs Clarification]\` markers? → Phase 3 needed
 4. \`./book/research/\` has source files or \`research-plan.md\`? → Past Phase 4 (or skipped)
@@ -101,7 +103,9 @@ Check for the presence and status of phase output documents. The detection follo
 
 **Non-fiction track detection order:**
 0. \`./book/ideation/\` has artifacts? → Past Phase 0 (ideation)
-1. \`./book/manifest.md\` exists? → Past Phase 1
+1. \`./book/manifest.md\` exists **and is populated with real content**? → Past Phase 1
+   - Read \`./book/manifest.md\`. If any section still contains placeholder brackets (e.g. `[Your central thesis, theme, or purpose]`, `[Your non-negotiable standards]`, `[Register, tone, conventions]`, `[Structure, evidence, narrative norms]`, `[Audience expectations, content notes]`, `[How revision decisions are made]`) or is empty/whitespace-only, treat Phase 1 as **NOT complete** — the manifest was created but never filled out. Route to \`/buchbinder manifest\`.
+   - Only count as past Phase 1 if every section has substantive, non-placeholder content.
 2. \`./book/research/\` has sources or research plan? → Past Phase 2
 3. Sources annotated and bibliography started? → Past Phase 3
 4. \`./book/outline.md\` exists? → Past Phase 4

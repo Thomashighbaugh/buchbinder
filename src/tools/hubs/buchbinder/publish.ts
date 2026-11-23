@@ -37,7 +37,17 @@ For PDF export specifically:
 - If no LaTeX engine: PDF export unavailable — warn the user
 - Alternative: suggest \`weasyprint\` as a non-LaTeX PDF engine
 
-### 3. Load Publish Config
+### 3. Design Publication (kami)
+
+Derive a publication design from \`./book/meta.json\` and write it to
+\`./book/publication.md\` (project-local, adjacent to metadata). This is the
+kami-designed output: brand color, body font, cover style, and series
+branding — all deterministic, no \`~/.config\`, no Python.
+
+Call \`brandFromBookMeta(meta)\` then \`writePublication(projectRoot, design)\`.
+Record the output path in the verification report.
+
+### 4. Load Publish Config
 
 Read \`./book/publish-config.json\` if it exists. This file contains:
 - Format preferences (which formats to export)
@@ -178,7 +188,8 @@ If the user selects a phase, call \`buchbinder-router\` with \`action: "route"\`
 
 | Skill | File | Purpose |
 |-------|------|---------|
-| \`publish-export\` | \`src/lib/publish-export.ts\` | Export engine (pandoc + fallback + verification) |`,
+| \`publish-export\` | \`src/lib/publish-export.ts\` | Export engine (pandoc + fallback + verification) |
+| \`kami-publish\` | \`src/lib/kami-publish.ts\` | Publication design from book metadata (brand, font, cover) |`,
   tools: ["bash", "question"],
   relatedSkills: ["style-enforcer", "consistency-checker", "citation-validator"],
   examples: [

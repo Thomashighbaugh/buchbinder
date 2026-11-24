@@ -306,15 +306,57 @@ async function main() {
         ].includes(v);
     };
 
+    // ── Infer existing project metadata so reinstall doesn't re-ask
+    //    questions the project already answered ──
+    const bookMetaPath = path.join(process.cwd(), 'book', 'meta.json');
+    const trackPath = path.join(process.cwd(), 'book', 'track.json');
+    const seriesMetaPath = path.join(process.cwd(), 'series', 'meta.json');
+
+    try {
+        if (fs.existsSync(trackPath)) {
+            const t = fs.readJsonSync(trackPath);
+            if (t.track) track = t.track;
+            if (t.seriesId) seriesId = t.seriesId;
+            if (t.bookNumber) bookNumber = t.bookNumber;
+        }
+        if (fs.existsSync(bookMetaPath)) {
+            const bm = fs.readJsonSync(bookMetaPath);
+            if (bm.author && !isDubiousAuthorName(bm.author)) bookAuthor = bm.author;
+            if (bm.series && !seriesId) {
+                seriesId = bm.series.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'series';
+            }
+            if (bm.title && !seriesTitle) seriesTitle = bm.title;
+        }
+        if (fs.existsSync(seriesMetaPath)) {
+            const sm = fs.readJsonSync(seriesMetaPath);
+            if (sm.seriesId) seriesId = sm.seriesId;
+            if (sm.title) seriesTitle = sm.title;
+            if (sm.author && !isDubiousAuthorName(sm.author)) seriesAuthor = sm.author;
+            if (sm.bookCount) bookCount = sm.bookCount;
+            if (sm.books && Array.isArray(sm.books) && !bookNumber) {
+                const max = Math.max(0, ...sm.books.map(b => Number(b.number || 0)));
+                bookNumber = max + 1;
+            }
+        }
+        if (seriesId || seriesTitle || seriesAuthor) {
+            isSeries = 'existing';
+        }
+    } catch {
+        // fall through to prompts
+    }
+
     {
-        track = await select({
-            message: 'Which track do you want to use for this project?',
-            choices: [
-                { name: 'Fiction', value: 'fiction', description: 'Novels, short stories, serials, creative non-fiction' },
-                { name: 'Non-Fiction', value: 'non-fiction', description: 'Academic works, journalism, biography, technical books' },
-                { name: 'Mixed', value: 'mixed', description: 'Creative non-fiction, memoir with research, narrative journalism' },
-            ],
-        });
+        // ── Track (skip if book/track.json already exists) ──
+        if (!fs.existsSync(trackPath)) {
+            track = await select({
+                message: 'Which track do you want to use for this project?',
+                choices: [
+                    { name: 'Fiction', value: 'fiction', description: 'Novels, short stories, serials, creative non-fiction' },
+                    { name: 'Non-Fiction', value: 'non-fiction', description: 'Academic works, journalism, biography, technical books' },
+                    { name: 'Mixed', value: 'mixed', description: 'Creative non-fiction, memoir with research, narrative journalism' },
+                ],
+            });
+        }
 
         // ── Lorebook / Premise import option ──
         importChoice = await select({
@@ -412,46 +454,52 @@ async function main() {
             }
         };
 
-        isSeries = await select({
-            message: 'Is this project part of a series?',
-            choices: [
-                { name: 'No — standalone book', value: false, description: 'Single-book project' },
-                { name: 'Yes — new series', value: 'new', description: 'Initialize a new series and plan the books' },
-                { name: 'Yes — add a book to existing series', value: 'existing', description: 'Link to an existing ./series/ directory' },
-            ],
-        });
+        if (!fs.existsSync(seriesMetaPath)) {
+            isSeries = await select({
+                message: 'Is this project part of a series?',
+                choices: [
+                    { name: 'No — standalone book', value: false, description: 'Single-book project' },
+                    { name: 'Yes — new series', value: 'new', description: 'Initialize a new series and plan the books' },
+                    { name: 'Yes — add a book to existing series', value: 'existing', description: 'Link to an existing ./series/ directory' },
+                ],
+            });
 
-        if (isSeries === 'new') {
-            const { input, number } = await import('@inquirer/prompts');
-            seriesTitle = await input({ message: 'Series title:', default: '' });
-            seriesAuthor = await promptRequiredAuthor('Author name (required):');
-            bookAuthor = seriesAuthor; // explicitly determined credited author for series books in this install flow
-            seriesId = seriesTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'series';
-            bookCount = await number({ message: 'How many books are planned for the series?', default: 3, min: 1 });
-            
-            for (let i = 1; i <= bookCount; i++) {
-                targetBooks.push(path.join(process.cwd(), 'series', `book${i}`));
-            }
-        } else if (isSeries === 'existing') {
-            const { input, number } = await import('@inquirer/prompts');
-            bookNumber = await number({ message: 'Book number in series:', default: 2 });
-            targetBooks.push(path.join(process.cwd(), 'series', `book${bookNumber}`));
-            if (fs.existsSync(path.join(process.cwd(), 'series', 'meta.json'))) {
-                const meta = fs.readJsonSync(path.join(process.cwd(), 'series', 'meta.json'));
-                seriesId = meta.id || meta.seriesId;
-                seriesTitle = meta.title;
-                seriesAuthor = meta.author;
-                if (isDubiousAuthorName(seriesAuthor)) {
-                    seriesAuthor = await promptRequiredAuthor('Series author name is missing or placeholder — set author name (required):');
-                }
-            } else {
-                seriesId = await input({ message: 'Series ID (folder-safe, e.g. my-series):', default: 'series' });
+            if (isSeries === 'new') {
+                const { input, number } = await import('@inquirer/prompts');
+                seriesTitle = await input({ message: 'Series title:', default: '' });
                 seriesAuthor = await promptRequiredAuthor('Author name (required):');
+                bookAuthor = seriesAuthor; // explicitly determined credited author for series books in this install flow
+                seriesId = seriesTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'series';
+                bookCount = await number({ message: 'How many books are planned for the series?', default: 3, min: 1 });
+                
+                for (let i = 1; i <= bookCount; i++) {
+                    targetBooks.push(path.join(process.cwd(), 'series', `book${i}`));
+                }
+            } else if (isSeries === 'existing') {
+                const { input, number } = await import('@inquirer/prompts');
+                bookNumber = await number({ message: 'Book number in series:', default: 2 });
+                targetBooks.push(path.join(process.cwd(), 'series', `book${bookNumber}`));
+                if (fs.existsSync(path.join(process.cwd(), 'series', 'meta.json'))) {
+                    const meta = fs.readJsonSync(path.join(process.cwd(), 'series', 'meta.json'));
+                    seriesId = meta.id || meta.seriesId;
+                    seriesTitle = meta.title;
+                    seriesAuthor = meta.author;
+                    if (isDubiousAuthorName(seriesAuthor)) {
+                        seriesAuthor = await promptRequiredAuthor('Series author name is missing or placeholder — set author name (required):');
+                    }
+                } else {
+                    seriesId = await input({ message: 'Series ID (folder-safe, e.g. my-series):', default: 'series' });
+                    seriesAuthor = await promptRequiredAuthor('Author name (required):');
+                }
+                bookAuthor = seriesAuthor;
+            } else {
+                targetBooks = [path.join(process.cwd(), 'book')];
+                bookAuthor = await promptRequiredAuthor('Author name (required, first book metadata step):');
             }
-            bookAuthor = seriesAuthor;
         } else {
-            targetBooks = [path.join(process.cwd(), 'book')];
-            bookAuthor = await promptRequiredAuthor('Author name (required, first book metadata step):');
+            // Series metadata already exists — link to it without prompting
+            targetBooks.push(path.join(process.cwd(), 'series', `book${bookNumber || 1}`));
+            bookAuthor = bookAuthor || seriesAuthor;
         }
     }
 
